@@ -11,6 +11,8 @@ import { QRCodePage } from './components/features/QRCodePage';
 import { NotificationsPage } from './components/features/NotificationsPage';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AppProvider } from './contexts/AppContext';
+import { CalendarPage } from './components/features/CalendarPage';
+import { ClassBooking } from './components/features/ClassBooking';
 
 function AppContent() {
   const { user } = useAuth();
@@ -75,12 +77,7 @@ function AppContent() {
           </div>
         );
       case 'calendar':
-        return (
-          <div className="text-center py-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Calendar & Scheduling</h2>
-            <p className="text-gray-600">This feature is coming soon!</p>
-          </div>
-        );
+        return <CalendarPage />;
       case 'attendance':
         return (
           <div className="text-center py-12">
