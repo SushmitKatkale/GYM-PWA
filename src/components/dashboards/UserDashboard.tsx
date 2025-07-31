@@ -1,13 +1,13 @@
-import React from 'react';
 import { MapPin, Calendar, Clock, CreditCard, Activity, Target } from 'lucide-react';
-import { useAuth, useApp } from '../../contexts';
+import { useAuth } from '../../contexts/AuthContext';
+import { useApp, Attendance } from '../../contexts/AppContext';
 
 export function UserDashboard() {
   const { user } = useAuth();
   const { attendance } = useApp();
 
-  const userAttendance = attendance.filter(a => a.userId === user?.id);
-  const thisWeekAttendance = userAttendance.filter(a => {
+  const userAttendance = attendance.filter((a: Attendance) => a.userId === user?.id);
+  const thisWeekAttendance = userAttendance.filter((a: Attendance) => {
     const attendanceDate = new Date(a.date);
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
@@ -82,7 +82,7 @@ export function UserDashboard() {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Workouts</h3>
           {userAttendance.length > 0 ? (
             <div className="space-y-3">
-              {userAttendance.slice(0, 3).map((session, index) => (
+              {userAttendance.slice(0, 3).map((session: Attendance, index: number) => (
                 <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div>
                     <p className="font-medium text-gray-900">Workout Session</p>

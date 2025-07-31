@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { MapPin, Star, Filter, Navigation, Clock, DollarSign } from 'lucide-react';
+import { useState } from 'react';
+import { MapPin, Star, Filter, Navigation, Clock, DollarSign, Map, List } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 
 export function GymDiscovery() {
@@ -7,6 +7,7 @@ export function GymDiscovery() {
   const [filter, setFilter] = useState('all');
   const [sortBy, setSortBy] = useState('distance');
   const [selectedGym, setSelectedGym] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
   const calculateDistance = (gymLat: number, gymLng: number) => {
     if (!currentLocation) return 0;
@@ -89,12 +90,47 @@ export function GymDiscovery() {
               <option value="rating">Rating</option>
               <option value="price">Price</option>
             </select>
+            
+            {/* View Mode Toggle */}
+            <div className="flex bg-gray-200 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('list')}
+                className={`px-3 py-1 rounded-md flex items-center gap-1 text-sm ${
+                  viewMode === 'list' ? 'bg-white shadow-sm text-green-600' : 'text-gray-600'
+                }`}
+              >
+                <List className="h-4 w-4" />
+                List
+              </button>
+              <button
+                onClick={() => setViewMode('map')}
+                className={`px-3 py-1 rounded-md flex items-center gap-1 text-sm ${
+                  viewMode === 'map' ? 'bg-white shadow-sm text-green-600' : 'text-gray-600'
+                }`}
+              >
+                <Map className="h-4 w-4" />
+                Map
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
+      {/* Map or List View */}
+      {viewMode === 'map' ? (
+        <div className="mb-6">
+          <div className="h-96 w-full rounded-lg overflow-hidden shadow-lg bg-gray-100 flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-gray-600 mb-2">🗺️</div>
+              <p className="text-gray-600">Interactive Map</p>
+              <p className="text-sm text-gray-500">Showing {filteredAndSortedGyms.length} gyms</p>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {/* Gym List */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className={`grid grid-cols-1 lg:grid-cols-2 gap-6 ${viewMode === 'map' ? 'mt-6' : ''}`}>
         {filteredAndSortedGyms.map((gym) => (
           <div key={gym.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
             <div className="relative h-48">
