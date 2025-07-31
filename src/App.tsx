@@ -13,6 +13,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AppProvider } from './contexts/AppContext';
 import { CalendarPage } from './components/features/CalendarPage';
 import { ClassBooking } from './components/features/ClassBooking';
+import { SubscriptionManagement } from './components/features/SubscriptionManagement';
 
 function AppContent() {
   const { user } = useAuth();
@@ -70,12 +71,7 @@ function AppContent() {
           </div>
         );
       case 'my-subscriptions':
-        return (
-          <div className="text-center py-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">My Subscriptions</h2>
-            <p className="text-gray-600">This feature is coming soon!</p>
-          </div>
-        );
+        return <SubscriptionManagement />;
       case 'calendar':
         return <CalendarPage />;
       case 'attendance':
