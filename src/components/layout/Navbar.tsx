@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, Menu, X, LogOut, User } from 'lucide-react';
+import { Bell, Menu, X, User, AlertTriangle } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { useNotificationStore } from '../../stores/notificationStore';
 
@@ -9,11 +9,12 @@ interface NavbarProps {
 }
 
 export function Navbar({ onMenuToggle, isMobileMenuOpen }: NavbarProps) {
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const { getUnreadCount } = useNotificationStore();
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showAlertsDropdown, setShowAlertsDropdown] = useState(false);
   
   const unreadCount = user ? getUnreadCount(user.id, user.role) : 0;
+  const alertsCount = 3; // Mock alerts count
 
   const getRoleColor = () => {
     switch (user?.role) {
@@ -28,16 +29,37 @@ export function Navbar({ onMenuToggle, isMobileMenuOpen }: NavbarProps) {
     <nav className={`bg-gradient-to-r ${getRoleColor()} shadow-lg`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <div className="flex items-center">
+          <div className="flex items-center space-x-4">
             <button
               onClick={onMenuToggle}
               className="lg:hidden text-white hover:bg-white/10 p-2 rounded-md transition-colors"
             >
               {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
-            <div className="flex-shrink-0 ml-2 lg:ml-0">
-              <h1 className="text-white text-xl font-bold">Gym MS</h1>
+            
+            {/* Profile - moved to left */}
+            <div className="flex items-center space-x-3 text-white">
+              {user?.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt={user.name}
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                  <User className="w-5 h-5" />
+                </div>
+              )}
+              <div className="hidden sm:block text-left">
+                <div className="text-sm font-medium">{user?.name}</div>
+                <div className="text-xs opacity-75 capitalize">{user?.role}</div>
+              </div>
             </div>
+          </div>
+
+          {/* Center - App Title */}
+          <div className="flex-shrink-0">
+            <h1 className="text-white text-xl font-bold">Gym MS</h1>
           </div>
 
           <div className="flex items-center space-x-4">
@@ -51,45 +73,62 @@ export function Navbar({ onMenuToggle, isMobileMenuOpen }: NavbarProps) {
               )}
             </button>
 
-            {/* Profile Menu */}
+            {/* Alerts - moved to right */}
             <div className="relative">
               <button
-                onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className="flex items-center space-x-3 text-white hover:bg-white/10 p-2 rounded-lg transition-colors"
+                onClick={() => setShowAlertsDropdown(!showAlertsDropdown)}
+                className="text-white hover:bg-white/10 p-2 rounded-full transition-colors relative"
               >
-                {user?.avatar ? (
-                  <img
-                    src={user.avatar}
-                    alt={user.name}
-                    className="w-8 h-8 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                    <User className="w-5 h-5" />
-                  </div>
+                <AlertTriangle className="w-6 h-6" />
+                {alertsCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {alertsCount}
+                  </span>
                 )}
-                <div className="hidden sm:block text-left">
-                  <div className="text-sm font-medium">{user?.name}</div>
-                  <div className="text-xs opacity-75 capitalize">{user?.role}</div>
-                </div>
               </button>
 
-              {showProfileMenu && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50">
+              {showAlertsDropdown && (
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg py-2 z-50">
                   <div className="px-4 py-2 border-b border-gray-100">
-                    <div className="text-sm font-medium text-gray-900">{user?.name}</div>
-                    <div className="text-xs text-gray-500">{user?.email}</div>
+                    <h3 className="text-sm font-semibold text-gray-900">System Alerts</h3>
                   </div>
-                  <button
-                    onClick={() => {
-                      logout();
-                      setShowProfileMenu(false);
-                    }}
-                    className="w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50 flex items-center"
-                  >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Sign Out
-                  </button>
+                  <div className="max-h-64 overflow-y-auto">
+                    <div className="px-4 py-3 hover:bg-gray-50 border-b border-gray-100">
+                      <div className="flex items-start space-x-3">
+                        <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">Equipment Maintenance Due</p>
+                          <p className="text-xs text-gray-600">Treadmill #3 requires maintenance</p>
+                          <p className="text-xs text-gray-400 mt-1">2 hours ago</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="px-4 py-3 hover:bg-gray-50 border-b border-gray-100">
+                      <div className="flex items-start space-x-3">
+                        <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">High Capacity Alert</p>
+                          <p className="text-xs text-gray-600">Main gym area at 85% capacity</p>
+                          <p className="text-xs text-gray-400 mt-1">15 minutes ago</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="px-4 py-3 hover:bg-gray-50">
+                      <div className="flex items-start space-x-3">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">New Member Registration</p>
+                          <p className="text-xs text-gray-600">5 new members registered today</p>
+                          <p className="text-xs text-gray-400 mt-1">1 hour ago</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="px-4 py-2 border-t border-gray-100">
+                    <button className="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                      View all alerts
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

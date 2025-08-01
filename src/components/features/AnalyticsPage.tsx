@@ -144,42 +144,48 @@ export function AnalyticsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6 px-4 md:px-6 max-w-full mx-auto">
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900">Analytics & Reports</h1>
-        <p className="text-gray-600 mt-2">Comprehensive insights into your gym performance</p>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Analytics</h1>
+        <p className="text-gray-600 mt-2 text-sm md:text-base">Performance insights</p>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Filter className="w-5 h-5 text-gray-400" />
-            <div className="flex space-x-4">
-              <select
-                value={selectedPeriod}
-                onChange={(e) => setSelectedPeriod(e.target.value as any)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="7d">Last 7 Days</option>
-                <option value="30d">Last 30 Days</option>
-                <option value="90d">Last 90 Days</option>
-                <option value="1y">Last Year</option>
-              </select>
-              <select
-                value={selectedMetric}
-                onChange={(e) => setSelectedMetric(e.target.value as any)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="attendance">Attendance</option>
-                <option value="revenue">Revenue</option>
-                <option value="users">Users</option>
-              </select>
-            </div>
+      {/* Mobile-First Filters */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+        <div className="space-y-4">
+          {/* Period Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Time Period</label>
+            <select
+              value={selectedPeriod}
+              onChange={(e) => setSelectedPeriod(e.target.value as any)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+            >
+              <option value="7d">Last 7 Days</option>
+              <option value="30d">Last 30 Days</option>
+              <option value="90d">Last 90 Days</option>
+              <option value="1y">Last Year</option>
+            </select>
           </div>
+          
+          {/* Metric Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">View</label>
+            <select
+              value={selectedMetric}
+              onChange={(e) => setSelectedMetric(e.target.value as any)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+            >
+              <option value="attendance">📊 Attendance</option>
+              <option value="revenue">💰 Revenue</option>
+              <option value="users">👥 Users</option>
+            </select>
+          </div>
+          
+          {/* Export Button - Mobile Friendly */}
           <button
             onClick={exportData}
-            className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+            className="w-full flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg transition-colors font-medium"
           >
             <Download className="w-4 h-4" />
             <span>Export Data</span>
@@ -187,118 +193,150 @@ export function AnalyticsPage() {
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Revenue</p>
-              <p className="text-3xl font-bold text-gray-900">${analyticsData.totalRevenue.toLocaleString()}</p>
-              <p className="text-sm text-green-600 mt-1">+{analyticsData.monthlyGrowth}% from last month</p>
+      {/* Mobile-First KPI Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          <div className="text-center">
+            <div className="bg-green-100 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mx-auto mb-2">
+              <CreditCard className="w-5 h-5 md:w-6 md:h-6 text-green-600" />
             </div>
-            <div className="bg-green-100 p-3 rounded-lg">
-              <CreditCard className="w-6 h-6 text-green-600" />
-            </div>
+            <p className="text-xs text-gray-600 mb-1">Revenue</p>
+            <p className="text-lg md:text-2xl font-bold text-gray-900">${(analyticsData.totalRevenue / 1000).toFixed(0)}k</p>
+            <p className="text-xs text-green-600">+{analyticsData.monthlyGrowth}%</p>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Users</p>
-              <p className="text-3xl font-bold text-gray-900">{analyticsData.totalUsers.toLocaleString()}</p>
-              <p className="text-sm text-blue-600 mt-1">Active members</p>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          <div className="text-center">
+            <div className="bg-blue-100 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mx-auto mb-2">
+              <Users className="w-5 h-5 md:w-6 md:h-6 text-blue-600" />
             </div>
-            <div className="bg-blue-100 p-3 rounded-lg">
-              <Users className="w-6 h-6 text-blue-600" />
-            </div>
+            <p className="text-xs text-gray-600 mb-1">Users</p>
+            <p className="text-lg md:text-2xl font-bold text-gray-900">{(analyticsData.totalUsers / 1000).toFixed(1)}k</p>
+            <p className="text-xs text-blue-600">Active</p>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Sessions</p>
-              <p className="text-3xl font-bold text-gray-900">{analyticsData.totalSessions.toLocaleString()}</p>
-              <p className="text-sm text-purple-600 mt-1">This month</p>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          <div className="text-center">
+            <div className="bg-purple-100 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mx-auto mb-2">
+              <Calendar className="w-5 h-5 md:w-6 md:h-6 text-purple-600" />
             </div>
-            <div className="bg-purple-100 p-3 rounded-lg">
-              <Calendar className="w-6 h-6 text-purple-600" />
-            </div>
+            <p className="text-xs text-gray-600 mb-1">Sessions</p>
+            <p className="text-lg md:text-2xl font-bold text-gray-900">{(analyticsData.totalSessions / 1000).toFixed(1)}k</p>
+            <p className="text-xs text-purple-600">Monthly</p>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Avg Session</p>
-              <p className="text-3xl font-bold text-gray-900">{analyticsData.averageSessionDuration}min</p>
-              <p className="text-sm text-orange-600 mt-1">Average duration</p>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          <div className="text-center">
+            <div className="bg-orange-100 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mx-auto mb-2">
+              <TrendingUp className="w-5 h-5 md:w-6 md:h-6 text-orange-600" />
             </div>
-            <div className="bg-orange-100 p-3 rounded-lg">
-              <TrendingUp className="w-6 h-6 text-orange-600" />
-            </div>
+            <p className="text-xs text-gray-600 mb-1">Avg Time</p>
+            <p className="text-lg md:text-2xl font-bold text-gray-900">{analyticsData.averageSessionDuration}m</p>
+            <p className="text-xs text-orange-600">Duration</p>
           </div>
         </div>
       </div>
 
-      {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Attendance Trend */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Weekly Attendance Trend</h3>
-          <Line data={attendanceChartData} options={chartOptions} />
+      {/* Mobile-First Charts */}
+      <div className="space-y-4">
+        {/* Main Trend Chart */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-4">📈 Weekly Trend</h3>
+          <div className="h-64 md:h-80">
+            <Line data={attendanceChartData} options={{
+              ...chartOptions,
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  display: false
+                }
+              },
+              scales: {
+                x: {
+                  ticks: {
+                    font: {
+                      size: 12
+                    }
+                  }
+                },
+                y: {
+                  ticks: {
+                    font: {
+                      size: 12
+                    }
+                  }
+                }
+              }
+            }} />
+          </div>
         </div>
 
-        {/* Revenue Chart */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Weekly Revenue</h3>
-          <Bar data={revenueChartData} options={chartOptions} />
+        {/* Popular Times - Mobile Optimized */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-4">🕒 Peak Hours</h3>
+          <div className="space-y-2">
+            {analyticsData.popularTimes.map((time, index) => (
+              <div key={time.hour} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                <span className="text-sm font-medium text-gray-700">{time.hour}</span>
+                <div className="flex items-center space-x-2">
+                  <div className="w-20 bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-purple-500 h-2 rounded-full" 
+                      style={{ width: `${(time.sessions / 203) * 100}%` }}
+                    ></div>
+                  </div>
+                  <span className="text-sm text-gray-600 w-8">{time.sessions}</span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Popular Times */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Popular Workout Times</h3>
-          <Bar data={popularTimesData} options={chartOptions} />
-        </div>
-
-        {/* Gym Performance */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Gym Performance Distribution</h3>
-          <div className="flex justify-center">
-            <div className="w-80 h-80">
-              <Doughnut data={gymPerformanceData} options={chartOptions} />
-            </div>
+        {/* Gym Performance - Mobile List */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-4">🏢 Gym Performance</h3>
+          <div className="space-y-3">
+            {analyticsData.gymPerformance.map((gym, index) => (
+              <div key={gym.name} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div>
+                  <p className="font-medium text-gray-900 text-sm">{gym.name}</p>
+                  <p className="text-xs text-gray-600">{gym.members} members</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-semibold text-gray-900 text-sm">{gym.sessions}</p>
+                  <p className="text-xs text-green-600">${gym.revenue.toLocaleString()}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Detailed Performance Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Gym Performance Details</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-              <tr>
-                <th className="px-6 py-3">Gym Name</th>
-                <th className="px-6 py-3">Sessions</th>
-                <th className="px-6 py-3">Revenue</th>
-                <th className="px-6 py-3">Members</th>
-                <th className="px-6 py-3">Avg Session Duration</th>
-              </tr>
-            </thead>
-            <tbody>
-              {analyticsData.gymPerformance.map((gym, index) => (
-                <tr key={index} className="bg-white border-b hover:bg-gray-50">
-                  <td className="px-6 py-4 font-medium text-gray-900">{gym.name}</td>
-                  <td className="px-6 py-4">{gym.sessions.toLocaleString()}</td>
-                  <td className="px-6 py-4">${gym.revenue.toLocaleString()}</td>
-                  <td className="px-6 py-4">{gym.members}</td>
-                  <td className="px-6 py-4">{Math.floor(Math.random() * 30) + 60} min</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {/* Weekly Summary - Mobile Cards */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+        <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-4">📅 This Week</h3>
+        <div className="grid grid-cols-1 gap-3">
+          {analyticsData.weeklyTrend.map((day, index) => (
+            <div key={day.day} className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                  <span className="text-xs font-bold text-white">{day.day[0]}</span>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900 text-sm">{day.day}</p>
+                  <p className="text-xs text-gray-600">{day.sessions} sessions</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="font-semibold text-green-600 text-sm">${day.revenue}</p>
+                <p className="text-xs text-gray-500">revenue</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

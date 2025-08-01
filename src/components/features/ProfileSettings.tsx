@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Mail, Phone, Lock, Bell, Shield, Camera, Save, Eye, EyeOff } from 'lucide-react';
+import { User, Mail, Phone, Lock, Bell, Shield, Camera, Save, Eye, EyeOff, Settings } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { useApp } from '../../contexts/AppContext';
 
@@ -20,11 +20,15 @@ interface UserProfile {
   };
 }
 
-export function ProfileSettings() {
+interface ProfileSettingsProps {
+  activeSettingsTab?: string;
+}
+
+export function ProfileSettings({ activeSettingsTab = 'profile' }: ProfileSettingsProps) {
   const { user, logout } = useAuthStore();
   const { addNotification } = useApp();
   
-  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'notifications' | 'privacy'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'notifications' | 'privacy' | 'preferences'>(activeSettingsTab as any || 'profile');
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -73,6 +77,18 @@ export function ProfileSettings() {
     shareWorkoutData: false,
     shareProgressPhotos: false,
     allowFriendRequests: true
+  });
+
+  // App preferences
+  const [appPreferences, setAppPreferences] = useState({
+    darkMode: false,
+    language: 'en',
+    units: 'metric',
+    autoSync: true,
+    offlineMode: false,
+    dataUsage: 'normal',
+    animationsEnabled: true,
+    soundEffects: true
   });
 
   const fitnessGoalOptions = [
@@ -166,23 +182,23 @@ export function ProfileSettings() {
         return (
           <div className="space-y-6">
             {/* Profile Photo */}
-            <div className="flex items-center space-x-6">
+            <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
               <div className="relative">
-                <div className="w-24 h-24 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xl sm:text-2xl font-bold">
                   {profile.firstName[0]}{profile.lastName[0]}
                 </div>
                 <button className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors">
                   <Camera className="w-4 h-4 text-gray-600" />
                 </button>
               </div>
-              <div>
+              <div className="text-center sm:text-left">
                 <h3 className="text-lg font-semibold text-gray-900">Profile Photo</h3>
                 <p className="text-sm text-gray-600">Click the camera icon to upload a new photo</p>
               </div>
             </div>
 
             {/* Basic Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">First Name *</label>
                 <input
@@ -244,7 +260,7 @@ export function ProfileSettings() {
             </div>
 
             {/* Physical Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Height (cm)</label>
                 <input
@@ -268,7 +284,7 @@ export function ProfileSettings() {
             {/* Fitness Goals */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Fitness Goals</label>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 {fitnessGoalOptions.map((goal) => (
                   <label key={goal} className="flex items-center">
                     <input
@@ -286,7 +302,7 @@ export function ProfileSettings() {
             {/* Emergency Contact */}
             <div className="border-t pt-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Emergency Contact</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
                   <input
@@ -327,13 +343,29 @@ export function ProfileSettings() {
               </div>
             </div>
 
-            <button
-              onClick={handleProfileSave}
-              className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
-            >
-              <Save className="w-4 h-4" />
-              <span>Save Changes</span>
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={handleProfileSave}
+                className="flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors font-medium"
+              >
+                <Save className="w-4 h-4" />
+                <span>Save Changes</span>
+              </button>
+              
+              <button
+                onClick={() => {
+                  if (window.confirm('Are you sure you want to logout?')) {
+                    logout();
+                  }
+                }}
+                className="flex items-center justify-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors font-medium"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span>Logout</span>
+              </button>
+            </div>
           </div>
         );
 
@@ -524,6 +556,33 @@ export function ProfileSettings() {
           </div>
         );
 
+      case 'preferences':
+        return (
+          <div className="space-y-6">
+            {Object.entries(appPreferences).map(([key, value]) => (
+              <div key={key} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                <div>
+                  <h3 className="font-medium text-gray-900 capitalize">
+                    {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                  </h3>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={value}
+                    onChange={(e) => setAppPreferences(prev => ({
+                      ...prev,
+                      [key]: e.target.checked
+                    }))}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+            ))}
+          </div>
+        );
+
       default:
         return null;
     }
@@ -552,21 +611,23 @@ export function ProfileSettings() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6 px-4 md:px-6 max-w-full mx-auto">
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900">Profile Settings</h1>
-        <p className="text-gray-600 mt-2">Manage your account settings and preferences</p>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Profile Settings</h1>
+        <p className="text-gray-600 mt-2 text-sm md:text-base">Manage your account settings and preferences</p>
       </div>
 
-      {/* Tab Navigation */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+
+      {/* Desktop Tab Navigation */}
+      <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200">
         <div className="border-b border-gray-200">
           <nav className="flex space-x-8 px-6">
             {[
               { id: 'profile', label: 'Profile', icon: User },
               { id: 'security', label: 'Security', icon: Shield },
               { id: 'notifications', label: 'Notifications', icon: Bell },
-              { id: 'privacy', label: 'Privacy', icon: Lock }
+              { id: 'privacy', label: 'Privacy', icon: Lock },
+              { id: 'preferences', label: 'Preferences', icon: Settings }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -587,6 +648,11 @@ export function ProfileSettings() {
         <div className="p-6">
           {renderTabContent()}
         </div>
+      </div>
+
+      {/* Mobile Content */}
+      <div className="md:hidden bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+        {renderTabContent()}
       </div>
     </div>
   );
