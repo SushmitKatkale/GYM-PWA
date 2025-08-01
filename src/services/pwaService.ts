@@ -131,7 +131,7 @@ class PWAService {
   // Show update available notification
   private showUpdateAvailable(): void {
     this.showLocalNotification('Update Available', {
-      body: 'A new version of GymPro is available. Refresh to update.',
+      body: 'A new version of FItEsperro is available. Refresh to update.',
       tag: 'update-available',
       requireInteraction: true
     });
@@ -164,7 +164,7 @@ class PWAService {
     });
 
     window.addEventListener('appinstalled', () => {
-      console.log('GymPro was installed successfully');
+      console.log('FItEsperro was installed successfully');
       this.hideInstallBanner();
     });
   }
@@ -190,7 +190,7 @@ class PWAService {
         z-index: 1000;
       ">
         <div>
-          <div style="font-weight: bold; margin-bottom: 4px;">Install GymPro</div>
+          <div style="font-weight: bold; margin-bottom: 4px;">Install FItEsperro</div>
           <div style="font-size: 14px; opacity: 0.9;">Get the full app experience</div>
         </div>
         <div>

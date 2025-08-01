@@ -53,7 +53,7 @@ self.addEventListener('activate', (event) => {
 // Push notification event
 self.addEventListener('push', (event) => {
   const options = {
-    body: event.data ? event.data.text() : 'New notification from GymPro',
+    body: event.data ? event.data.text() : 'New notification from FItEsperro',
     icon: '/icons/icon-192x192.png',
     badge: '/icons/icon-72x72.png',
     vibrate: [100, 50, 100],

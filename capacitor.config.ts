@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.gympro.app',
-  appName: 'GymPro - Fitness Management',
+  appName: 'FItEsperro - Fitness Management',
   webDir: 'dist',
   server: {
     androidScheme: 'https'

@@ -4,10 +4,56 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  publicDir: 'public',
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      manifest: {
+        name: 'GymPro - Fitness Management',
+        short_name: 'GymPro',
+        description: 'Complete gym management and fitness tracking application',
+        start_url: '/',
+        display: 'standalone',
+        background_color: '#ffffff',
+        theme_color: '#2563eb',
+        orientation: 'portrait-primary',
+        scope: '/',
+        lang: 'en',
+        categories: ['fitness', 'health', 'lifestyle'],
+        icons: [
+          {
+            src: '/icons/manifest-icon-192.maskable.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/icons/manifest-icon-192.maskable.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'maskable'
+          },
+          {
+            src: '/icons/manifest-icon-512.maskable.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/icons/manifest-icon-512.maskable.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
+          },
+          {
+            src: '/icons/apple-icon-180.png',
+            sizes: '180x180',
+            type: 'image/png',
+            purpose: 'any'
+          }
+        ]
+      },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff,woff2,ttf,eot}'],
         runtimeCaching: [
@@ -41,7 +87,7 @@ export default defineConfig({
           }
         ]
       },
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg', 'icons/*.png'],
       devOptions: {
         enabled: true,
         type: 'module'
