@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -12,7 +12,7 @@ import {
   Legend,
   ArcElement,
 } from 'chart.js';
-import { TrendingUp, Users, CreditCard, Calendar, Download, Filter } from 'lucide-react';
+import { TrendingUp, Users, CreditCard, Calendar, Download, Filter, ChevronDown, BarChart3, DollarSign, UserCheck } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { useAuthStore } from '../../stores/authStore';
 import { useAttendanceStore } from '../../stores/attendanceStore';
@@ -36,6 +36,25 @@ export function AnalyticsPage() {
   const { getAllAttendance } = useAttendanceStore();
   const [selectedPeriod, setSelectedPeriod] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
   const [selectedMetric, setSelectedMetric] = useState<'attendance' | 'revenue' | 'users'>('attendance');
+  const [showPeriodDropdown, setShowPeriodDropdown] = useState(false);
+  const [showMetricDropdown, setShowMetricDropdown] = useState(false);
+  const periodDropdownRef = useRef<HTMLDivElement>(null);
+  const metricDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Handle outside clicks to close dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (periodDropdownRef.current && !periodDropdownRef.current.contains(event.target as Node)) {
+        setShowPeriodDropdown(false);
+      }
+      if (metricDropdownRef.current && !metricDropdownRef.current.contains(event.target as Node)) {
+        setShowMetricDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Mock analytics data
   const analyticsData = {
@@ -154,32 +173,95 @@ export function AnalyticsPage() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
         <div className="space-y-4">
           {/* Period Filter */}
-          <div>
+          <div ref={periodDropdownRef}>
             <label className="block text-sm font-medium text-gray-700 mb-2">Time Period</label>
-            <select
-              value={selectedPeriod}
-              onChange={(e) => setSelectedPeriod(e.target.value as any)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
-            >
-              <option value="7d">Last 7 Days</option>
-              <option value="30d">Last 30 Days</option>
-              <option value="90d">Last 90 Days</option>
-              <option value="1y">Last Year</option>
-            </select>
+            <div className="relative">
+              <button
+                onClick={() => setShowPeriodDropdown(!showPeriodDropdown)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base bg-white text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex items-center space-x-2">
+                  <Calendar className="w-4 h-4 text-gray-500" />
+                  <span>
+                    {selectedPeriod === '7d' && 'Last 7 Days'}
+                    {selectedPeriod === '30d' && 'Last 30 Days'}
+                    {selectedPeriod === '90d' && 'Last 90 Days'}
+                    {selectedPeriod === '1y' && 'Last Year'}
+                  </span>
+                </div>
+                <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${showPeriodDropdown ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {showPeriodDropdown && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg">
+                  {[
+                    { value: '7d', label: 'Last 7 Days' },
+                    { value: '30d', label: 'Last 30 Days' },
+                    { value: '90d', label: 'Last 90 Days' },
+                    { value: '1y', label: 'Last Year' }
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => {
+                        setSelectedPeriod(option.value as any);
+                        setShowPeriodDropdown(false);
+                      }}
+                      className={`w-full px-3 py-2 text-left hover:bg-blue-50 flex items-center space-x-2 first:rounded-t-lg last:rounded-b-lg transition-colors ${
+                        selectedPeriod === option.value ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                      }`}
+                    >
+                      <Calendar className="w-4 h-4 text-gray-400" />
+                      <span>{option.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
           
           {/* Metric Filter */}
-          <div>
+          <div ref={metricDropdownRef}>
             <label className="block text-sm font-medium text-gray-700 mb-2">View</label>
-            <select
-              value={selectedMetric}
-              onChange={(e) => setSelectedMetric(e.target.value as any)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
-            >
-              <option value="attendance">📊 Attendance</option>
-              <option value="revenue">💰 Revenue</option>
-              <option value="users">👥 Users</option>
-            </select>
+            <div className="relative">
+              <button
+                onClick={() => setShowMetricDropdown(!showMetricDropdown)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base bg-white text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex items-center space-x-2">
+                  <BarChart3 className="w-4 h-4 text-gray-500" />
+                  <span>
+                    {selectedMetric === 'attendance' && '📊 Attendance'}
+                    {selectedMetric === 'revenue' && '💰 Revenue'}
+                    {selectedMetric === 'users' && '👥 Users'}
+                  </span>
+                </div>
+                <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${showMetricDropdown ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {showMetricDropdown && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg">
+                  {[
+                    { value: 'attendance', label: '📊 Attendance' },
+                    { value: 'revenue', label: '💰 Revenue' },
+                    { value: 'users', label: '👥 Users' }
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => {
+                        setSelectedMetric(option.value as any);
+                        setShowMetricDropdown(false);
+                      }}
+                      className={`w-full px-3 py-2 text-left hover:bg-blue-50 flex items-center space-x-2 first:rounded-t-lg last:rounded-b-lg transition-colors ${
+                        selectedMetric === option.value ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                      }`}
+                    >
+                      <BarChart3 className="w-4 h-4 text-gray-400" />
+                      <span>{option.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
           
           {/* Export Button - Mobile Friendly */}
