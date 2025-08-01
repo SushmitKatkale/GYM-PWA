@@ -11,17 +11,24 @@
   },
   "dependencies": {
     "@types/leaflet": "^1.9.20",
+    "chart.js": "^4.4.0",
     "date-fns": "^4.1.0",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^2.5.1",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.344.0",
+    "qrcode": "^1.5.3",
     "react": "^18.3.1",
-    "react-calendar": "^6.0.0",
+    "react-calendar": "^5.0.0",
+    "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.3.1",
-    "react-leaflet": "^5.0.0",
-    "zustand": "^5.0.7"
+    "react-leaflet": "^4.2.1",
+    "react-qr-code": "^2.0.15",
+    "zustand": "^4.5.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
+    "@types/qrcode": "^1.5.5",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",

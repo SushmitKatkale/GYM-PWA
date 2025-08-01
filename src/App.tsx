@@ -11,6 +11,11 @@ import { GymDiscovery } from './components/features/GymDiscovery';
 import { QRCodePage } from './components/features/QRCodePage';
 import { NotificationsPage } from './components/features/NotificationsPage';
 import { CalendarBooking } from './components/features/CalendarBooking';
+import { SubscriptionPage } from './components/features/SubscriptionPage';
+import { AttendanceReports } from './components/features/AttendanceReports';
+import { WalletPage } from './components/features/WalletPage';
+import { ProfileSettings } from './components/features/ProfileSettings';
+import { AnalyticsPage } from './components/features/AnalyticsPage';
 
 function App() {
   const { user } = useAuthStore();
@@ -45,58 +50,24 @@ function App() {
           case 'user': return <UserDashboard />;
           default: return <div>Invalid role</div>;
         }
-      case 'discover':
-        return <GymDiscovery />;
-      case 'qr-code':
-        return <QRCodePage />;
-      case 'notifications':
-        return <NotificationsPage />;
-      case 'calendar':
-        return <CalendarBooking />;
-      case 'gyms':
-      case 'my-gyms':
-        return (
-          <div className="text-center py-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Gym Management</h2>
-            <p className="text-gray-600">This feature is coming soon!</p>
-          </div>
-        );
-      case 'users':
-      case 'members':
-        return (
-          <div className="text-center py-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">User Management</h2>
-            <p className="text-gray-600">This feature is coming soon!</p>
-          </div>
-        );
-      case 'my-subscriptions':
-        return (
-          <div className="text-center py-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">My Subscriptions</h2>
-            <p className="text-gray-600">This feature is coming soon!</p>
-          </div>
-        );
-      case 'attendance':
-        return (
-          <div className="text-center py-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Attendance Reports</h2>
-            <p className="text-gray-600">This feature is coming soon!</p>
-          </div>
-        );
-      case 'analytics':
-        return (
-          <div className="text-center py-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Analytics & Reports</h2>
-            <p className="text-gray-600">This feature is coming soon!</p>
-          </div>
-        );
-      case 'settings':
-        return (
-          <div className="text-center py-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Settings</h2>
-            <p className="text-gray-600">This feature is coming soon!</p>
-          </div>
-        );
+          case 'discover':
+            return <GymDiscovery />;
+          case 'qr-code':
+            return <QRCodePage />;
+          case 'notifications':
+            return <NotificationsPage />;
+          case 'calendar':
+            return <CalendarBooking />;
+          case 'my-subscriptions':
+            return <SubscriptionPage />;
+          case 'attendance':
+            return <AttendanceReports />;
+          case 'analytics':
+            return <AnalyticsPage />;
+          case 'settings':
+            return <ProfileSettings />;
+          case 'wallet':
+            return <WalletPage />;
       default:
         return (
           <div className="text-center py-12">

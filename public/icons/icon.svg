@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" fill="#4F46E5" rx="64"/>
+  <g fill="white">
+    <!-- Dumbbell icon -->
+    <rect x="96" y="240" width="320" height="32" rx="4"/>
+    <rect x="80" y="224" width="32" height="64" rx="8"/>
+    <rect x="400" y="224" width="32" height="64" rx="8"/>
+    <rect x="72" y="208" width="48" height="96" rx="12"/>
+    <rect x="392" y="208" width="48" height="96" rx="12"/>
+    <!-- Text "GYM" -->
+    <text x="256" y="180" font-family="Arial, sans-serif" font-size="64" font-weight="bold" text-anchor="middle">GYM</text>
+    <text x="256" y="380" font-family="Arial, sans-serif" font-size="32" font-weight="normal" text-anchor="middle">MS</text>
+  </g>
+</svg>

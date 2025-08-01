@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   Home, Users, Building, Calendar, QrCode, CreditCard, 
-  BarChart3, Settings, MapPin, Bell, Clock
+  BarChart3, Settings, MapPin, Bell, Clock, Wallet
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 
@@ -50,6 +50,7 @@ export function Sidebar({ activeView, onViewChange, isOpen }: SidebarProps) {
           { id: 'qr-code', label: 'QR Check-in', icon: QrCode },
           { id: 'calendar', label: 'My Schedule', icon: Calendar },
           { id: 'attendance', label: 'My Attendance', icon: Clock },
+          { id: 'wallet', label: 'Wallet & Payments', icon: Wallet },
           ...commonItems.slice(1)
         ];
       

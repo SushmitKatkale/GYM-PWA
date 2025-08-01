@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import QRCode from 'react-qr-code';
 import { QrCode, Scan, Clock, MapPin, Calendar } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { useAttendanceStore } from '../../stores/attendanceStore';
@@ -136,10 +137,17 @@ export function QRCodePage() {
         <div className="text-center">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Your QR Code</h3>
           <div className="inline-block p-6 bg-gray-50 rounded-xl">
-            <div className="w-48 h-48 bg-white border-2 border-gray-200 rounded-lg flex items-center justify-center mx-auto">
-              <div className="text-center">
-                <QrCode className="w-24 h-24 text-gray-400 mx-auto mb-2" />
-                <p className="text-xs text-gray-500 font-mono">{qrCode}</p>
+            <div className="w-48 h-48 bg-white border-2 border-gray-200 rounded-lg flex items-center justify-center mx-auto p-4">
+              <div className="text-center w-full">
+                <div className="mb-2">
+                  <QRCode
+                    value={qrCode}
+                    size={160}
+                    level="H"
+                    includeMargin={false}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 font-mono">{qrCode.slice(-8)}</p>
               </div>
             </div>
           </div>
