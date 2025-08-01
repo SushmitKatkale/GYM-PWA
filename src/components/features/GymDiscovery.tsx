@@ -276,7 +276,7 @@ export function GymDiscovery() {
           ))}
         </div>
       )}
-                <p className="text-gray-600 text-sm mb-4">{gym.description}</p>
+                {/* <p className="text-gray-600 text-sm mb-4">${gym.description}</p> */}
       {filteredAndSortedGyms.length === 0 && (
         <div className="text-center py-12">
           <MapPin className="w-16 h-16 text-gray-300 mx-auto mb-4" />
