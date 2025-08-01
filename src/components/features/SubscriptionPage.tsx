@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { CreditCard, Calendar, DollarSign, Clock, Star, Check, AlertCircle } from 'lucide-react';
+import { useState } from 'react';
+import { CreditCard, Calendar, DollarSign, Star, Check } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { useApp } from '../../contexts/AppContext';
 
@@ -161,11 +161,6 @@ export function SubscriptionPage() {
 
   return (
     <div className="space-y-6">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900">Subscription Management</h1>
-        <p className="text-gray-600 mt-2">Manage your gym memberships and plans</p>
-      </div>
-
       {/* Current Subscriptions */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">My Subscriptions</h2>

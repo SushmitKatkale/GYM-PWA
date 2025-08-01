@@ -87,12 +87,6 @@ export function QRCodePage() {
 
   return (
     <div className="space-y-6">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900">QR Check-in</h1>
-        <p className="text-gray-600 mt-2">
-          {activeSession ? 'Currently checked in' : 'Scan or enter code to check in'}
-        </p>
-      </div>
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">

@@ -163,11 +163,6 @@ export function WalletPage() {
 
   return (
     <div className="space-y-6">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900">Wallet & Payments</h1>
-        <p className="text-gray-600 mt-2">Manage your wallet balance and payment history</p>
-      </div>
-
       {/* Wallet Balance Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white">

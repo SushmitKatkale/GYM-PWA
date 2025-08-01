@@ -164,11 +164,6 @@ export function AnalyticsPage() {
 
   return (
     <div className="space-y-4 md:space-y-6 px-4 md:px-6 max-w-full mx-auto">
-      <div className="text-center">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Analytics</h1>
-        <p className="text-gray-600 mt-2 text-sm md:text-base">Performance insights</p>
-      </div>
-
       {/* Mobile-First Filters */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
         <div className="space-y-4">

@@ -193,11 +193,6 @@ export function MemberManagement() {
 
   return (
     <div className="space-y-3 md:space-y-6 px-3 md:px-6 max-w-full mx-auto pb-4">
-      <div className="text-center px-2">
-        <h1 className="text-xl md:text-3xl font-bold text-gray-900">Member Management</h1>
-        <p className="text-gray-600 mt-1 text-xs md:text-base">Manage gym members and memberships</p>
-      </div>
-
       {/* Mobile-First Search and Filters */}
       <div className="bg-white rounded-lg md:rounded-xl shadow-sm border border-gray-200 p-3 md:p-4">
         <div className="space-y-3">

@@ -29,56 +29,76 @@ export function MobileBottomNav({ activeMenu, setActiveMenu }: MobileBottomNavPr
 
   // Define main navigation items (max 5 for mobile)
   const getMainNavItems = () => {
+    const moreItems = getMoreMenuItems();
+    
     if (user?.role === 'admin') {
-      return [
+      const baseItems = [
         { id: 'dashboard', label: 'Dashboard', icon: Home },
         { id: 'gym-management', label: 'Gyms', icon: Building2 },
         { id: 'member-management', label: 'Members', icon: Users },
-        { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-        { id: 'more', label: 'More', icon: MoreHorizontal, isMore: true }
+        { id: 'analytics', label: 'Analytics', icon: BarChart3 }
       ];
+      
+      // If only one item in more menu, show it directly
+      if (moreItems.length === 1) {
+        return [...baseItems, moreItems[0]];
+      }
+      // Otherwise show More tab
+      return [...baseItems, { id: 'more', label: 'More', icon: MoreHorizontal, isMore: true }];
     }
 
     if (user?.role === 'owner') {
-      return [
+      const baseItems = [
         { id: 'dashboard', label: 'Dashboard', icon: Home },
         { id: 'my-gyms', label: 'My Gyms', icon: Building2 },
         { id: 'member-management', label: 'Members', icon: Users },
-        { id: 'analytics', label: 'Reports', icon: BarChart3 },
-        { id: 'more', label: 'More', icon: MoreHorizontal, isMore: true }
+        { id: 'analytics', label: 'Reports', icon: BarChart3 }
       ];
+      
+      // If only one item in more menu, show it directly
+      if (moreItems.length === 1) {
+        return [...baseItems, moreItems[0]];
+      }
+      // Otherwise show More tab
+      return [...baseItems, { id: 'more', label: 'More', icon: MoreHorizontal, isMore: true }];
     }
 
     // Regular User role - most common use case
-    return [
+    const baseItems = [
       { id: 'dashboard', label: 'Home', icon: Home },
-      { id: 'discover', label: 'Discover', icon: MapPin },
-      { id: 'qr-code', label: 'Check-in', icon: QrCode },
       { id: 'calendar', label: 'Classes', icon: Calendar },
-      { id: 'more', label: 'More', icon: MoreHorizontal, isMore: true }
+      { id: 'qr-code', label: 'Check-in', icon: QrCode },
+      { id: 'wallet', label: 'Wallet', icon: Wallet }
     ];
+    
+    // If only one item in more menu, show it directly
+    if (moreItems.length === 1) {
+      return [...baseItems, moreItems[0]];
+    }
+    // Otherwise show More tab
+    return [...baseItems, { id: 'more', label: 'More', icon: MoreHorizontal, isMore: true }];
   };
 
   // Define secondary menu items
   const getMoreMenuItems = () => {
     if (user?.role === 'admin') {
       return [
-        { id: 'help', label: 'Help & Support', icon: HelpCircle }
+        { id: 'help', label: 'Support', icon: HelpCircle }
       ];
     }
 
     if (user?.role === 'owner') {
       return [
-        { id: 'help', label: 'Help & Support', icon: HelpCircle }
+        { id: 'help', label: 'Support', icon: HelpCircle }
       ];
     }
 
     // Regular User
     return [
+      { id: 'discover', label: 'Discover', icon: MapPin },
       { id: 'my-subscriptions', label: 'Subscriptions', icon: Subscription },
-      { id: 'wallet', label: 'Wallet', icon: Wallet },
       { id: 'attendance', label: 'My Attendance', icon: BarChart3 },
-      { id: 'help', label: 'Help & Support', icon: HelpCircle }
+      { id: 'help', label: 'Support', icon: HelpCircle }
     ];
   };
 

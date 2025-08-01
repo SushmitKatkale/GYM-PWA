@@ -612,12 +612,6 @@ export function ProfileSettings({ activeSettingsTab = 'profile' }: ProfileSettin
 
   return (
     <div className="space-y-4 md:space-y-6 px-4 md:px-6 max-w-full mx-auto">
-      <div className="text-center">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Profile Settings</h1>
-        <p className="text-gray-600 mt-2 text-sm md:text-base">Manage your account settings and preferences</p>
-      </div>
-
-
       {/* Desktop Tab Navigation */}
       <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200">
         <div className="border-b border-gray-200">

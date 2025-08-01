@@ -95,13 +95,6 @@ export function HelpFaq() {
 
   return (
     <div className="space-y-8 px-4 md:px-8 max-w-full mx-auto">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">Help & FAQ</h1>
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-          Find answers to common questions and get the help you need
-        </p>
-      </div>
-
       {/* Search */}
       <div className="max-w-2xl mx-auto">
         <div className="relative">
