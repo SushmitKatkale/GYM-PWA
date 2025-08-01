@@ -1,11 +1,13 @@
-const CACHE_NAME = 'gympro-v1';
+const CACHE_NAME = 'gympro-v2';
 const urlsToCache = [
   '/',
   '/static/js/bundle.js',
   '/static/css/main.css',
   '/manifest.json',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png'
+  '/manifest.webmanifest',
+  '/icons/manifest-icon-192.maskable.png',
+  '/icons/manifest-icon-512.maskable.png',
+  '/icons/apple-icon-180.png'
 ];
 
 // Install event
@@ -54,8 +56,8 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('push', (event) => {
   const options = {
     body: event.data ? event.data.text() : 'New notification from FItEsperro',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/icon-72x72.png',
+    icon: '/icons/manifest-icon-192.maskable.png',
+    badge: '/icons/apple-icon-180.png',
     vibrate: [100, 50, 100],
     data: {
       dateOfArrival: Date.now(),
@@ -65,12 +67,12 @@ self.addEventListener('push', (event) => {
       {
         action: 'explore',
         title: 'Open App',
-        icon: '/icons/icon-192x192.png'
+        icon: '/icons/manifest-icon-192.maskable.png'
       },
       {
         action: 'close',
         title: 'Close',
-        icon: '/icons/icon-192x192.png'
+        icon: '/icons/manifest-icon-192.maskable.png'
       }
     ]
   };
