@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UserPlus, Mail, Lock, User, Phone, Building } from 'lucide-react';
-import { useAuth, UserRole } from '../../contexts/AuthContext';
+import { useAuthStore, UserRole } from '../../stores/authStore';
 
 interface RegisterFormProps {
   onToggleMode: () => void;
@@ -18,7 +18,14 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
   });
   const [error, setError] = useState('');
   
-  const { register, isLoading } = useAuth();
+  const { register, isLoading, error: authError, clearError } = useAuthStore();
+
+  React.useEffect(() => {
+    if (authError) {
+      setError(authError);
+      clearError();
+    }
+  }, [authError, clearError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,9 +43,7 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
 
     try {
       const success = await register(formData, formData.password);
-      if (!success) {
-        setError('Registration failed. Please try again.');
-      }
+      // Error handling is now done through the store
     } catch (err) {
       setError('Registration failed. Please try again.');
     }

@@ -1,9 +1,16 @@
 import React from 'react';
 import { Bell, Check, X, Clock, AlertCircle, CheckCircle, Info } from 'lucide-react';
-import { useApp } from '../../contexts/AppContext';
+import { useNotificationStore } from '../../stores/notificationStore';
+import { useAuthStore } from '../../stores/authStore';
 
 export function NotificationsPage() {
-  const { notifications, markNotificationRead } = useApp();
+  const { user } = useAuthStore();
+  const { getNotificationsForUser, getUnreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotificationStore();
+
+  if (!user) return null;
+
+  const notifications = getNotificationsForUser(user.id, user.role);
+  const unreadCount = getUnreadCount(user.id, user.role);
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -32,10 +39,13 @@ export function NotificationsPage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Notifications</h1>
           <p className="text-gray-600 mt-1">
-            {unreadNotifications.length} unread notifications
+            {unreadCount} unread notifications
           </p>
         </div>
-        <button className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-medium">
+        <button 
+          onClick={() => markAllAsRead(user.id)}
+          className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-medium"
+        >
           <Check className="w-4 h-4" />
           <span>Mark all as read</span>
         </button>
@@ -68,7 +78,7 @@ export function NotificationsPage() {
                         {new Date(notification.createdAt).toLocaleString()}
                       </div>
                       <button
-                        onClick={() => markNotificationRead(notification.id)}
+                        onClick={() => markAsRead(notification.id)}
                         className="text-xs text-blue-600 hover:text-blue-700 font-medium"
                       >
                         Mark as read

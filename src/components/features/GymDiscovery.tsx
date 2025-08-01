@@ -1,13 +1,46 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Star, Filter, Navigation, Clock, DollarSign } from 'lucide-react';
-import { useApp } from '../../contexts/AppContext';
+import { MapPin, Star, Filter, Navigation, Clock, DollarSign, Map as MapIcon } from 'lucide-react';
+import { useGymStore } from '../../stores/gymStore';
+import { useAuthStore } from '../../stores/authStore';
+import { Map } from '../common/Map';
 
 export function GymDiscovery() {
-  const { gyms, currentLocation, getCurrentLocation, isLoadingLocation } = useApp();
+  const { gyms, selectedGym, setSelectedGym } = useGymStore();
+  const { user } = useAuthStore();
   const [filter, setFilter] = useState('all');
   const [sortBy, setSortBy] = useState('distance');
-  const [selectedGym, setSelectedGym] = useState<string | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
+  const getCurrentLocation = async () => {
+    setIsLoadingLocation(true);
+    try {
+      if ('geolocation' in navigator) {
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject);
+        });
+        
+        setCurrentLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        });
+      }
+    } catch (error) {
+      console.error('Error getting location:', error);
+      // Fallback to NYC coordinates
+      setCurrentLocation({
+        lat: 40.7128,
+        lng: -74.0060
+      });
+    } finally {
+      setIsLoadingLocation(false);
+    }
+  };
+
+  useEffect(() => {
+    getCurrentLocation();
+  }, []);
   const calculateDistance = (gymLat: number, gymLng: number) => {
     if (!currentLocation) return 0;
     
@@ -49,14 +82,39 @@ export function GymDiscovery() {
           <h1 className="text-3xl font-bold text-gray-900">Discover Gyms</h1>
           <p className="text-gray-600 mt-1">Find the perfect gym near you</p>
         </div>
-        <button
-          onClick={getCurrentLocation}
-          disabled={isLoadingLocation}
-          className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
-        >
-          <Navigation className="w-4 h-4" />
-          <span>{isLoadingLocation ? 'Locating...' : 'Update Location'}</span>
-        </button>
+        <div className="flex items-center space-x-3">
+          <div className="flex bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                viewMode === 'list'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              List
+            </button>
+            <button
+              onClick={() => setViewMode('map')}
+              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                viewMode === 'map'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <MapIcon className="w-4 h-4 mr-1" />
+              Map
+            </button>
+          </div>
+          <button
+            onClick={getCurrentLocation}
+            disabled={isLoadingLocation}
+            className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
+          >
+            <Navigation className="w-4 h-4" />
+            <span>{isLoadingLocation ? 'Locating...' : 'Update Location'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -93,123 +151,132 @@ export function GymDiscovery() {
         </div>
       </div>
 
-      {/* Gym List */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {filteredAndSortedGyms.map((gym) => (
-          <div key={gym.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-            <div className="relative h-48">
-              <img
-                src={gym.image}
-                alt={gym.name}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute top-4 right-4 bg-white rounded-full px-3 py-1 flex items-center space-x-1">
-                <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                <span className="text-sm font-medium">{gym.rating}</span>
-              </div>
-            </div>
-            
-            <div className="p-6">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900">{gym.name}</h3>
-                  <div className="flex items-center text-gray-500 mt-1">
-                    <MapPin className="w-4 h-4 mr-1" />
-                    <span className="text-sm">{gym.address}</span>
-                  </div>
-                  {currentLocation && (
-                    <p className="text-sm text-green-600 mt-1">
-                      {gym.distance.toFixed(1)} km away
-                    </p>
-                  )}
+      {/* Content */}
+      {viewMode === 'map' ? (
+        <div className="h-[600px] bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <Map
+            gyms={filteredAndSortedGyms}
+            center={currentLocation ? [currentLocation.lat, currentLocation.lng] : [40.7128, -74.0060]}
+            zoom={12}
+            onGymSelect={setSelectedGym}
+            selectedGym={selectedGym}
+            showUserLocation={true}
+            userLocation={currentLocation ? [currentLocation.lat, currentLocation.lng] : null}
+          />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {filteredAndSortedGyms.map((gym) => (
+            <div key={gym.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+              <div className="relative h-48">
+                <img
+                  src={gym.image}
+                  alt={gym.name}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute top-4 right-4 bg-white rounded-full px-3 py-1 flex items-center space-x-1">
+                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                  <span className="text-sm font-medium">{gym.rating}</span>
                 </div>
               </div>
-
-              <p className="text-gray-600 text-sm mb-4">{gym.description}</p>
-
-              {/* Amenities */}
-              <div className="mb-4">
-                <div className="flex flex-wrap gap-2">
-                  {gym.amenities.slice(0, 3).map((amenity, index) => (
-                    <span
-                      key={index}
-                      className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full"
-                    >
-                      {amenity}
-                    </span>
-                  ))}
-                  {gym.amenities.length > 3 && (
-                    <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                      +{gym.amenities.length - 3} more
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Operating Hours & Price */}
-              <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
-                <div className="flex items-center space-x-1">
-                  <Clock className="w-4 h-4" />
-                  <span>{gym.operatingHours.open} - {gym.operatingHours.close}</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <DollarSign className="w-4 h-4" />
-                  <span>${gym.plans.monthly}/month</span>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex space-x-3">
-                <button
-                  onClick={() => setSelectedGym(selectedGym === gym.id ? null : gym.id)}
-                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors"
-                >
-                  {selectedGym === gym.id ? 'Hide Details' : 'View Details'}
-                </button>
-                <button className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
-                  Subscribe
-                </button>
-              </div>
-
-              {/* Expanded Details */}
-              {selectedGym === gym.id && (
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <h4 className="font-medium text-gray-900 mb-3">All Amenities</h4>
-                  <div className="grid grid-cols-2 gap-2 mb-4">
-                    {gym.amenities.map((amenity, index) => (
-                      <div key={index} className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span className="text-sm text-gray-600">{amenity}</span>
-                      </div>
+              
+              <div className="p-6">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-900">{gym.name}</h3>
+                    <div className="flex items-center text-gray-500 mt-1">
+                      <MapPin className="w-4 h-4 mr-1" />
+                      <span className="text-sm">{gym.address}</span>
+                    </div>
+                    {currentLocation && (
+                      <p className="text-sm text-green-600 mt-1">
+                        {gym.distance.toFixed(1)} km away
+                      </p>
+                    )}
+                {/* Amenities */}
+                <div className="mb-4">
+                  <div className="flex flex-wrap gap-2">
+                    {gym.amenities.slice(0, 3).map((amenity, index) => (
+                      <span
+                        key={index}
+                        className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full"
+                      >
+                        {amenity}
+                      </span>
                     ))}
-                  </div>
-                  
-                  <h4 className="font-medium text-gray-900 mb-3">Pricing Plans</h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="text-center p-3 bg-gray-50 rounded-lg">
-                      <p className="text-sm text-gray-600">Daily</p>
-                      <p className="text-lg font-semibold text-gray-900">${gym.plans.daily}</p>
-                    </div>
-                    <div className="text-center p-3 bg-gray-50 rounded-lg">
-                      <p className="text-sm text-gray-600">Weekly</p>
-                      <p className="text-lg font-semibold text-gray-900">${gym.plans.weekly}</p>
-                    </div>
-                    <div className="text-center p-3 bg-green-50 rounded-lg">
-                      <p className="text-sm text-green-600">Monthly</p>
-                      <p className="text-lg font-semibold text-green-700">${gym.plans.monthly}</p>
-                    </div>
-                    <div className="text-center p-3 bg-blue-50 rounded-lg">
-                      <p className="text-sm text-blue-600">Yearly</p>
-                      <p className="text-lg font-semibold text-blue-700">${gym.plans.yearly}</p>
-                    </div>
+                    {gym.amenities.length > 3 && (
+                      <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                        +{gym.amenities.length - 3} more
+                      </span>
+                    )}
                   </div>
                 </div>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
+                  </div>
+                {/* Operating Hours & Price */}
+                <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
+                  <div className="flex items-center space-x-1">
+                    <Clock className="w-4 h-4" />
+                    <span>{gym.operatingHours.open} - {gym.operatingHours.close}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <DollarSign className="w-4 h-4" />
+                    <span>${gym.plans.monthly}/month</span>
+                  </div>
+                </div>
+                </div>
+                {/* Actions */}
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => setSelectedGym(selectedGym?.id === gym.id ? null : gym)}
+                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors"
+                  >
+                    {selectedGym?.id === gym.id ? 'Hide Details' : 'View Details'}
+                  </button>
+                  <button className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                    Subscribe
+                  </button>
+                </div>
 
+                {/* Expanded Details */}
+                {selectedGym?.id === gym.id && (
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <h4 className="font-medium text-gray-900 mb-3">All Amenities</h4>
+                    <div className="grid grid-cols-2 gap-2 mb-4">
+                      {gym.amenities.map((amenity, index) => (
+                        <div key={index} className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span className="text-sm text-gray-600">{amenity}</span>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <h4 className="font-medium text-gray-900 mb-3">Pricing Plans</h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="text-center p-3 bg-gray-50 rounded-lg">
+                        <p className="text-sm text-gray-600">Daily</p>
+                        <p className="text-lg font-semibold text-gray-900">${gym.plans.daily}</p>
+                      </div>
+                      <div className="text-center p-3 bg-gray-50 rounded-lg">
+                        <p className="text-sm text-gray-600">Weekly</p>
+                        <p className="text-lg font-semibold text-gray-900">${gym.plans.weekly}</p>
+                      </div>
+                      <div className="text-center p-3 bg-green-50 rounded-lg">
+                        <p className="text-sm text-green-600">Monthly</p>
+                        <p className="text-lg font-semibold text-green-700">${gym.plans.monthly}</p>
+                      </div>
+                      <div className="text-center p-3 bg-blue-50 rounded-lg">
+                        <p className="text-sm text-blue-600">Yearly</p>
+                        <p className="text-lg font-semibold text-blue-700">${gym.plans.yearly}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+                <p className="text-gray-600 text-sm mb-4">{gym.description}</p>
       {filteredAndSortedGyms.length === 0 && (
         <div className="text-center py-12">
           <MapPin className="w-16 h-16 text-gray-300 mx-auto mb-4" />

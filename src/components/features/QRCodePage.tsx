@@ -1,21 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import { QrCode, Scan, Clock, MapPin, Calendar } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
-import { useApp } from '../../contexts/AppContext';
+import { useAuthStore } from '../../stores/authStore';
+import { useAttendanceStore } from '../../stores/attendanceStore';
+import { useGymStore } from '../../stores/gymStore';
 
 export function QRCodePage() {
-  const { user } = useAuth();
-  const { addAttendance, updateAttendance, attendance } = useApp();
-  const [activeSession, setActiveSession] = useState<string | null>(null);
+  const { user } = useAuthStore();
+  const { checkIn, checkOut, getUserAttendance, getActiveSession, isLoading, error } = useAttendanceStore();
+  const { gyms, updateGymOccupancy } = useGymStore();
   const [qrCode, setQrCode] = useState('');
   const [manualCode, setManualCode] = useState('');
   const [showScanner, setShowScanner] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
 
-  // Check for active session
+  const activeSession = user ? getActiveSession(user.id) : null;
+  const userAttendance = user ? getUserAttendance(user.id) : [];
+
+  // Get current location
   useEffect(() => {
-    const active = attendance.find(a => a.userId === user?.id && !a.checkOut);
-    setActiveSession(active?.id || null);
-  }, [attendance, user?.id]);
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCurrentLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+        }
+      );
+    }
+  }, []);
 
   // Generate dynamic QR code
   useEffect(() => {
@@ -32,42 +48,41 @@ export function QRCodePage() {
     return () => clearInterval(interval);
   }, [user?.id]);
 
-  const handleCheckIn = (gymId: string = 'gym1') => {
-    if (user) {
-      addAttendance({
-        userId: user.id,
-        gymId,
-        checkIn: new Date().toISOString(),
-        date: new Date().toISOString().split('T')[0]
-      });
-    }
-  };
-
-  const handleCheckOut = () => {
-    if (activeSession) {
-      const checkOutTime = new Date().toISOString();
-      const session = attendance.find(a => a.id === activeSession);
-      if (session) {
-        const duration = (new Date(checkOutTime).getTime() - new Date(session.checkIn).getTime()) / 1000;
-        updateAttendance(activeSession, {
-          checkOut: checkOutTime,
-          duration
-        });
-        setActiveSession(null);
+  const handleCheckIn = async (gymId: string = 'gym1') => {
+    if (user && !activeSession) {
+      const success = await checkIn(user.id, gymId, 'manual', currentLocation || undefined, qrCode);
+      if (success) {
+        updateGymOccupancy(gymId, 1);
       }
     }
   };
 
-  const handleManualEntry = () => {
+  const handleCheckOut = async () => {
+    if (activeSession) {
+      const success = await checkOut(activeSession.id);
+      if (success) {
+        updateGymOccupancy(activeSession.gymId, -1);
+      }
+    }
+  };
+
+  const handleManualEntry = async () => {
     if (manualCode.length === 6) {
       if (activeSession) {
-        handleCheckOut();
+        await handleCheckOut();
       } else {
-        handleCheckIn();
+        await handleCheckIn();
       }
       setManualCode('');
     }
   };
+
+  const getCurrentGym = () => {
+    if (!activeSession) return null;
+    return gyms.find(gym => gym.id === activeSession.gymId);
+  };
+
+  const currentGym = getCurrentGym();
 
   return (
     <div className="space-y-6">
@@ -77,6 +92,12 @@ export function QRCodePage() {
           {activeSession ? 'Currently checked in' : 'Scan or enter code to check in'}
         </p>
       </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          {error}
+        </div>
+      )}
 
       {/* Status Card */}
       <div className={`rounded-xl p-6 text-white ${
@@ -98,11 +119,11 @@ export function QRCodePage() {
               <>
                 <div className="flex items-center text-sm opacity-90 mb-1">
                   <Clock className="w-4 h-4 mr-1" />
-                  <span>Since {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  <span>Since {new Date(activeSession.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
                 <div className="flex items-center text-sm opacity-90">
                   <MapPin className="w-4 h-4 mr-1" />
-                  <span>FitZone Downtown</span>
+                  <span>{currentGym?.name || 'Unknown Gym'}</span>
                 </div>
               </>
             )}
@@ -136,28 +157,31 @@ export function QRCodePage() {
         {!activeSession ? (
           <>
             <button
+              disabled={isLoading}
               onClick={() => setShowScanner(!showScanner)}
-              className="flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-4 px-6 rounded-xl transition-colors"
+              className="flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-4 px-6 rounded-xl transition-colors disabled:opacity-50"
             >
               <Scan className="w-5 h-5" />
               <span>Scan Gym QR Code</span>
             </button>
             <button
+              disabled={isLoading}
               onClick={() => handleCheckIn()}
-              className="flex items-center justify-center space-x-2 bg-green-600 hover:bg-green-700 text-white font-medium py-4 px-6 rounded-xl transition-colors"
+              className="flex items-center justify-center space-x-2 bg-green-600 hover:bg-green-700 text-white font-medium py-4 px-6 rounded-xl transition-colors disabled:opacity-50"
             >
               <QrCode className="w-5 h-5" />
-              <span>Quick Check In</span>
+              <span>{isLoading ? 'Checking In...' : 'Quick Check In'}</span>
             </button>
           </>
         ) : (
           <div className="md:col-span-2">
             <button
+              disabled={isLoading}
               onClick={handleCheckOut}
-              className="w-full flex items-center justify-center space-x-2 bg-red-600 hover:bg-red-700 text-white font-medium py-4 px-6 rounded-xl transition-colors"
+              className="w-full flex items-center justify-center space-x-2 bg-red-600 hover:bg-red-700 text-white font-medium py-4 px-6 rounded-xl transition-colors disabled:opacity-50"
             >
               <Clock className="w-5 h-5" />
-              <span>Check Out</span>
+              <span>{isLoading ? 'Checking Out...' : 'Check Out'}</span>
             </button>
           </div>
         )}
@@ -192,8 +216,7 @@ export function QRCodePage() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Check-ins</h3>
         <div className="space-y-3">
-          {attendance
-            .filter(a => a.userId === user?.id)
+          {userAttendance
             .slice(0, 5)
             .map((session) => (
             <div key={session.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">

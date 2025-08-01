@@ -1,12 +1,13 @@
 import React from 'react';
 import { MapPin, Calendar, Clock, CreditCard, Activity, Target } from 'lucide-react';
-import { useAuth, useApp } from '../../contexts';
+import { useAuthStore } from '../../stores/authStore';
+import { useAttendanceStore } from '../../stores/attendanceStore';
 
 export function UserDashboard() {
-  const { user } = useAuth();
-  const { attendance } = useApp();
+  const { user } = useAuthStore();
+  const { getUserAttendance } = useAttendanceStore();
 
-  const userAttendance = attendance.filter(a => a.userId === user?.id);
+  const userAttendance = user ? getUserAttendance(user.id) : [];
   const thisWeekAttendance = userAttendance.filter(a => {
     const attendanceDate = new Date(a.date);
     const weekAgo = new Date();

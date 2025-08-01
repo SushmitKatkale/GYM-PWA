@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { LogIn, Smartphone, Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuthStore } from '../../stores/authStore';
 
 interface LoginFormProps {
   onToggleMode: () => void;
@@ -16,7 +16,14 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   
-  const { login, loginWithCode, isLoading } = useAuth();
+  const { login, loginWithCode, isLoading, error: authError, clearError } = useAuthStore();
+
+  React.useEffect(() => {
+    if (authError) {
+      setError(authError);
+      clearError();
+    }
+  }, [authError, clearError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,9 +38,7 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
         success = await loginWithCode(formData.code);
       }
 
-      if (!success) {
-        setError(loginMode === 'email' ? 'Invalid email or password' : 'Invalid access code');
-      }
+      // Error handling is now done through the store
     } catch (err) {
       setError('Login failed. Please try again.');
     }

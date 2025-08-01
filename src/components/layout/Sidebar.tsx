@@ -3,7 +3,7 @@ import {
   Home, Users, Building, Calendar, QrCode, CreditCard, 
   BarChart3, Settings, MapPin, Bell, Clock
 } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuthStore } from '../../stores/authStore';
 
 interface SidebarProps {
   activeView: string;
@@ -12,7 +12,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ activeView, onViewChange, isOpen }: SidebarProps) {
-  const { user } = useAuth();
+  const { user } = useAuthStore();
 
   const getMenuItems = () => {
     const commonItems = [

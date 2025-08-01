@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Bell, Menu, X, LogOut, User } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
-import { useApp } from '../../contexts/AppContext';
+import { useAuthStore } from '../../stores/authStore';
+import { useNotificationStore } from '../../stores/notificationStore';
 
 interface NavbarProps {
   onMenuToggle: () => void;
@@ -9,11 +9,11 @@ interface NavbarProps {
 }
 
 export function Navbar({ onMenuToggle, isMobileMenuOpen }: NavbarProps) {
-  const { user, logout } = useAuth();
-  const { notifications } = useApp();
+  const { user, logout } = useAuthStore();
+  const { getUnreadCount } = useNotificationStore();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = user ? getUnreadCount(user.id, user.role) : 0;
 
   const getRoleColor = () => {
     switch (user?.role) {

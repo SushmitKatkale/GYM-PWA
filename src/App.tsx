@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuthStore } from './stores/authStore';
 import { LoginForm } from './components/auth/LoginForm';
 import { RegisterForm } from './components/auth/RegisterForm';
 import { Navbar } from './components/layout/Navbar';
@@ -9,11 +10,10 @@ import { UserDashboard } from './components/dashboards/UserDashboard';
 import { GymDiscovery } from './components/features/GymDiscovery';
 import { QRCodePage } from './components/features/QRCodePage';
 import { NotificationsPage } from './components/features/NotificationsPage';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { AppProvider } from './contexts/AppContext';
+import { CalendarBooking } from './components/features/CalendarBooking';
 
-function AppContent() {
-  const { user } = useAuth();
+function App() {
+  const { user } = useAuthStore();
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [activeView, setActiveView] = useState('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -51,6 +51,8 @@ function AppContent() {
         return <QRCodePage />;
       case 'notifications':
         return <NotificationsPage />;
+      case 'calendar':
+        return <CalendarBooking />;
       case 'gyms':
       case 'my-gyms':
         return (
@@ -71,13 +73,6 @@ function AppContent() {
         return (
           <div className="text-center py-12">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">My Subscriptions</h2>
-            <p className="text-gray-600">This feature is coming soon!</p>
-          </div>
-        );
-      case 'calendar':
-        return (
-          <div className="text-center py-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Calendar & Scheduling</h2>
             <p className="text-gray-600">This feature is coming soon!</p>
           </div>
         );
@@ -139,16 +134,6 @@ function AppContent() {
         </main>
       </div>
     </div>
-  );
-}
-
-function App() {
-  return (
-    <AuthProvider>
-      <AppProvider>
-        <AppContent />
-      </AppProvider>
-    </AuthProvider>
   );
 }
 
