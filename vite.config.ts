@@ -10,8 +10,8 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: 'GymPro - Fitness Management',
-        short_name: 'GymPro',
+        name: 'FItEsperro - Fitness Management',
+        short_name: 'FItEsperro',
         description: 'Complete gym management and fitness tracking application',
         start_url: '/',
         display: 'standalone',

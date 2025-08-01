@@ -45,45 +45,5 @@
       "type": "image/png",
       "purpose": "any"
     }
-  ],
-  "shortcuts": [
-    {
-      "name": "QR Check-in",
-      "short_name": "QR Scan",
-      "description": "Quick QR code check-in",
-      "url": "/qr-code",
-      "icons": [
-        {
-          "src": "/icons/qr-icon.png",
-          "sizes": "96x96"
-        }
-      ]
-    },
-    {
-      "name": "My Schedule",
-      "short_name": "Schedule",
-      "description": "View your workout schedule",
-      "url": "/calendar",
-      "icons": [
-        {
-          "src": "/icons/calendar-icon.png",
-          "sizes": "96x96"
-        }
-      ]
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/screenshots/home-desktop.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide"
-    },
-    {
-      "src": "/screenshots/home-mobile.png",
-      "sizes": "540x720",
-      "type": "image/png",
-      "form_factor": "narrow"
-    }
   ]
 }
