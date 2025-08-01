@@ -23,13 +23,13 @@ export default defineConfig({
         categories: ['fitness', 'health', 'lifestyle'],
         icons: [
           {
-            src: '/icons/manifest-icon-192.maskable.png',
+            src: 'https://www.pwabuilder.com/assets/icons/icon_512.png',
             sizes: '192x192',
             type: 'image/png',
             purpose: 'any maskable'
           },
           {
-            src: '/icons/manifest-icon-512.maskable.png',
+            src: 'https://www.pwabuilder.com/assets/icons/icon_512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'
