@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   Home, Users, Building, Calendar, QrCode, CreditCard, 
-  BarChart3, Settings, MapPin, Bell, Clock, Wallet
+  BarChart3, Settings, MapPin, Bell, Clock, Wallet, UserCheck, Package
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 
@@ -25,7 +25,9 @@ export function Sidebar({ activeView, onViewChange, isOpen }: SidebarProps) {
       case 'admin':
         return [
           { id: 'dashboard', label: 'Dashboard', icon: Home },
-          { id: 'gyms', label: 'Manage Gyms', icon: Building },
+          { id: 'gym-management', label: 'Gym Management', icon: Building },
+          { id: 'subscription-management', label: 'Subscription Management', icon: Package },
+          { id: 'owner-management', label: 'Owner Management', icon: UserCheck },
           { id: 'users', label: 'All Users', icon: Users },
           { id: 'analytics', label: 'Analytics', icon: BarChart3 },
           ...commonItems.slice(1)

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { LogIn, Smartphone, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
+import { authService } from '../../services/authService';
 
 interface LoginFormProps {
   onToggleMode: () => void;
@@ -29,6 +30,19 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
     e.preventDefault();
     setError('');
 
+    // Basic required field validation only
+    if (loginMode === 'email') {
+      if (!formData.email.trim() || !formData.password.trim()) {
+        setError('Please fill in all required fields');
+        return;
+      }
+    } else {
+      if (!formData.code.trim()) {
+        setError('Access code is required');
+        return;
+      }
+    }
+
     try {
       let success = false;
       
@@ -39,8 +53,12 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
       }
 
       // Error handling is now done through the store
-    } catch (err) {
-      setError('Login failed. Please try again.');
+      if (!success && !authError) {
+        setError('Login failed. Please check your credentials and try again.');
+      }
+    } catch (err: any) {
+      console.error('Login error:', err);
+      setError(err?.message || 'Login failed. Please try again.');
     }
   };
 

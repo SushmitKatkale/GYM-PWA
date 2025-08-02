@@ -1,320 +1,516 @@
-import React, { useState } from 'react';
-import { Plus, Edit, Trash2, MapPin, Star, Users, Clock, Search, Filter } from 'lucide-react';
-import { useAuthStore } from '../../stores/authStore';
-import { useGymStore } from '../../stores/gymStore';
-import { useApp } from '../../contexts/AppContext';
+import React, { useEffect, useState } from 'react';
+import { buildApiUrl, API_CONFIG } from '../../config/api';
+import { Plus, Edit, Trash2, MapPin, Mail, X } from 'lucide-react';
 
-export function GymManagement() {
-  const { user } = useAuthStore();
-  const { gyms } = useGymStore();
-  const { addNotification } = useApp();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [selectedGym, setSelectedGym] = useState<any>(null);
-  const [showEditModal, setShowEditModal] = useState(false);
-
-  // Filter gyms based on user role
-  const filteredGyms = gyms.filter(gym => {
-    const matchesSearch = gym.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         gym.address.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    if (user?.role === 'owner') {
-      return matchesSearch && gym.ownerId === user.id;
-    }
-    return matchesSearch;
-  });
-
-  const [newGym, setNewGym] = useState({
-    name: '',
-    address: '',
-    description: '',
-    latitude: 0,
-    longitude: 0,
-    capacity: 100,
-    amenities: [] as string[],
-    operatingHours: { open: '06:00', close: '22:00' },
-    plans: { daily: 15, weekly: 75, monthly: 59.99, yearly: 599 }
-  });
-
-  const handleAddGym = () => {
-    // Simulate adding gym
-    addNotification({
-      title: 'Gym Added',
-      message: `${newGym.name} has been successfully added`,
-      type: 'success'
-    });
-    setShowAddModal(false);
-    setNewGym({
-      name: '',
-      address: '',
-      description: '',
-      latitude: 0,
-      longitude: 0,
-      capacity: 100,
-      amenities: [],
-      operatingHours: { open: '06:00', close: '22:00' },
-      plans: { daily: 15, weekly: 75, monthly: 59.99, yearly: 599 }
-    });
+interface Gym {
+  id: string;
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  rating: number;
+  image: string;
+  description: string;
+  amenities: string[];
+  operatingHours: {
+    open: string;
+    close: string;
   };
-
-  const handleEditGym = (gym: any) => {
-    setSelectedGym(gym);
-    setShowEditModal(true);
+  plans: {
+    daily: number;
+    weekly: number;
+    monthly: number;
+    yearly: number;
   };
-
-  const handleDeleteGym = (gymId: string, gymName: string) => {
-    if (window.confirm(`Are you sure you want to delete ${gymName}?`)) {
-      addNotification({
-        title: 'Gym Deleted',
-        message: `${gymName} has been deleted`,
-        type: 'info'
-      });
-    }
-  };
-
-  const availableAmenities = [
-    'Cardio Equipment', 'Weight Training', 'Group Classes', 'Personal Training',
-    'Sauna', 'Swimming Pool', 'Yoga Studio', 'CrossFit Box', 'Boxing Ring',
-    'Basketball Court', 'Parking', 'Locker Rooms', 'Showers', 'Nutrition Bar'
-  ];
-
-  return (
-    <div className="space-y-6 px-4 md:px-8 max-w-full mx-auto">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            {user?.role === 'admin' ? 'Manage Gyms' : 'My Gyms'}
-          </h1>
-          <p className="text-gray-600 mt-2">
-            {user?.role === 'admin' 
-              ? 'Manage all gyms in the system' 
-              : 'Manage your gym locations and settings'
-            }
-          </p>
-        </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add New Gym</span>
-        </button>
-      </div>
-
-      {/* Search and Filter */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center space-x-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search gyms by name or address..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-          <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-            <Filter className="w-4 h-4" />
-            <span>Filter</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Gyms Grid */}
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
-        {filteredGyms.map((gym) => (
-          <div key={gym.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <img
-              src={gym.image}
-              alt={gym.name}
-              className="w-full h-48 object-cover"
-            />
-            <div className="p-6">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">{gym.name}</h3>
-                  <div className="flex items-center text-sm text-gray-500 mt-1">
-                    <MapPin className="w-4 h-4 mr-1" />
-                    {gym.address}
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                  <span className="text-sm text-gray-600 ml-1">{gym.rating}</span>
-                </div>
-              </div>
-
-              <p className="text-gray-600 text-sm mb-4 line-clamp-2">{gym.description}</p>
-
-              <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                <div className="flex items-center">
-                  <Users className="w-4 h-4 mr-1" />
-                  <span>{gym.currentOccupancy}/{gym.capacity}</span>
-                </div>
-                <div className="flex items-center">
-                  <Clock className="w-4 h-4 mr-1" />
-                  <span>{gym.operatingHours.open} - {gym.operatingHours.close}</span>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => handleEditGym(gym)}
-                  className="flex-1 flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded-lg transition-colors"
-                >
-                  <Edit className="w-4 h-4" />
-                  <span>Edit</span>
-                </button>
-                <button
-                  onClick={() => handleDeleteGym(gym.id, gym.name)}
-                  className="flex items-center justify-center bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded-lg transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {filteredGyms.length === 0 && (
-        <div className="text-center py-12">
-          <div className="text-gray-400 mb-4">
-            <MapPin className="w-16 h-16 mx-auto" />
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No gyms found</h3>
-          <p className="text-gray-500">
-            {searchTerm ? 'No gyms match your search criteria.' : 'Get started by adding your first gym.'}
-          </p>
-        </div>
-      )}
-
-      {/* Add Gym Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-xl font-semibold text-gray-900">Add New Gym</h3>
-            </div>
-            
-            <div className="p-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Gym Name *</label>
-                  <input
-                    type="text"
-                    value={newGym.name}
-                    onChange={(e) => setNewGym(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter gym name"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Capacity</label>
-                  <input
-                    type="number"
-                    value={newGym.capacity}
-                    onChange={(e) => setNewGym(prev => ({ ...prev, capacity: parseInt(e.target.value) }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Address *</label>
-                <input
-                  type="text"
-                  value={newGym.address}
-                  onChange={(e) => setNewGym(prev => ({ ...prev, address: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter full address"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                <textarea
-                  value={newGym.description}
-                  onChange={(e) => setNewGym(prev => ({ ...prev, description: e.target.value }))}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Describe your gym..."
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Opening Time</label>
-                  <input
-                    type="time"
-                    value={newGym.operatingHours.open}
-                    onChange={(e) => setNewGym(prev => ({ 
-                      ...prev, 
-                      operatingHours: { ...prev.operatingHours, open: e.target.value }
-                    }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Closing Time</label>
-                  <input
-                    type="time"
-                    value={newGym.operatingHours.close}
-                    onChange={(e) => setNewGym(prev => ({ 
-                      ...prev, 
-                      operatingHours: { ...prev.operatingHours, close: e.target.value }
-                    }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Amenities</label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-40 overflow-y-auto">
-                  {availableAmenities.map((amenity) => (
-                    <label key={amenity} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={newGym.amenities.includes(amenity)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setNewGym(prev => ({ ...prev, amenities: [...prev.amenities, amenity] }));
-                          } else {
-                            setNewGym(prev => ({ 
-                              ...prev, 
-                              amenities: prev.amenities.filter(a => a !== amenity) 
-                            }));
-                          }
-                        }}
-                        className="mr-2 text-blue-600 focus:ring-blue-500"
-                      />
-                      <span className="text-sm text-gray-700">{amenity}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="p-6 border-t border-gray-200 flex space-x-3">
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-lg transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAddGym}
-                disabled={!newGym.name || !newGym.address}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Add Gym
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  ownerId: string;
+  capacity: number;
+  currentOccupancy: number;
 }
+
+const GymManagement = () => {
+    const [gyms, setGyms] = useState<Gym[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [formData, setFormData] = useState({
+        id: '',
+        name: '',
+        address: '',
+        latitude: 0,
+        longitude: 0,
+        rating: 0,
+        image: '',
+        description: '',
+        amenities: '',
+        operatingHours: { open: '', close: '' },
+        plans: { daily: 0, weekly: 0, monthly: 0, yearly: 0 },
+        ownerId: '',
+        capacity: 0,
+        currentOccupancy: 0,
+    });
+    const [searchTerm, setSearchTerm] = useState('');
+
+    useEffect(() => {
+        fetchGyms();
+    }, []);
+
+    const fetchGyms = async () => {
+        setLoading(true);
+        try {
+            const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.GYMS));
+            const data = await response.json();
+            if (data.success) {
+                setGyms(data.data);
+            }
+        } catch (error) {
+            console.error('Error fetching gyms:', error);
+        }
+        setLoading(false);
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+    };
+
+    const openModal = (gym: Gym | null = null) => {
+        if (gym) {
+            setFormData({
+                id: gym.id,
+                name: gym.name,
+                address: gym.address,
+                latitude: gym.latitude,
+                longitude: gym.longitude,
+                rating: gym.rating,
+                image: gym.image,
+                description: gym.description,
+                amenities: gym.amenities.join(', '),
+                operatingHours: gym.operatingHours,
+                plans: gym.plans,
+                ownerId: gym.ownerId,
+                capacity: gym.capacity,
+                currentOccupancy: gym.currentOccupancy,
+            });
+        } else {
+            setFormData({
+                id: '',
+                name: '',
+                address: '',
+                latitude: 0,
+                longitude: 0,
+                rating: 0,
+                image: '',
+                description: '',
+                amenities: '',
+                operatingHours: { open: '', close: '' },
+                plans: { daily: 0, weekly: 0, monthly: 0, yearly: 0 },
+                ownerId: '',
+                capacity: 0,
+                currentOccupancy: 0,
+            });
+        }
+        setIsModalOpen(true);
+    };
+
+    const closeModal = () => {
+        setIsModalOpen(false);
+        setFormData({
+            id: '',
+            name: '',
+            address: '',
+            latitude: 0,
+            longitude: 0,
+            rating: 0,
+            image: '',
+            description: '',
+            amenities: '',
+            operatingHours: { open: '', close: '' },
+            plans: { daily: 0, weekly: 0, monthly: 0, yearly: 0 },
+            ownerId: '',
+            capacity: 0,
+            currentOccupancy: 0,
+        });
+    };
+
+    const handleSave = async () => {
+        const amenitiesArray = formData.amenities.split(',').map((amenity) => amenity.trim());
+        setLoading(true);
+        try {
+            if (formData.id) {
+                const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.GYMS}/${formData.id}`), {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        ...formData,
+                        amenities: amenitiesArray
+                    })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert('Gym updated successfully!');
+                } else {
+                    alert('Error updating gym: ' + data.message);
+                }
+            } else {
+                const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.GYMS), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        ...formData,
+                        amenities: amenitiesArray
+                    })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert('Gym created successfully!');
+                } else {
+                    alert('Error creating gym: ' + data.message);
+                }
+            }
+            fetchGyms();
+            closeModal();
+        } catch (error) {
+            console.error('Error saving gym:', error);
+            alert('Error saving gym');
+        }
+        setLoading(false);
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this gym?')) return;
+
+        setLoading(true);
+        try {
+            const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.GYMS}/${id}`), {
+                method: 'DELETE'
+            });
+            const data = await response.json();
+            if (data.success) {
+                alert('Gym deleted successfully!');
+                fetchGyms();
+            } else {
+                alert('Error deleting gym: ' + data.message);
+            }
+        } catch (error) {
+            console.error('Error deleting gym:', error);
+            alert('Error deleting gym');
+        }
+        setLoading(false);
+    };
+
+    const searchGyms = (query: string) => {
+        return gyms.filter(gym =>
+            gym.name.toLowerCase().includes(query.toLowerCase()) ||
+            gym.address.toLowerCase().includes(query.toLowerCase())
+        );
+    };
+
+    const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchTerm(e.target.value);
+    };
+
+    return (
+        <div className="space-y-6">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-900">Gym Management</h1>
+                    <p className="text-gray-600">Manage gym listings and their details</p>
+                </div>
+                <button
+                    onClick={() => openModal()}
+                    className="flex items-center justify-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                    <Plus className="w-5 h-5" />
+                    <span>Add Gym</span>
+                </button>
+            </div>
+
+            {/* Search */}
+            <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                    type="text"
+                    placeholder="Search gyms..."
+                    value={searchTerm}
+                    onChange={handleSearch}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+            </div>
+
+            {/* Gyms List - Mobile First Design */}
+            <div className="space-y-4">
+                {searchGyms(searchTerm).length === 0 ? (
+                    <div className="text-center py-12 bg-white rounded-lg shadow border">
+                        <MapPin className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">No gyms found</h3>
+                        <p className="text-gray-500">
+                            {searchTerm ? 'Try adjusting your search criteria' : 'Start by adding your first gym'}
+                        </p>
+                    </div>
+                ) : (
+                    searchGyms(searchTerm).map((gym) => (
+                        <div key={gym.id} className="bg-white rounded-lg shadow border p-4 hover:shadow-md transition-shadow">
+                            <div className="flex items-start justify-between">
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center space-x-3 mb-2">
+                                        <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+                                            {gym.name[0]}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="text-lg font-semibold text-gray-900 truncate">
+                                                {gym.name}
+                                            </h3>
+                                            <p className="text-sm text-gray-500">{gym.address}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1 mb-3">
+                                        <div className="flex items-center text-sm text-gray-600">
+                                            <Mail className="w-4 h-4 mr-2" />
+                                            <span className="truncate">{gym.email}</span>
+                                        </div>
+                                        <p className="text-xs text-gray-400">
+                                            Created: {new Date(gym.createdAt).toLocaleDateString()}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center space-x-2 ml-4">
+                                    <button
+                                        onClick={() => openModal(gym)}
+                                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                    >
+                                        <Edit className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(gym.id)}
+                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    ))
+                )}
+            </div>
+
+            {/* Add/Edit Gym Modal */}
+            {isModalOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between p-6 border-b">
+                            <h2 className="text-xl font-semibold">{formData.id ? 'Edit Gym' : 'Add Gym'}</h2>
+                            <button
+                                onClick={closeModal}
+                                className="p-2 hover:bg-gray-100 rounded-lg"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    value={formData.name}
+                                    onChange={handleInputChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                                <input
+                                    type="text"
+                                    name="address"
+                                    value={formData.address}
+                                    onChange={handleInputChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Latitude</label>
+                                <input
+                                    type="number"
+                                    name="latitude"
+                                    value={formData.latitude}
+                                    onChange={handleInputChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Longitude</label>
+                                <input
+                                    type="number"
+                                    name="longitude"
+                                    value={formData.longitude}
+                                    onChange={handleInputChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Rating</label>
+                                <input
+                                    type="number"
+                                    name="rating"
+                                    value={formData.rating}
+                                    onChange={handleInputChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    step="0.1"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Image URL</label>
+                                <input
+                                    type="text"
+                                    name="image"
+                                    value={formData.image}
+                                    onChange={handleInputChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                                <input
+                                    type="text"
+                                    name="description"
+                                    value={formData.description}
+                                    onChange={handleInputChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Amenities (Comma Separated)</label>
+                                <input
+                                    type="text"
+                                    name="amenities"
+                                    value={formData.amenities}
+                                    onChange={handleInputChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Operating Hours - Open</label>
+                                <input
+                                    type="time"
+                                    name="operatingHours.open"
+                                    value={formData.operatingHours.open}
+                                    onChange={handleInputChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Operating Hours - Close</label>
+                                <input
+                                    type="time"
+                                    name="operatingHours.close"
+                                    value={formData.operatingHours.close}
+                                    onChange={handleInputChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Daily Plan ($)</label>
+                                <input
+                                    type="number"
+                                    name="plans.daily"
+                                    value={formData.plans.daily}
+                                    onChange={handleInputChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Weekly Plan ($)</label>
+                                <input
+                                    type="number"
+                                    name="plans.weekly"
+                                    value={formData.plans.weekly}
+                                    onChange={handleInputChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Monthly Plan ($)</label>
+                                <input
+                                    type="number"
+                                    name="plans.monthly"
+                                    value={formData.plans.monthly}
+                                    onChange={handleInputChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Yearly Plan ($)</label>
+                                <input
+                                    type="number"
+                                    name="plans.yearly"
+                                    value={formData.plans.yearly}
+                                    onChange={handleInputChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Owner ID</label>
+                                <input
+                                    type="text"
+                                    name="ownerId"
+                                    value={formData.ownerId}
+                                    onChange={handleInputChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Capacity</label>
+                                <input
+                                    type="number"
+                                    name="capacity"
+                                    value={formData.capacity}
+                                    onChange={handleInputChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Current Occupancy</label>
+                                <input
+                                    type="number"
+                                    name="currentOccupancy"
+                                    value={formData.currentOccupancy}
+                                    onChange={handleInputChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex space-x-3 p-6 border-t">
+                            <button
+                                onClick={closeModal}
+                                className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSave}
+                                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            >
+                                {formData.id ? 'Update Gym' : 'Create Gym'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default GymManagement;
+

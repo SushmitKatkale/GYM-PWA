@@ -162,46 +162,46 @@ export function WalletPage() {
   };
 
   return (
-    <div className="space-y-4 pb-6 md:pb-0 px-1">
+    <div className="space-y-3 px-2 sm:px-4 pb-4">
       {/* Wallet Balance Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-5 sm:p-6 text-white shadow-lg">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-lg col-span-1 sm:col-span-2">
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <p className="text-blue-100 text-sm font-medium">Available Balance</p>
-              <p className="text-2xl sm:text-3xl lg:text-4xl font-bold mt-1">${walletData.balance.toFixed(2)}</p>
+              <p className="text-3xl sm:text-4xl lg:text-5xl font-bold mt-2">${walletData.balance.toFixed(2)}</p>
             </div>
-            <Wallet className="w-8 h-8 sm:w-10 sm:h-10 text-blue-200 flex-shrink-0" />
+            <Wallet className="w-10 h-10 sm:w-12 sm:h-12 text-blue-200 flex-shrink-0" />
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 sm:p-6">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-md border border-gray-100 p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div className="flex-1">
-              <p className="text-gray-600 text-sm font-medium">Pending Amount</p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">${walletData.pendingAmount.toFixed(2)}</p>
+              <p className="text-gray-600 text-xs sm:text-sm font-medium">Pending Amount</p>
+              <p className="text-lg sm:text-xl font-bold text-gray-900 mt-1">${walletData.pendingAmount.toFixed(2)}</p>
             </div>
-            <RefreshCw className="w-7 h-7 sm:w-8 sm:h-8 text-orange-500 flex-shrink-0" />
+            <RefreshCw className="w-6 h-6 sm:w-7 sm:h-7 text-orange-500 flex-shrink-0" />
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 sm:p-6">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-md border border-gray-100 p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div className="flex-1">
-              <p className="text-gray-600 text-sm font-medium">Total Spent</p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">${walletData.totalSpent.toFixed(2)}</p>
+              <p className="text-gray-600 text-xs sm:text-sm font-medium">Total Spent</p>
+              <p className="text-lg sm:text-xl font-bold text-gray-900 mt-1">${walletData.totalSpent.toFixed(2)}</p>
             </div>
-            <CreditCard className="w-7 h-7 sm:w-8 sm:h-8 text-red-500 flex-shrink-0" />
+            <CreditCard className="w-6 h-6 sm:w-7 sm:h-7 text-red-500 flex-shrink-0" />
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 sm:p-6">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-md border border-gray-100 p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div className="flex-1">
-              <p className="text-gray-600 text-sm font-medium">Cashback Earned</p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">${walletData.cashbackEarned.toFixed(2)}</p>
+              <p className="text-gray-600 text-xs sm:text-sm font-medium">Cashback Earned</p>
+              <p className="text-lg sm:text-xl font-bold text-gray-900 mt-1">${walletData.cashbackEarned.toFixed(2)}</p>
             </div>
-            <Gift className="w-7 h-7 sm:w-8 sm:h-8 text-green-500 flex-shrink-0" />
+            <Gift className="w-6 h-6 sm:w-7 sm:h-7 text-green-500 flex-shrink-0" />
           </div>
         </div>
       </div>
@@ -256,40 +256,48 @@ export function WalletPage() {
       </div>
 
       {/* Transaction History */}
-      <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 sm:p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-5">Recent Transactions</h2>
-        <div className="space-y-4">
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow-md border border-gray-100 p-4 sm:p-6">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-5">Recent Transactions</h2>
+        <div className="space-y-3 sm:space-y-4">
           {transactions.map((transaction) => (
-            <div key={transaction.id} className="flex items-center justify-between p-4 sm:p-5 border-2 border-gray-100 rounded-2xl hover:border-gray-200 transition-all">
-              <div className="flex items-center space-x-4 sm:space-x-5 flex-1 min-w-0">
-                <div className="p-3 bg-gray-100 rounded-xl flex-shrink-0">
+            <div key={transaction.id} className="flex items-center p-3 sm:p-4 border border-gray-100 rounded-xl sm:rounded-2xl hover:border-gray-200 transition-all active:scale-[0.98] sm:active:scale-100">
+              <div className="flex items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
+                <div className="p-2 sm:p-3 bg-gray-100 rounded-lg sm:rounded-xl flex-shrink-0">
                   {getTransactionIcon(transaction.type)}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-gray-900 text-sm sm:text-base truncate leading-tight">{transaction.description}</p>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {new Date(transaction.date).toLocaleDateString()}
+                  <p className="font-semibold text-gray-900 text-sm leading-tight truncate">{transaction.description}</p>
+                  <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                    {new Date(transaction.date).toLocaleDateString('en-US', { 
+                      month: 'short', 
+                      day: 'numeric',
+                      year: new Date(transaction.date).getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
+                    })}
                     <span className="hidden sm:inline"> • {transaction.reference}</span>
                   </p>
                 </div>
               </div>
-              <div className="flex items-center space-x-3 sm:space-x-4 flex-shrink-0">
+              <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
                 <div className="text-right">
-                  <p className={`font-bold text-base sm:text-lg ${getTransactionColor(transaction.type)}`}>
+                  <p className={`font-bold text-sm sm:text-base ${getTransactionColor(transaction.type)}`}>
                     {transaction.amount > 0 ? '+' : ''}${Math.abs(transaction.amount).toFixed(2)}
                   </p>
-                  <p className={`text-xs sm:text-sm font-medium ${
+                  <p className={`text-xs font-medium ${
                     transaction.status === 'completed' ? 'text-green-600' :
                     transaction.status === 'pending' ? 'text-yellow-600' : 'text-red-600'
                   }`}>
-                    {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
+                    {transaction.status === 'completed' ? '✓' : 
+                     transaction.status === 'pending' ? '⏳' : '✗'}
+                    <span className="hidden sm:inline ml-1">
+                      {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
+                    </span>
                   </p>
                 </div>
                 <button
                   onClick={() => downloadInvoice(transaction.id)}
-                  className="p-3 text-gray-400 hover:text-gray-600 transition-colors touch-target rounded-full hover:bg-gray-100 active:scale-95"
+                  className="p-2 sm:p-3 text-gray-400 hover:text-gray-600 transition-colors touch-target rounded-lg hover:bg-gray-100 active:scale-95"
                 >
-                  <Download className="w-5 h-5" />
+                  <Download className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               </div>
             </div>

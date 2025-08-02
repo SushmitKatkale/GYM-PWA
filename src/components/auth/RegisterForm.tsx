@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
-import { UserPlus, Mail, Lock, User, Phone, Building } from 'lucide-react';
-import { useAuthStore, UserRole } from '../../stores/authStore';
+import { UserPlus, Mail, Lock, User } from 'lucide-react';
+import { useAuthStore } from '../../stores/authStore';
 
 interface RegisterFormProps {
   onToggleMode: () => void;
+  onRegistrationSuccess: (email: string) => void;
 }
 
-export function RegisterForm({ onToggleMode }: RegisterFormProps) {
+export function RegisterForm({ onToggleMode, onRegistrationSuccess }: RegisterFormProps) {
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
+    username: '',
     email: '',
     password: '',
-    confirmPassword: '',
-    phone: '',
-    role: 'user' as UserRole,
-    gymId: ''
+    confirmPassword: ''
   });
   const [error, setError] = useState('');
   
@@ -30,22 +30,53 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    
+    console.log('Form submitted with data:', formData);
+
+    // Basic required field validation only
+    if (!formData.firstName.trim() || !formData.lastName.trim() || 
+        !formData.username.trim() || !formData.email.trim() || 
+        !formData.password.trim()) {
+      setError('Please fill in all required fields');
+      return;
+    }
 
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return;
-    }
-
     try {
-      const success = await register(formData, formData.password);
+      // Create registration data with required backend fields
+      const registrationData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        type: '1' as const // Always user type for public registration
+      };
+      
+      console.log('Calling register with data:', registrationData);
+      const success = await register(registrationData);
+      console.log('Register result:', success);
+      
+      if (success) {
+        console.log('Registration successful');
+        onRegistrationSuccess(formData.email);
+      } else {
+        console.log('Registration failed');
+        // If there's no error from the store yet, wait a bit for it to be set
+        setTimeout(() => {
+          if (!authError) {
+            setError('Registration failed. Please check your information and try again.');
+          }
+        }, 100);
+      }
       // Error handling is now done through the store
-    } catch (err) {
-      setError('Registration failed. Please try again.');
+    } catch (err: any) {
+      console.error('Registration error caught:', err);
+      setError(err?.message || 'Registration failed. Please try again.');
     }
   };
 
@@ -67,19 +98,54 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                First Name
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  required
+                  value={formData.firstName}
+                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                  placeholder="John"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Last Name
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  required
+                  value={formData.lastName}
+                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                  placeholder="Doe"
+                />
+              </div>
+            </div>
+          </div>
+          
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Full Name
+              Username
             </label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"
                 required
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                value={formData.username}
+                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                placeholder="John Doe"
+                placeholder="johndoe"
               />
             </div>
           </div>
@@ -98,39 +164,6 @@ export function RegisterForm({ onToggleMode }: RegisterFormProps) {
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                 placeholder="john@example.com"
               />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Phone Number
-            </label>
-            <div className="relative">
-              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                placeholder="+1234567890"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Account Type
-            </label>
-            <div className="relative">
-              <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <select
-                value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-              >
-                <option value="user">Gym User</option>
-                <option value="owner">Gym Owner</option>
-              </select>
             </div>
           </div>
 

@@ -29,11 +29,6 @@ export function UserDashboard() {
           <h1 className="text-3xl font-bold text-gray-900">Welcome back, {user?.name}!</h1>
           <p className="text-gray-600 mt-1">Ready for another great workout?</p>
         </div>
-        <div className="flex items-center space-x-4">
-          <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
-            Quick Check-in
-          </button>
-        </div>
       </div>
 
       {/* Stats Grid */}

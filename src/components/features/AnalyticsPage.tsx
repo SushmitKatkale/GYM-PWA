@@ -163,7 +163,7 @@ export function AnalyticsPage() {
   };
 
   return (
-    <div className="space-y-4 md:space-y-6 px-4 md:px-6 max-w-full mx-auto">
+    <div className="space-y-4 md:space-y-6 px-2 sm:px-4 md:px-6 max-w-full mx-auto mobile-safe-content">
       {/* Mobile-First Filters */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
         <div className="space-y-4">
@@ -271,47 +271,47 @@ export function AnalyticsPage() {
       </div>
 
       {/* Mobile-First KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
+        <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200 p-3 sm:p-4">
           <div className="text-center">
-            <div className="bg-green-100 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mx-auto mb-2">
-              <CreditCard className="w-5 h-5 md:w-6 md:h-6 text-green-600" />
+            <div className="bg-green-100 w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mx-auto mb-1 sm:mb-2">
+              <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-green-600" />
             </div>
             <p className="text-xs text-gray-600 mb-1">Revenue</p>
-            <p className="text-lg md:text-2xl font-bold text-gray-900">${(analyticsData.totalRevenue / 1000).toFixed(0)}k</p>
+            <p className="text-base sm:text-lg md:text-2xl font-bold text-gray-900">${(analyticsData.totalRevenue / 1000).toFixed(0)}k</p>
             <p className="text-xs text-green-600">+{analyticsData.monthlyGrowth}%</p>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+        <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200 p-3 sm:p-4">
           <div className="text-center">
-            <div className="bg-blue-100 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mx-auto mb-2">
-              <Users className="w-5 h-5 md:w-6 md:h-6 text-blue-600" />
+            <div className="bg-blue-100 w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mx-auto mb-1 sm:mb-2">
+              <Users className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-blue-600" />
             </div>
             <p className="text-xs text-gray-600 mb-1">Users</p>
-            <p className="text-lg md:text-2xl font-bold text-gray-900">{(analyticsData.totalUsers / 1000).toFixed(1)}k</p>
+            <p className="text-base sm:text-lg md:text-2xl font-bold text-gray-900">{(analyticsData.totalUsers / 1000).toFixed(1)}k</p>
             <p className="text-xs text-blue-600">Active</p>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+        <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200 p-3 sm:p-4">
           <div className="text-center">
-            <div className="bg-purple-100 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mx-auto mb-2">
-              <Calendar className="w-5 h-5 md:w-6 md:h-6 text-purple-600" />
+            <div className="bg-purple-100 w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mx-auto mb-1 sm:mb-2">
+              <Calendar className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-purple-600" />
             </div>
             <p className="text-xs text-gray-600 mb-1">Sessions</p>
-            <p className="text-lg md:text-2xl font-bold text-gray-900">{(analyticsData.totalSessions / 1000).toFixed(1)}k</p>
+            <p className="text-base sm:text-lg md:text-2xl font-bold text-gray-900">{(analyticsData.totalSessions / 1000).toFixed(1)}k</p>
             <p className="text-xs text-purple-600">Monthly</p>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+        <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200 p-3 sm:p-4">
           <div className="text-center">
-            <div className="bg-orange-100 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mx-auto mb-2">
-              <TrendingUp className="w-5 h-5 md:w-6 md:h-6 text-orange-600" />
+            <div className="bg-orange-100 w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mx-auto mb-1 sm:mb-2">
+              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-orange-600" />
             </div>
             <p className="text-xs text-gray-600 mb-1">Avg Time</p>
-            <p className="text-lg md:text-2xl font-bold text-gray-900">{analyticsData.averageSessionDuration}m</p>
+            <p className="text-base sm:text-lg md:text-2xl font-bold text-gray-900">{analyticsData.averageSessionDuration}m</p>
             <p className="text-xs text-orange-600">Duration</p>
           </div>
         </div>
@@ -320,32 +320,67 @@ export function AnalyticsPage() {
       {/* Mobile-First Charts */}
       <div className="space-y-4">
         {/* Main Trend Chart */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-          <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-4">📈 Weekly Trend</h3>
-          <div className="h-64 md:h-80">
+        <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200 p-3 sm:p-4">
+          <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">📈 Weekly Trend</h3>
+          <div className="h-48 sm:h-64 md:h-80 -mx-1 sm:mx-0">
             <Line data={attendanceChartData} options={{
               ...chartOptions,
               responsive: true,
               maintainAspectRatio: false,
+              interaction: {
+                intersect: false,
+                mode: 'index' as const,
+              },
               plugins: {
                 legend: {
                   display: false
+                },
+                tooltip: {
+                  backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                  titleColor: 'white',
+                  bodyColor: 'white',
+                  cornerRadius: 8,
+                  padding: 12,
+                  displayColors: false,
                 }
               },
               scales: {
                 x: {
+                  grid: {
+                    display: false
+                  },
                   ticks: {
                     font: {
-                      size: 12
-                    }
+                      size: 10
+                    },
+                    maxTicksLimit: 7,
+                    color: '#6B7280'
                   }
                 },
                 y: {
+                  grid: {
+                    color: '#F3F4F6'
+                  },
                   ticks: {
                     font: {
-                      size: 12
+                      size: 10
+                    },
+                    maxTicksLimit: 5,
+                    color: '#6B7280',
+                    callback: function(value) {
+                      return value + ' sessions';
                     }
                   }
+                }
+              },
+              elements: {
+                point: {
+                  radius: 4,
+                  hoverRadius: 6,
+                  hitRadius: 10
+                },
+                line: {
+                  borderWidth: 2
                 }
               }
             }} />

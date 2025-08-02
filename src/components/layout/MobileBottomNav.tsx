@@ -14,6 +14,7 @@ import {
   BarChart3,
   HelpCircle,
   MapPin,
+  UserCheck,
   CreditCard as Subscription
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
@@ -83,6 +84,7 @@ export function MobileBottomNav({ activeMenu, setActiveMenu }: MobileBottomNavPr
   const getMoreMenuItems = () => {
     if (user?.role === 'admin') {
       return [
+        { id: 'owner-management', label: 'Owner Mgmt', icon: UserCheck },
         { id: 'help', label: 'Support', icon: HelpCircle }
       ];
     }

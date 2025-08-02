@@ -69,7 +69,12 @@
   
   /* Mobile-specific improvements */
   .mobile-safe-content {
-    padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
+  
+  /* Compact mobile content */
+  .mobile-compact {
+    padding-bottom: calc(6rem + env(safe-area-inset-bottom));
   }
   
   /* Better button interactions on mobile */

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuthStore } from './stores/authStore';
 import { LoginForm } from './components/auth/LoginForm';
 import { RegisterForm } from './components/auth/RegisterForm';
+import { OTPVerification } from './components/auth/OTPVerification';
 import { Navbar } from './components/layout/Navbar';
 import { Sidebar } from './components/layout/Sidebar';
 import { AdminDashboard } from './components/dashboards/AdminDashboard';
@@ -17,14 +18,17 @@ import { WalletPage } from './components/features/WalletPage';
 import { ProfileSettings } from './components/features/ProfileSettings';
 import { AnalyticsPage } from './components/features/AnalyticsPage';
 import { MobileBottomNav } from './components/layout/MobileBottomNav';
-import { GymManagement } from './components/features/GymManagement';
+import GymManagement from './components/features/GymManagement';
 import { MemberManagement } from './components/features/MemberManagement';
+import { OwnerManagement } from './components/features/OwnerManagement';
+import { SubscriptionManagement } from './components/features/SubscriptionManagement';
 import { HelpFaq } from './components/features/HelpFaq';
 import { AlertTriangle, Bell, User, Shield, Settings, Lock, LogOut, X } from 'lucide-react';
 
 function App() {
   const { user, logout } = useAuthStore();
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const [authMode, setAuthMode] = useState<'login' | 'register' | 'otp'>('login');
+  const [pendingVerificationEmail, setPendingVerificationEmail] = useState('');
   const [activeView, setActiveView] = useState('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showMobileAlerts, setShowMobileAlerts] = useState(false);
@@ -83,6 +87,10 @@ function App() {
             return <GymManagement />;
           case 'member-management':
             return <MemberManagement />;
+          case 'owner-management':
+            return <OwnerManagement />;
+          case 'subscription-management':
+            return <SubscriptionManagement />;
           case 'help':
             return <HelpFaq />;
       default:
@@ -96,9 +104,36 @@ function App() {
   };
 
   if (!user) {
-    return authMode === 'login' 
-      ? <LoginForm onToggleMode={() => setAuthMode('register')} />
-      : <RegisterForm onToggleMode={() => setAuthMode('login')} />;
+    switch (authMode) {
+      case 'login':
+        return <LoginForm onToggleMode={() => setAuthMode('register')} />;
+      case 'register':
+        return (
+          <RegisterForm 
+            onToggleMode={() => setAuthMode('login')} 
+            onRegistrationSuccess={(email: string) => {
+              setPendingVerificationEmail(email);
+              setAuthMode('otp');
+            }}
+          />
+        );
+      case 'otp':
+        return (
+          <OTPVerification 
+            email={pendingVerificationEmail}
+            onVerified={() => {
+              setAuthMode('login');
+              setPendingVerificationEmail('');
+            }}
+            onBackToRegister={() => {
+              setAuthMode('register');
+              setPendingVerificationEmail('');
+            }}
+          />
+        );
+      default:
+        return <LoginForm onToggleMode={() => setAuthMode('register')} />;
+    }
   }
 
   return (
@@ -122,7 +157,7 @@ function App() {
         </div>
         
         {/* Main Content */}
-        <main className="flex-1 md:lg:ml-64 pb-20 md:pb-0">
+        <main className="flex-1 md:lg:ml-64 pb-24 md:pb-0">
           {/* Mobile Header */}
           <div className="md:hidden bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-40">
             <div className="flex items-center justify-between">
