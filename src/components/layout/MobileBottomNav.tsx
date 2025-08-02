@@ -169,7 +169,7 @@ export function MobileBottomNav({ activeMenu, setActiveMenu }: MobileBottomNavPr
       )}
 
       {/* Main Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-2 py-1 z-50">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-1 py-2 z-50 safe-area-bottom">
         <div className="flex items-center justify-around">
           {mainNavItems.map((item) => {
             const Icon = item.icon;
@@ -180,16 +180,16 @@ export function MobileBottomNav({ activeMenu, setActiveMenu }: MobileBottomNavPr
               <button
                 key={item.id}
                 onClick={() => handleNavClick(item)}
-                className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 min-w-0 flex-1 ${
+                className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 min-w-0 flex-1 touch-target ${
                   isActive || isMoreActive
                     ? 'text-blue-600 bg-blue-50'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50 active:bg-gray-100'
                 }`}
               >
                 <Icon className={`w-5 h-5 mb-1 ${
                   isActive || isMoreActive ? 'text-blue-600' : 'text-gray-500'
                 }`} />
-                <span className={`text-xs font-medium truncate ${
+                <span className={`text-xs font-medium truncate max-w-full ${
                   isActive || isMoreActive ? 'text-blue-600' : 'text-gray-500'
                 }`}>
                   {item.label}
@@ -198,9 +198,6 @@ export function MobileBottomNav({ activeMenu, setActiveMenu }: MobileBottomNavPr
             );
           })}
         </div>
-        
-        {/* Safe area padding for devices with home indicator */}
-        <div className="h-safe-area-inset-bottom" />
       </div>
     </>
   );

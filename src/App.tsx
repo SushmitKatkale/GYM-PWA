@@ -122,7 +122,7 @@ function App() {
         </div>
         
         {/* Main Content */}
-        <main className="flex-1 md:lg:ml-64 pb-16 md:pb-0">
+        <main className="flex-1 md:lg:ml-64 pb-20 md:pb-0">
           {/* Mobile Header */}
           <div className="md:hidden bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-40">
             <div className="flex items-center justify-between">

@@ -66,4 +66,26 @@
       font-size: 16px;
     }
   }
+  
+  /* Mobile-specific improvements */
+  .mobile-safe-content {
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+  }
+  
+  /* Better button interactions on mobile */
+  @media (hover: none) {
+    .touch-target:hover {
+      background-color: transparent;
+    }
+    
+    .touch-target:active {
+      transform: scale(0.98);
+      transition: transform 0.1s;
+    }
+  }
+  
+  /* Modal positioning for mobile */
+  .mobile-modal {
+    margin-bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
 }

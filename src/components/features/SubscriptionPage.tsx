@@ -162,27 +162,27 @@ export function SubscriptionPage() {
   return (
     <div className="space-y-6">
       {/* Current Subscriptions */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">My Subscriptions</h2>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">My Subscriptions</h2>
         <div className="space-y-4">
           {subscriptions.map((subscription) => {
             const daysLeft = getDaysUntilExpiry(subscription.endDate);
             return (
-              <div key={subscription.id} className="border border-gray-200 rounded-lg p-4">
+              <div key={subscription.id} className="border border-gray-200 rounded-lg p-3 sm:p-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className={`w-3 h-3 rounded-full ${
+                  <div className="flex items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
+                    <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
                       subscription.status === 'active' ? 'bg-green-500' : 
                       subscription.status === 'expired' ? 'bg-red-500' : 'bg-gray-500'
                     }`}></div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{subscription.gymName}</h3>
-                      <p className="text-sm text-gray-500 capitalize">{subscription.planType} Plan</p>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate">{subscription.gymName}</h3>
+                      <p className="text-xs sm:text-sm text-gray-500 capitalize">{subscription.planType} Plan</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-gray-900">${subscription.price}</p>
-                    <p className={`text-sm ${
+                  <div className="text-right flex-shrink-0">
+                    <p className="font-semibold text-gray-900 text-sm sm:text-base">${subscription.price}</p>
+                    <p className={`text-xs sm:text-sm ${
                       subscription.status === 'active' && daysLeft <= 3 ? 'text-red-600' :
                       subscription.status === 'active' ? 'text-green-600' : 'text-gray-500'
                     }`}>
@@ -201,11 +201,11 @@ export function SubscriptionPage() {
                       <Calendar className="w-4 h-4" />
                       <span>Auto-renewal: {subscription.autoRenewal ? 'On' : 'Off'}</span>
                     </div>
-                    <div className="flex space-x-2">
-                      <button className="text-sm text-blue-600 hover:text-blue-700">
+                    <div className="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-2">
+                      <button className="text-xs sm:text-sm text-blue-600 hover:text-blue-700">
                         Manage
                       </button>
-                      <button className="text-sm text-red-600 hover:text-red-700">
+                      <button className="text-xs sm:text-sm text-red-600 hover:text-red-700">
                         Cancel
                       </button>
                     </div>
@@ -218,9 +218,9 @@ export function SubscriptionPage() {
       </div>
 
       {/* Gym Selection */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Select a Gym</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Select a Gym</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {gyms.map((gym) => (
             <div
               key={gym.id}
@@ -234,10 +234,10 @@ export function SubscriptionPage() {
               <img
                 src={gym.image}
                 alt={gym.name}
-                className="w-full h-32 object-cover rounded-lg mb-3"
+                className="w-full h-28 sm:h-32 object-cover rounded-lg mb-3"
               />
-              <h3 className="font-semibold text-gray-900">{gym.name}</h3>
-              <p className="text-sm text-gray-500">{gym.address}</p>
+              <h3 className="font-semibold text-gray-900 text-sm sm:text-base">{gym.name}</h3>
+              <p className="text-xs sm:text-sm text-gray-500 truncate">{gym.address}</p>
               <div className="flex items-center mt-2">
                 <Star className="w-4 h-4 text-yellow-400 fill-current" />
                 <span className="text-sm text-gray-600 ml-1">{gym.rating}</span>
@@ -248,13 +248,13 @@ export function SubscriptionPage() {
       </div>
 
       {/* Subscription Plans */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Choose Your Plan</h2>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Choose Your Plan</h2>
         
         {/* Discount Code */}
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <h3 className="font-medium text-gray-900 mb-2">Have a discount code?</h3>
-          <div className="flex space-x-2">
+        <div className="mb-6 p-3 sm:p-4 bg-gray-50 rounded-lg">
+          <h3 className="font-medium text-gray-900 mb-2 text-sm sm:text-base">Have a discount code?</h3>
+          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
             <input
               type="text"
               value={discountCode}
@@ -264,7 +264,7 @@ export function SubscriptionPage() {
             />
             <button
               onClick={handleApplyDiscount}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors w-full sm:w-auto"
             >
               Apply
             </button>
@@ -277,13 +277,13 @@ export function SubscriptionPage() {
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {plans.map((plan) => {
             const finalPrice = calculatePrice(plan.price);
             return (
               <div
                 key={plan.type}
-                className={`relative border-2 rounded-xl p-6 ${
+                className={`relative border-2 rounded-xl p-4 sm:p-6 ${
                   plan.popular
                     ? 'border-blue-500 bg-blue-50'
                     : 'border-gray-200 hover:border-gray-300'
@@ -298,10 +298,10 @@ export function SubscriptionPage() {
                 )}
                 
                 <div className="text-center">
-                  <h3 className="text-lg font-semibold text-gray-900 capitalize">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 capitalize">
                     {plan.type}
                   </h3>
-                  <p className="text-sm text-gray-500 mb-4">{plan.duration}</p>
+                  <p className="text-xs sm:text-sm text-gray-500 mb-4">{plan.duration}</p>
                   
                   <div className="mb-4">
                     {plan.originalPrice && (
@@ -309,7 +309,7 @@ export function SubscriptionPage() {
                         ${plan.originalPrice}
                       </p>
                     )}
-                    <p className="text-3xl font-bold text-gray-900">
+                    <p className="text-2xl sm:text-3xl font-bold text-gray-900">
                       ${finalPrice.toFixed(2)}
                     </p>
                     {appliedDiscount && finalPrice !== plan.price && (
@@ -319,11 +319,11 @@ export function SubscriptionPage() {
                     )}
                   </div>
 
-                  <ul className="text-sm text-gray-600 space-y-2 mb-6">
+                  <ul className="text-xs sm:text-sm text-gray-600 space-y-1 sm:space-y-2 mb-4 sm:mb-6">
                     {plan.features.map((feature, index) => (
-                      <li key={index} className="flex items-center">
-                        <Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
-                        {feature}
+                      <li key={index} className="flex items-start">
+                        <Check className="w-3 h-3 sm:w-4 sm:h-4 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                        <span className="text-left">{feature}</span>
                       </li>
                     ))}
                   </ul>
@@ -331,7 +331,7 @@ export function SubscriptionPage() {
                   <button
                     onClick={() => handleSubscribe(plan.type)}
                     disabled={!selectedGym}
-                    className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${
+                    className={`w-full py-3 px-4 rounded-lg font-medium transition-colors text-sm sm:text-base ${
                       plan.popular
                         ? 'bg-blue-600 hover:bg-blue-700 text-white'
                         : 'bg-gray-600 hover:bg-gray-700 text-white'
@@ -348,8 +348,8 @@ export function SubscriptionPage() {
 
       {/* Payment Modal */}
       {showPayment && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-md w-full p-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 pb-20 md:pb-4">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 max-h-[80vh] overflow-y-auto">
             <h3 className="text-xl font-semibold text-gray-900 mb-4">Complete Payment</h3>
             
             <div className="mb-4 p-3 bg-gray-50 rounded-lg">
@@ -395,16 +395,16 @@ export function SubscriptionPage() {
               </div>
             </div>
 
-            <div className="flex space-x-3">
+            <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
               <button
                 onClick={() => setShowPayment(false)}
-                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-lg transition-colors"
+                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 px-4 rounded-lg transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handlePayment}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors"
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg transition-colors"
               >
                 Pay Now
               </button>

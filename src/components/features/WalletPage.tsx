@@ -162,122 +162,123 @@ export function WalletPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 pb-6 md:pb-0 px-1">
       {/* Wallet Balance Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-5 sm:p-6 text-white shadow-lg">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-blue-100 text-sm">Available Balance</p>
-              <p className="text-3xl font-bold">${walletData.balance.toFixed(2)}</p>
+            <div className="flex-1">
+              <p className="text-blue-100 text-sm font-medium">Available Balance</p>
+              <p className="text-2xl sm:text-3xl lg:text-4xl font-bold mt-1">${walletData.balance.toFixed(2)}</p>
             </div>
-            <Wallet className="w-8 h-8 text-blue-200" />
+            <Wallet className="w-8 h-8 sm:w-10 sm:h-10 text-blue-200 flex-shrink-0" />
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 sm:p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm">Pending Amount</p>
-              <p className="text-2xl font-bold text-gray-900">${walletData.pendingAmount.toFixed(2)}</p>
+            <div className="flex-1">
+              <p className="text-gray-600 text-sm font-medium">Pending Amount</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">${walletData.pendingAmount.toFixed(2)}</p>
             </div>
-            <RefreshCw className="w-6 h-6 text-orange-500" />
+            <RefreshCw className="w-7 h-7 sm:w-8 sm:h-8 text-orange-500 flex-shrink-0" />
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 sm:p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm">Total Spent</p>
-              <p className="text-2xl font-bold text-gray-900">${walletData.totalSpent.toFixed(2)}</p>
+            <div className="flex-1">
+              <p className="text-gray-600 text-sm font-medium">Total Spent</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">${walletData.totalSpent.toFixed(2)}</p>
             </div>
-            <CreditCard className="w-6 h-6 text-red-500" />
+            <CreditCard className="w-7 h-7 sm:w-8 sm:h-8 text-red-500 flex-shrink-0" />
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 sm:p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 text-sm">Cashback Earned</p>
-              <p className="text-2xl font-bold text-gray-900">${walletData.cashbackEarned.toFixed(2)}</p>
+            <div className="flex-1">
+              <p className="text-gray-600 text-sm font-medium">Cashback Earned</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">${walletData.cashbackEarned.toFixed(2)}</p>
             </div>
-            <Gift className="w-6 h-6 text-green-500" />
+            <Gift className="w-7 h-7 sm:w-8 sm:h-8 text-green-500 flex-shrink-0" />
           </div>
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 sm:p-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-5">Quick Actions</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <button
             onClick={() => setShowTopup(true)}
-            className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+            className="flex flex-col items-center p-4 sm:p-5 border-2 border-gray-200 rounded-2xl hover:border-blue-400 hover:bg-blue-50 transition-all duration-200 touch-target active:scale-95"
           >
-            <Plus className="w-6 h-6 text-blue-600 mb-2" />
-            <span className="text-sm font-medium text-gray-900">Top Up</span>
+            <Plus className="w-7 h-7 sm:w-8 sm:h-8 text-blue-600 mb-3" />
+            <span className="text-sm font-semibold text-gray-900 text-center leading-tight">Top Up</span>
           </button>
 
-          <button className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50 transition-colors">
-            <Download className="w-6 h-6 text-green-600 mb-2" />
-            <span className="text-sm font-medium text-gray-900">Download Statements</span>
+          <button className="flex flex-col items-center p-4 sm:p-5 border-2 border-gray-200 rounded-2xl hover:border-green-400 hover:bg-green-50 transition-all duration-200 touch-target active:scale-95">
+            <Download className="w-7 h-7 sm:w-8 sm:h-8 text-green-600 mb-3" />
+            <span className="text-sm font-semibold text-gray-900 text-center leading-tight">Statements</span>
           </button>
 
-          <button className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-colors">
-            <Gift className="w-6 h-6 text-purple-600 mb-2" />
-            <span className="text-sm font-medium text-gray-900">Cashback</span>
+          <button className="flex flex-col items-center p-4 sm:p-5 border-2 border-gray-200 rounded-2xl hover:border-purple-400 hover:bg-purple-50 transition-all duration-200 touch-target active:scale-95">
+            <Gift className="w-7 h-7 sm:w-8 sm:h-8 text-purple-600 mb-3" />
+            <span className="text-sm font-semibold text-gray-900 text-center leading-tight">Cashback</span>
           </button>
 
-          <button className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:border-gray-300 hover:bg-gray-50 transition-colors">
-            <History className="w-6 h-6 text-gray-600 mb-2" />
-            <span className="text-sm font-medium text-gray-900">Transaction History</span>
+          <button className="flex flex-col items-center p-4 sm:p-5 border-2 border-gray-200 rounded-2xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 touch-target active:scale-95">
+            <History className="w-7 h-7 sm:w-8 sm:h-8 text-gray-600 mb-3" />
+            <span className="text-sm font-semibold text-gray-900 text-center leading-tight">History</span>
           </button>
         </div>
       </div>
 
       {/* Promo Code */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Have a Promo Code?</h2>
-        <div className="flex space-x-3">
+      <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 sm:p-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-5">Have a Promo Code?</h2>
+        <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
           <input
             type="text"
             value={promoCode}
             onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
             placeholder="Enter promo code"
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="flex-1 px-5 py-4 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base font-medium transition-all"
           />
           <button
             onClick={handlePromoCode}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl transition-all duration-200 text-base font-semibold w-full sm:w-auto touch-target active:scale-95 shadow-md"
           >
-            Apply
+            Apply Code
           </button>
         </div>
       </div>
 
       {/* Transaction History */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Recent Transactions</h2>
-        <div className="space-y-3">
+      <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 sm:p-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-5">Recent Transactions</h2>
+        <div className="space-y-4">
           {transactions.map((transaction) => (
-            <div key={transaction.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-              <div className="flex items-center space-x-4">
-                <div className="p-2 bg-gray-100 rounded-lg">
+            <div key={transaction.id} className="flex items-center justify-between p-4 sm:p-5 border-2 border-gray-100 rounded-2xl hover:border-gray-200 transition-all">
+              <div className="flex items-center space-x-4 sm:space-x-5 flex-1 min-w-0">
+                <div className="p-3 bg-gray-100 rounded-xl flex-shrink-0">
                   {getTransactionIcon(transaction.type)}
                 </div>
-                <div>
-                  <p className="font-medium text-gray-900">{transaction.description}</p>
-                  <p className="text-sm text-gray-500">
-                    {new Date(transaction.date).toLocaleDateString()} • {transaction.reference}
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-gray-900 text-sm sm:text-base truncate leading-tight">{transaction.description}</p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {new Date(transaction.date).toLocaleDateString()}
+                    <span className="hidden sm:inline"> • {transaction.reference}</span>
                   </p>
                 </div>
               </div>
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3 sm:space-x-4 flex-shrink-0">
                 <div className="text-right">
-                  <p className={`font-semibold ${getTransactionColor(transaction.type)}`}>
+                  <p className={`font-bold text-base sm:text-lg ${getTransactionColor(transaction.type)}`}>
                     {transaction.amount > 0 ? '+' : ''}${Math.abs(transaction.amount).toFixed(2)}
                   </p>
-                  <p className={`text-sm ${
+                  <p className={`text-xs sm:text-sm font-medium ${
                     transaction.status === 'completed' ? 'text-green-600' :
                     transaction.status === 'pending' ? 'text-yellow-600' : 'text-red-600'
                   }`}>
@@ -286,9 +287,9 @@ export function WalletPage() {
                 </div>
                 <button
                   onClick={() => downloadInvoice(transaction.id)}
-                  className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="p-3 text-gray-400 hover:text-gray-600 transition-colors touch-target rounded-full hover:bg-gray-100 active:scale-95"
                 >
-                  <Download className="w-4 h-4" />
+                  <Download className="w-5 h-5" />
                 </button>
               </div>
             </div>
@@ -298,22 +299,32 @@ export function WalletPage() {
 
       {/* Top-up Modal */}
       {showTopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-md w-full p-6">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">Top Up Wallet</h3>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-t-3xl sm:rounded-2xl max-w-md w-full p-6 sm:p-6 max-h-[90vh] md:max-h-[85vh] overflow-y-auto mb-0 sm:mb-0 mt-auto sm:mt-4 custom-scrollbar">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-gray-900">Top Up Wallet</h3>
+              <button
+                onClick={() => setShowTopup(false)}
+                className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
             
             {/* Quick Amount Buttons */}
-            <div className="mb-4">
-              <p className="text-sm font-medium text-gray-700 mb-2">Quick Select</p>
-              <div className="grid grid-cols-5 gap-2">
+            <div className="mb-6">
+              <p className="text-base font-semibold text-gray-800 mb-4">Quick Select</p>
+              <div className="grid grid-cols-3 gap-3">
                 {quickTopupAmounts.map((amount) => (
                   <button
                     key={amount}
                     onClick={() => setTopupAmount(amount.toString())}
-                    className={`p-2 text-sm border rounded-lg transition-colors ${
+                    className={`p-4 text-base font-semibold border-2 rounded-2xl transition-all duration-200 touch-target active:scale-95 ${
                       topupAmount === amount.toString()
-                        ? 'border-blue-500 bg-blue-50 text-blue-600'
-                        : 'border-gray-300 hover:border-gray-400'
+                        ? 'border-blue-500 bg-blue-50 text-blue-600 shadow-md'
+                        : 'border-gray-300 hover:border-gray-400 text-gray-700 hover:bg-gray-50'
                     }`}
                   >
                     ${amount}
@@ -323,8 +334,8 @@ export function WalletPage() {
             </div>
 
             {/* Custom Amount */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="mb-6">
+              <label className="block text-base font-semibold text-gray-800 mb-3">
                 Custom Amount
               </label>
               <input
@@ -332,53 +343,53 @@ export function WalletPage() {
                 value={topupAmount}
                 onChange={(e) => setTopupAmount(e.target.value)}
                 placeholder="Enter amount"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-5 py-4 border-2 border-gray-300 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg font-medium transition-all"
                 min="1"
                 step="0.01"
               />
             </div>
 
             {/* Payment Method */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="mb-8">
+              <label className="block text-base font-semibold text-gray-800 mb-4">
                 Payment Method
               </label>
-              <div className="space-y-2">
-                <label className="flex items-center">
+              <div className="space-y-4">
+                <label className="flex items-center p-4 border-2 border-gray-200 rounded-2xl cursor-pointer hover:bg-gray-50 transition-all touch-target active:scale-98">
                   <input
                     type="radio"
                     value="card"
                     checked={paymentMethod === 'card'}
                     onChange={(e) => setPaymentMethod(e.target.value)}
-                    className="mr-2"
+                    className="mr-4 w-5 h-5"
                   />
-                  <CreditCard className="w-4 h-4 mr-2" />
-                  Credit/Debit Card
+                  <CreditCard className="w-6 h-6 mr-4 text-gray-600" />
+                  <span className="text-base font-semibold text-gray-900">Credit/Debit Card</span>
                 </label>
-                <label className="flex items-center">
+                <label className="flex items-center p-4 border-2 border-gray-200 rounded-2xl cursor-pointer hover:bg-gray-50 transition-all touch-target active:scale-98">
                   <input
                     type="radio"
                     value="bank"
                     checked={paymentMethod === 'bank'}
                     onChange={(e) => setPaymentMethod(e.target.value)}
-                    className="mr-2"
+                    className="mr-4 w-5 h-5"
                   />
-                  Bank Transfer
+                  <span className="text-base font-semibold text-gray-900">Bank Transfer</span>
                 </label>
               </div>
             </div>
 
-            <div className="flex space-x-3">
+            <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4 pt-6 border-t-2 border-gray-100">
               <button
                 onClick={() => setShowTopup(false)}
-                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-lg transition-colors"
+                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-4 px-6 rounded-2xl transition-all duration-200 font-bold text-lg touch-target active:scale-95"
               >
                 Cancel
               </button>
               <button
                 onClick={handleTopup}
                 disabled={!topupAmount || parseFloat(topupAmount) <= 0}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 px-6 rounded-2xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-lg touch-target active:scale-95 shadow-lg"
               >
                 Top Up ${topupAmount || '0'}
               </button>
