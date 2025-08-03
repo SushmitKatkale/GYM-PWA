@@ -145,7 +145,14 @@ class ImageService {
     });
   }
 
-  async uploadGymImage(file: File, token: string, validation: Partial<ImageValidation> = {}): Promise<ImageUploadResponse> {
+  async uploadGymImage(
+    file: File, 
+    gymId: string | number, 
+    token: string, 
+    title?: string, 
+    createdBy?: string, 
+    validation: Partial<ImageValidation> = {}
+  ): Promise<ImageUploadResponse> {
     try {
       // Validate file
       const basicValidation = this.validateImage(file, validation);
@@ -170,9 +177,16 @@ class ImageService {
       // Create FormData
       const formData = new FormData();
       formData.append('image', file);
-      formData.append('type', 'gym');
+      
+      if (title) {
+        formData.append('title', title);
+      }
+      
+      if (createdBy) {
+        formData.append('createdBy', createdBy);
+      }
 
-      const url = buildApiUrl('/upload/gym-image');
+      const url = buildApiUrl(`/gym-images/gym/${gymId}/upload`);
       
       const response = await fetch(url, {
         method: 'POST',
@@ -191,11 +205,19 @@ class ImageService {
     }
   }
 
-  async uploadMultipleGymImages(files: File[], token: string, validation: Partial<ImageValidation> = {}): Promise<ImageUploadResponse[]> {
+  async uploadMultipleGymImages(
+    files: File[], 
+    gymId: string | number, 
+    token: string, 
+    title?: string, 
+    createdBy?: string, 
+    validation: Partial<ImageValidation> = {}
+  ): Promise<ImageUploadResponse[]> {
     const results: ImageUploadResponse[] = [];
     
+    // Upload one image at a time
     for (const file of files) {
-      const result = await this.uploadGymImage(file, token, validation);
+      const result = await this.uploadGymImage(file, gymId, token, title, createdBy, validation);
       results.push(result);
     }
     

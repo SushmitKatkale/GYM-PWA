@@ -82,6 +82,10 @@ const StepOperatingHours: React.FC<StepOperatingHoursProps> = ({ formData, onCha
   const handleAddFeature = (planIndex: number) => {
     if (newFeature.title.trim()) {
       const updatedPlans = [...formData.plans];
+      // Initialize features array if it doesn't exist
+      if (!updatedPlans[planIndex].features) {
+        updatedPlans[planIndex].features = [];
+      }
       updatedPlans[planIndex].features.push({ ...newFeature });
       
       onChange({ ...formData, plans: updatedPlans });
@@ -91,6 +95,10 @@ const StepOperatingHours: React.FC<StepOperatingHoursProps> = ({ formData, onCha
 
   const handleRemoveFeature = (planIndex: number, featureIndex: number) => {
     const updatedPlans = [...formData.plans];
+    // Initialize features array if it doesn't exist
+    if (!updatedPlans[planIndex].features) {
+      updatedPlans[planIndex].features = [];
+    }
     updatedPlans[planIndex].features.splice(featureIndex, 1);
     onChange({ ...formData, plans: updatedPlans });
   };
@@ -344,7 +352,7 @@ const StepOperatingHours: React.FC<StepOperatingHoursProps> = ({ formData, onCha
                 </div>
 
                 {/* Features List */}
-                {plan.features.length > 0 && (
+                {plan.features && plan.features.length > 0 && (
                   <div className="space-y-2">
                     {plan.features.map((feature, featureIndex) => (
                       <div key={featureIndex} className="flex items-center justify-between bg-gray-50 p-2 rounded-lg">
@@ -365,7 +373,7 @@ const StepOperatingHours: React.FC<StepOperatingHoursProps> = ({ formData, onCha
                   </div>
                 )}
 
-                {plan.features.length === 0 && (
+                {(!plan.features || plan.features.length === 0) && (
                   <p className="text-sm text-gray-400 text-center py-2">No features added yet</p>
                 )}
               </div>

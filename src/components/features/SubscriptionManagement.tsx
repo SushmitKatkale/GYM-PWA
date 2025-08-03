@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Search, Plus, Edit, Trash2, DollarSign, Clock, X } from 'lucide-react';
+import { Box, Search, Plus, Edit, Trash2, DollarSign, Clock, X, MapPin, Star, Award } from 'lucide-react';
 import { buildApiUrl, API_CONFIG } from '../../config/api';
+import { useAuthStore } from '../../stores/authStore';
+import SuccessModal from '../ui/SuccessModal';
+import ErrorModal from '../ui/ErrorModal';
+import ConfirmationModal from '../ui/ConfirmationModal';
 
 interface Subscription {
   id: number;
@@ -9,10 +13,12 @@ interface Subscription {
   price: number;
   discountedPrice: number | null;
   gymId: number;
+  gymName?: string;
   isMostPopular: boolean;
   isCheapest: boolean;
   activeStatus: boolean;
   createTimestamp: string;
+  features: string[];
 }
 
 export function SubscriptionManagement() {
@@ -33,18 +39,79 @@ export function SubscriptionManagement() {
     isCheapest: false,
   });
 
+  // Auth store
+  const { getAccessToken } = useAuthStore();
+
+  // Modal states
+  const [successModal, setSuccessModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    actionLabel?: string;
+    onAction?: () => void;
+  }>({ isOpen: false, title: '', message: '' });
+  
+  const [errorModal, setErrorModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    error?: string;
+    showRetry?: boolean;
+    onRetry?: () => void;
+  }>({ isOpen: false, title: '', message: '' });
+  
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    itemName?: string;
+    onConfirm: () => void;
+  }>({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+
   // Fetch subscriptions from API
   const fetchSubscriptions = async () => {
     try {
       setIsLoading(true);
       const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.SUBSCRIPTIONS));
       const data = await response.json();
-      if (data.success) {
-        setSubscriptions(data.data.subscriptions);
-        setFilteredSubscriptions(data.data.subscriptions);
+      if (data.success && data.data && data.data.subscriptions) {
+        // Process and validate the subscription data
+        const processedSubscriptions = data.data.subscriptions.map((sub: any) => ({
+          ...sub,
+          price: Number(sub.price || 0),
+          discountedPrice: sub.discountedPrice ? Number(sub.discountedPrice) : null,
+          validityDays: Number(sub.validityDays || 0),
+          gymId: Number(sub.gymId || 0),
+          gymName: sub.gymName || sub.gym?.name || `Gym #${sub.gymId}`,
+          isMostPopular: Boolean(sub.isMostPopular),
+          isCheapest: Boolean(sub.isCheapest),
+          activeStatus: Boolean(sub.activeStatus),
+          features: Array.isArray(sub.features) ? 
+            sub.features.map((f: any) => typeof f === 'string' ? f : f.title || f.name || 'Feature') : (
+            sub.features ? sub.features.split(',').map((f: string) => f.trim()) : [
+              'Access to gym equipment',
+              'Locker room access',
+              'Basic fitness consultation'
+            ]
+          )
+        }));
+        setSubscriptions(processedSubscriptions);
+        setFilteredSubscriptions(processedSubscriptions);
+      } else {
+        console.warn('No subscription data found in API response:', data);
+        setSubscriptions([]);
+        setFilteredSubscriptions([]);
       }
     } catch (error) {
       console.error('Error fetching subscriptions:', error);
+      setErrorModal({
+        isOpen: true,
+        title: 'Loading Error',
+        message: 'Failed to load subscriptions.',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        showRetry: true,
+        onRetry: fetchSubscriptions
+      });
     } finally {
       setIsLoading(false);
     }
@@ -72,38 +139,86 @@ export function SubscriptionManagement() {
 
   // Create subscription
   const createSubscription = async () => {
+    setIsLoading(true);
     try {
+      const token = getAccessToken();
+      if (!token) {
+        setErrorModal({
+          isOpen: true,
+          title: 'Authentication Required',
+          message: 'Please log in to create subscriptions.',
+          error: 'No authentication token found'
+        });
+        setIsLoading(false);
+        return;
+      }
+
       const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.SUBSCRIPTIONS), {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(formData)
       });
       const data = await response.json();
       if (data.success) {
-        fetchSubscriptions();
+        setSuccessModal({
+          isOpen: true,
+          title: 'Success!',
+          message: 'Subscription created successfully!',
+          actionLabel: 'View Subscriptions',
+          onAction: () => fetchSubscriptions()
+        });
         setShowAddModal(false);
         resetForm();
-        alert('Subscription created successfully!');
       } else {
-        alert('Error creating subscription: ' + data.message);
+        setErrorModal({
+          isOpen: true,
+          title: 'Creation Failed',
+          message: 'Failed to create subscription.',
+          error: data.message,
+          showRetry: true,
+          onRetry: createSubscription
+        });
       }
     } catch (error) {
       console.error('Error creating subscription:', error);
-      alert('Error creating subscription');
+      setErrorModal({
+        isOpen: true,
+        title: 'Network Error',
+        message: 'Failed to create subscription due to network error.',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        showRetry: true,
+        onRetry: createSubscription
+      });
     }
+    setIsLoading(false);
   };
 
   // Update subscription
   const updateSubscription = async () => {
     if (!selectedSubscription) return;
     
+    setIsLoading(true);
     try {
+      const token = getAccessToken();
+      if (!token) {
+        setErrorModal({
+          isOpen: true,
+          title: 'Authentication Required',
+          message: 'Please log in to update subscriptions.',
+          error: 'No authentication token found'
+        });
+        setIsLoading(false);
+        return;
+      }
+
       const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.SUBSCRIPTIONS}/${selectedSubscription.id}`), {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           title: formData.title,
@@ -116,39 +231,104 @@ export function SubscriptionManagement() {
       });
       const data = await response.json();
       if (data.success) {
-        fetchSubscriptions();
+        setSuccessModal({
+          isOpen: true,
+          title: 'Success!',
+          message: 'Subscription updated successfully!',
+          actionLabel: 'View Subscriptions',
+          onAction: () => fetchSubscriptions()
+        });
         setShowEditModal(false);
         setSelectedSubscription(null);
         resetForm();
-        alert('Subscription updated successfully!');
       } else {
-        alert('Error updating subscription: ' + data.message);
+        setErrorModal({
+          isOpen: true,
+          title: 'Update Failed',
+          message: 'Failed to update subscription.',
+          error: data.message,
+          showRetry: true,
+          onRetry: updateSubscription
+        });
       }
     } catch (error) {
       console.error('Error updating subscription:', error);
-      alert('Error updating subscription');
+      setErrorModal({
+        isOpen: true,
+        title: 'Network Error',
+        message: 'Failed to update subscription due to network error.',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        showRetry: true,
+        onRetry: updateSubscription
+      });
     }
+    setIsLoading(false);
+  };
+
+  // Show delete confirmation
+  const showDeleteConfirmation = (subscription: Subscription) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Subscription',
+      message: 'Are you sure you want to delete this subscription? This action cannot be undone.',
+      itemName: subscription.title,
+      onConfirm: () => performDelete(subscription.id)
+    });
   };
 
   // Delete subscription
-  const deleteSubscription = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this subscription?')) return;
-    
+  const performDelete = async (id: number) => {
+    setIsLoading(true);
     try {
+      const token = getAccessToken();
+      if (!token) {
+        setErrorModal({
+          isOpen: true,
+          title: 'Authentication Required',
+          message: 'Please log in to delete subscriptions.',
+          error: 'No authentication token found'
+        });
+        setIsLoading(false);
+        return;
+      }
+
       const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.SUBSCRIPTIONS}/${id}`), {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
       const data = await response.json();
       if (data.success) {
-        fetchSubscriptions();
-        alert('Subscription deleted successfully!');
+        setSuccessModal({
+          isOpen: true,
+          title: 'Subscription Deleted',
+          message: 'Subscription has been successfully deleted from the system.',
+          actionLabel: 'Refresh List',
+          onAction: fetchSubscriptions
+        });
       } else {
-        alert('Error deleting subscription: ' + data.message);
+        setErrorModal({
+          isOpen: true,
+          title: 'Delete Failed',
+          message: 'Failed to delete the subscription.',
+          error: data.message,
+          showRetry: true,
+          onRetry: () => performDelete(id)
+        });
       }
     } catch (error) {
       console.error('Error deleting subscription:', error);
-      alert('Error deleting subscription');
+      setErrorModal({
+        isOpen: true,
+        title: 'Network Error',
+        message: 'Failed to delete subscription due to network error.',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        showRetry: true,
+        onRetry: () => performDelete(id)
+      });
     }
+    setIsLoading(false);
   };
 
   // Reset form
@@ -236,18 +416,38 @@ export function SubscriptionManagement() {
               {/* Mobile Layout */}
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center space-x-3 mb-2">
+                  <div className="flex items-center space-x-3 mb-3">
                     <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
                       {subscription.title[0]}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-semibold text-gray-900 truncate">
-                        {subscription.title}
-                      </h3>
-                      <div className="flex items-center text-sm text-gray-500">
-                        <Clock className="mr-2" />
+                      <div className="flex items-center space-x-2 mb-1">
+                        <h3 className="text-lg font-semibold text-gray-900 truncate">
+                          {subscription.title}
+                        </h3>
+                        {subscription.isMostPopular && (
+                          <span className="px-2 py-1 text-xs bg-orange-100 text-orange-800 rounded-full flex items-center">
+                            <Star className="w-3 h-3 mr-1" />
+                            Popular
+                          </span>
+                        )}
+                        {subscription.isCheapest && (
+                          <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full flex items-center">
+                            <Award className="w-3 h-3 mr-1" />
+                            Best Value
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-500 mb-1">
+                        <Clock className="w-4 h-4 mr-2" />
                         <span>{subscription.validityDays} days</span>
                       </div>
+                      {subscription.gymName && (
+                        <div className="flex items-center text-sm text-blue-600">
+                          <MapPin className="w-4 h-4 mr-2" />
+                          <span className="font-medium">{subscription.gymName}</span>
+                        </div>
+                      )}
                     </div>
                     <span className={`px-2 py-1 text-xs rounded-full ${
                       subscription.activeStatus
@@ -258,18 +458,55 @@ export function SubscriptionManagement() {
                     </span>
                   </div>
 
-                  <div className="space-y-1 mb-3">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <DollarSign className="w-4 h-4 mr-2" />
-                      <span>${subscription.price.toFixed(2)}</span>
-                    </div>
-                    {subscription.discountedPrice && (
-                      <div className="flex items-center text-sm text-gray-600">
-                        <span className="line-through mr-2">${subscription.price.toFixed(2)}</span>
-                        <span className="text-green-600">${subscription.discountedPrice.toFixed(2)}</span>
+                  {/* Pricing */}
+                  <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="flex items-center text-lg font-semibold text-gray-900">
+                          <DollarSign className="w-5 h-5 mr-1" />
+                          {subscription.discountedPrice ? (
+                            <>
+                              <span className="text-green-600">
+                                {Number(subscription.discountedPrice || 0).toFixed(2)}
+                              </span>
+                              <span className="text-sm text-gray-500 line-through ml-2">
+                                ${Number(subscription.price || 0).toFixed(2)}
+                              </span>
+                            </>
+                          ) : (
+                            <span>{Number(subscription.price || 0).toFixed(2)}</span>
+                          )}
+                        </div>
+                        {subscription.discountedPrice && (
+                          <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
+                            Save ${(Number(subscription.price || 0) - Number(subscription.discountedPrice || 0)).toFixed(2)}
+                          </span>
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
+
+                  {/* Features */}
+                  {subscription.features && subscription.features.length > 0 && (
+                    <div className="mb-3">
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">Features:</h4>
+                      <div className="flex flex-wrap gap-1">
+                        {subscription.features.slice(0, 3).map((feature, index) => (
+                          <span
+                            key={index}
+                            className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full"
+                          >
+                            {feature}
+                          </span>
+                        ))}
+                        {subscription.features.length > 3 && (
+                          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                            +{subscription.features.length - 3} more
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   <p className="text-xs text-gray-400">
                     Created: {new Date(subscription.createTimestamp).toLocaleDateString()}
@@ -285,7 +522,7 @@ export function SubscriptionManagement() {
                     <Edit className="w-4 h-4" />
                   </button>
                   <button
-                    onClick={() => deleteSubscription(subscription.id)}
+                    onClick={() => showDeleteConfirmation(subscription)}
                     className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -515,6 +752,40 @@ export function SubscriptionManagement() {
           </div>
         </div>
       )}
+
+      {/* Success Modal */}
+      <SuccessModal
+        isOpen={successModal.isOpen}
+        onClose={() => setSuccessModal({ ...successModal, isOpen: false })}
+        title={successModal.title}
+        message={successModal.message}
+        actionLabel={successModal.actionLabel}
+        onAction={successModal.onAction}
+      />
+
+      {/* Error Modal */}
+      <ErrorModal
+        isOpen={errorModal.isOpen}
+        onClose={() => setErrorModal({ ...errorModal, isOpen: false })}
+        title={errorModal.title}
+        message={errorModal.message}
+        error={errorModal.error}
+        showRetry={errorModal.showRetry}
+        onRetry={errorModal.onRetry}
+      />
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        itemName={confirmModal.itemName}
+        onConfirm={() => {
+          confirmModal.onConfirm();
+          setConfirmModal({ ...confirmModal, isOpen: false });
+        }}
+      />
     </div>
   );
 }

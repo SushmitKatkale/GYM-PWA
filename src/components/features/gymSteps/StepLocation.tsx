@@ -24,25 +24,55 @@ interface FormData {
 interface StepLocationProps {
   formData: FormData;
   onChange: (data: FormData) => void;
+  isEditing?: boolean;
 }
 
-const StepLocation: React.FC<StepLocationProps> = ({ formData, onChange }) => {
+const StepLocation: React.FC<StepLocationProps> = ({ formData, onChange, isEditing }) => {
   const [mapCenter, setMapCenter] = useState({
     lat: formData.location.coordinates.latitude || 40.7128,
     lng: formData.location.coordinates.longitude || -74.0060
   });
-  const { coordinates, loading, error, getCurrentPosition } = useGeolocation();
+  
+  console.log('DEBUG StepLocation ENTRY:', {
+    isEditing,
+    formDataLocation: formData.location
+  });
 
-  // Update map center when location is detected
+  // Completely avoid geolocation when editing
+  const geolocationResult = !isEditing ? useGeolocation() : null;
+  const coordinates = geolocationResult?.coordinates || null;
+  const loading = geolocationResult?.loading || false;
+  const error = geolocationResult?.error || null;
+  const getCurrentPosition = geolocationResult?.getCurrentPosition || (() => {});
+
+  const [hasExistingLocation, setHasExistingLocation] = useState(false);
+
+  console.log('DEBUG StepLocation STATE:', {
+    isEditing,
+    hasExistingLocation,
+    formDataLocation: formData.location,
+    coordinates,
+    geolocationResult: !!geolocationResult
+  });
+
+  // Check if we have existing location data on mount
   useEffect(() => {
-    if (coordinates) {
+    if (formData.location.coordinates.latitude !== 0 || formData.location.coordinates.longitude !== 0 ||
+        formData.location.address || formData.location.city || formData.location.state || formData.location.zip) {
+      setHasExistingLocation(true);
+    }
+  }, []);
+
+  // Only update with current location if we don't have existing location data AND not editing
+  useEffect(() => {
+    if (coordinates && !hasExistingLocation && !isEditing) {
       const newCenter = {
         lat: coordinates.latitude,
         lng: coordinates.longitude
       };
       setMapCenter(newCenter);
       
-      // Update form data with current location
+      // Only update form data with current location if no existing location and not editing
       onChange({
         ...formData,
         location: {
@@ -54,7 +84,7 @@ const StepLocation: React.FC<StepLocationProps> = ({ formData, onChange }) => {
         }
       });
     }
-  }, [coordinates]);
+  }, [coordinates, hasExistingLocation, isEditing]);
 
   // Update map center when form data coordinates change
   useEffect(() => {
@@ -211,7 +241,7 @@ const StepLocation: React.FC<StepLocationProps> = ({ formData, onChange }) => {
               onPlaceSelect={handlePlaceSelect}
               placeholder="Search for gym location..."
               types={['establishment', 'geocode']}
-              useCurrentLocation={true}
+              useCurrentLocation={!isEditing}
             />
           ) : (
             <FallbackLocationInput

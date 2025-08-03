@@ -51,7 +51,12 @@ const StepAmenities: React.FC<StepAmenitiesProps> = ({ formData, onChange }) => 
 
   const handleEditAmenity = (index: number) => {
     setEditingIndex(index);
-    setEditAmenity({ ...formData.amenities[index] });
+    const amenity = formData.amenities[index];
+    if (typeof amenity === 'string') {
+      setEditAmenity({ name: amenity, description: '' });
+    } else {
+      setEditAmenity({ ...amenity });
+    }
   };
 
   const handleSaveEdit = () => {
@@ -71,9 +76,12 @@ const StepAmenities: React.FC<StepAmenitiesProps> = ({ formData, onChange }) => 
 
   const handleQuickAdd = (quickAmenity: Amenity) => {
     // Check if amenity already exists
-    const exists = formData.amenities.some(amenity => 
-      amenity.name.toLowerCase() === quickAmenity.name.toLowerCase()
-    );
+    const exists = formData.amenities.some(amenity => {
+      if (typeof amenity === 'string') {
+        return amenity.toLowerCase() === quickAmenity.name.toLowerCase();
+      }
+      return amenity?.name?.toLowerCase() === quickAmenity.name.toLowerCase();
+    });
     
     if (!exists) {
       const updatedAmenities = [...formData.amenities, { ...quickAmenity }];
@@ -122,7 +130,12 @@ const StepAmenities: React.FC<StepAmenitiesProps> = ({ formData, onChange }) => 
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {quickAmenities.map((amenity, index) => {
-            const isAdded = formData.amenities.some(a => a.name.toLowerCase() === amenity.name.toLowerCase());
+            const isAdded = formData.amenities.some(a => {
+              if (typeof a === 'string') {
+                return a.toLowerCase() === amenity.name.toLowerCase();
+              }
+              return a?.name?.toLowerCase() === amenity.name.toLowerCase();
+            });
             return (
               <button
                 key={index}
@@ -249,8 +262,10 @@ const StepAmenities: React.FC<StepAmenitiesProps> = ({ formData, onChange }) => 
                   // View mode
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <div className="font-medium text-gray-900">{amenity.name}</div>
-                      {amenity.description && (
+                      <div className="font-medium text-gray-900">
+                        {typeof amenity === 'string' ? amenity : amenity.name || 'Unnamed Amenity'}
+                      </div>
+                      {typeof amenity !== 'string' && amenity?.description && (
                         <div className="text-sm text-gray-500 mt-1">{amenity.description}</div>
                       )}
                     </div>
@@ -285,7 +300,9 @@ const StepAmenities: React.FC<StepAmenitiesProps> = ({ formData, onChange }) => 
           <div className="text-sm text-purple-700">
             Your gym will feature <strong>{formData.amenities.length}</strong> amenities, including: {' '}
             <span className="font-medium">
-              {formData.amenities.slice(0, 3).map(a => a.name).join(', ')}
+              {formData.amenities.slice(0, 3).map(a => {
+                return typeof a === 'string' ? a : a.name;
+              }).join(', ')}
               {formData.amenities.length > 3 && ` and ${formData.amenities.length - 3} more`}
             </span>
           </div>

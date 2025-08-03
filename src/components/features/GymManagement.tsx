@@ -1,44 +1,58 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Edit, Trash2, Map, MapPin, Mail, X } from 'lucide-react';
+import { Plus, Edit, Trash2, Map, MapPin, Mail, X, Image } from 'lucide-react';
 import StepBasicInfo from './gymSteps/StepBasicInfo';
 import StepLocation from './gymSteps/StepLocation';
 import StepOperatingHours from './gymSteps/StepOperatingHours';
 import StepAmenities from './gymSteps/StepAmenities';
-import StepImageUpload from './gymSteps/StepImageUpload';
+import GymImageEditModal from './GymImageEditModal';
+import SuccessModal from '../ui/SuccessModal';
+import ErrorModal from '../ui/ErrorModal';
+import ImageUploadModal from '../ui/ImageUploadModal';
+import ConfirmationModal from '../ui/ConfirmationModal';
 import { gymService } from '../../services/gymService';
+import { imageService } from '../../services/imageService';
 import { useAuthStore } from '../../stores/authStore';
 import { buildApiUrl, API_CONFIG } from '../../config/api';
+import { ApiResponse } from '../../models/ApiResponse';
 
-interface Gym {
-  id: string;
-  name: string;
-  address: string;
-  latitude: number;
-  longitude: number;
-  rating: number;
-  image: string;
-  description: string;
-  amenities: string[];
-  operatingHours: {
-    open: string;
-    close: string;
-  };
-  plans: {
-    daily: number;
-    weekly: number;
-    monthly: number;
-    yearly: number;
-  };
-  ownerId: string;
-  capacity: number;
-  currentOccupancy: number;
-}
+// Import the Gym interface from the service
+import { Gym } from '../../services/gymService';
 
 const GymManagement = () => {
     const [gyms, setGyms] = useState<Gym[]>([]);
     const [loading, setLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+    const [isImageUploadModalOpen, setIsImageUploadModalOpen] = useState(false);
+    const [selectedGymForImages, setSelectedGymForImages] = useState<Gym | null>(null);
     const [error, setError] = useState<string | null>(null);
+    
+    // Success/Error Modal States
+    const [successModal, setSuccessModal] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        actionLabel?: string;
+        onAction?: () => void;
+    }>({ isOpen: false, title: '', message: '' });
+    
+    const [errorModal, setErrorModal] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        error?: string;
+        showRetry?: boolean;
+        onRetry?: () => void;
+    }>({ isOpen: false, title: '', message: '' });
+    
+    const [confirmModal, setConfirmModal] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        itemName?: string;
+        onConfirm: () => void;
+    }>({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+    
     const { getAccessToken } = useAuthStore();
     const [formData, setFormData] = useState({
         id: '',
@@ -60,7 +74,7 @@ const GymManagement = () => {
         },
         operatingHours: { open: '', close: '' },
         plans: [] as { name: string; description: string; price: number }[],
-        amenities: [] as string[],
+        amenities: [] as any[],
         images: [] as { file: File; previewUrl: string; id: string }[],
         imageUrls: [] as string[],
     });
@@ -82,18 +96,25 @@ const GymManagement = () => {
                 return;
             }
 
+            console.log('DEBUG: Fetching gyms from API...');
+            console.log('DEBUG: Using token:', token ? 'Token available' : 'No token');
+            console.log('DEBUG: API URL:', buildApiUrl(API_CONFIG.ENDPOINTS.GYMS));
+
             const response = await gymService.getGyms(token);
+            console.log('DEBUG: Raw API response:', response);
+            
             if (response.success && response.data) {
+                console.log('DEBUG: Successfully fetched gyms:', response.data.length);
+                console.log('DEBUG: Gym data structure:', response.data);
                 setGyms(response.data);
-                console.log('Fetched gyms:', response.data.length);
             } else {
+                console.error('DEBUG: API call failed:', response.message);
                 setError(response.message || 'Failed to fetch gyms');
-                console.error('Failed to fetch gyms:', response.message);
             }
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+            console.error('DEBUG: Network/catch error:', error);
             setError(errorMessage);
-            console.error('Error fetching gyms:', error);
         } finally {
             setLoading(false);
         }
@@ -106,29 +127,51 @@ const GymManagement = () => {
 
     const openModal = (gym: Gym | null = null) => {
         if (gym) {
+            console.log('DEBUG: Opening modal for gym:', {
+                name: gym.name,
+                address: gym.address,
+                city: gym.city,
+                state: gym.state,
+                zipCode: gym.zipCode,
+                latitude: gym.latitude,
+                longitude: gym.longitude
+            });
             setFormData({
-                id: gym.id,
+                id: gym.id.toString(),
                 name: gym.name,
                 description: gym.description,
                 capacity: gym.capacity,
                 currentOccupancy: gym.currentOccupancy,
-                rating: gym.rating,
+                rating: parseFloat(gym.rating),
                 ownerId: gym.ownerId,
                 location: {
-                    address: gym.address,
-                    city: '',
-                    state: '',
-                    zip: '',
+                    address: gym.address || '',
+                    city: gym.city || '',
+                    state: gym.state || '',
+                    zip: gym.zipCode || '',
                     coordinates: {
-                        latitude: gym.latitude,
-                        longitude: gym.longitude
+                        latitude: gym.latitude ? parseFloat(gym.latitude) : 0,
+                        longitude: gym.longitude ? parseFloat(gym.longitude) : 0
                     }
                 },
-                operatingHours: gym.operatingHours,
-                plans: [],
-                amenities: gym.amenities,
+                operatingHours: gym.operatingHours || {
+                    open: gym.openingTime,
+                    close: gym.closingTime
+                },
+                plans: gym.subscriptions ? gym.subscriptions.map(sub => ({
+                    name: sub.title,
+                    title: sub.title,
+                    description: `${sub.validityDays} days validity`,
+                    validityDays: sub.validityDays,
+                    price: parseFloat(sub.price),
+                    discountedPrice: parseFloat(sub.discountedPrice) || 0,
+                    isMostPopular: sub.isMostPopular || false,
+                    isCheapest: sub.isCheapest || false,
+                    features: sub.features || []
+                })) : [],
+                amenities: gym.amenities || [],
                 images: [],
-                imageUrls: [gym.image],
+                imageUrls: gym.images || [],
             });
         } else {
             setFormData({
@@ -199,63 +242,145 @@ const GymManagement = () => {
     const handleSave = async () => {
         setLoading(true);
         try {
-            // Transform the data to match the expected API format
+            const token = getAccessToken();
+            if (!token) {
+                alert('Authentication required. Please log in.');
+                setLoading(false);
+                return;
+            }
+
+            console.log('DEBUG: Saving gym data');
+            console.log('DEBUG: Form data:', {
+                name: formData.name,
+                isEditing: !!formData.id,
+                hasImages: formData.images.length > 0,
+                existingImageUrls: formData.imageUrls.length,
+                ownerId: formData.ownerId
+            });
+
+            // Prepare gym data as JSON
             const gymData = {
                 id: formData.id,
                 name: formData.name,
                 description: formData.description,
                 address: formData.location.address,
+                city: formData.location.city,
+                state: formData.location.state,
+                zipCode: formData.location.zip,
                 latitude: formData.location.coordinates.latitude,
                 longitude: formData.location.coordinates.longitude,
                 rating: formData.rating,
-                images: formData.imageUrls, // Use imageUrls array instead of single image
-                amenities: formData.amenities,
+                amenities: formData.amenities.map(amenity => 
+                    typeof amenity === 'string' 
+                        ? { name: amenity, description: '' }
+                        : amenity
+                ),
                 operatingHours: formData.operatingHours,
                 plans: formData.plans,
                 ownerId: formData.ownerId,
                 capacity: formData.capacity,
                 currentOccupancy: formData.currentOccupancy,
+                images: formData.imageUrls // Send existing image URLs
             };
 
-            const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.GYMS), {
+            console.log('DEBUG: Sending JSON data to API:', gymData);
+
+            const url = formData.id 
+                ? buildApiUrl(`${API_CONFIG.ENDPOINTS.GYMS}/${formData.id}`)
+                : buildApiUrl(API_CONFIG.ENDPOINTS.GYMS);
+
+            console.log('DEBUG: API URL for request:', url);
+
+            const response = await fetch(url, {
                 method: formData.id ? 'PUT' : 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(gymData)
             });
+
             const data = await response.json();
+            console.log('DEBUG: API response:', data);
+
             if (data.success) {
-                alert(`Gym ${formData.id ? 'updated' : 'created'} successfully!`);
-                fetchGyms();
+                setSuccessModal({
+                    isOpen: true,
+                    title: 'Success!',
+                    message: `Gym ${formData.id ? 'updated' : 'created'} successfully!`,
+                    actionLabel: 'View Gyms',
+                    onAction: () => fetchGyms()
+                });
                 closeModal();
             } else {
-                alert(`Error ${formData.id ? 'updating' : 'creating'} gym: ${data.message}`);
+                setErrorModal({
+                    isOpen: true,
+                    title: 'Operation Failed',
+                    message: `Error ${formData.id ? 'updating' : 'creating'} gym`,
+                    error: data.message,
+                    showRetry: true,
+                    onRetry: handleSave
+                });
             }
         } catch (error) {
             console.error('Error saving gym:', error);
-            alert('Error saving gym');
+            setErrorModal({
+                isOpen: true,
+                title: 'Network Error',
+                message: 'Failed to save gym due to network error',
+                error: error instanceof Error ? error.message : 'Unknown error',
+                showRetry: true,
+                onRetry: handleSave
+            });
         }
         setLoading(false);
     };
 
-    const handleDelete = async (id: string) => {
-        if (!confirm('Are you sure you want to delete this gym?')) return;
+    const showDeleteConfirmation = (gym: Gym) => {
+        setConfirmModal({
+            isOpen: true,
+            title: 'Delete Gym',
+            message: 'Are you sure you want to delete this gym? All associated data will be permanently removed.',
+            itemName: gym.name,
+            onConfirm: () => performDelete(gym.id)
+        });
+    };
+
+    const performDelete = async (id: number) => {
         setLoading(true);
         try {
-            const response = await fetch(`/gyms/${id}`, {
+            const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.GYMS}/${id}`), {
                 method: 'DELETE'
             });
             const data = await response.json();
             if (data.success) {
-                alert('Gym deleted successfully!');
-                fetchGyms();
+                setSuccessModal({
+                    isOpen: true,
+                    title: 'Gym Deleted',
+                    message: 'Gym has been successfully deleted from the system.',
+                    actionLabel: 'Refresh List',
+                    onAction: fetchGyms
+                });
             } else {
-                alert(`Error deleting gym: ${data.message}`);
+                setErrorModal({
+                    isOpen: true,
+                    title: 'Delete Failed',
+                    message: 'Failed to delete the gym.',
+                    error: data.message,
+                    showRetry: true,
+                    onRetry: () => performDelete(id)
+                });
             }
         } catch (error) {
             console.error('Error deleting gym:', error);
-            alert('Error deleting gym');
+            setErrorModal({
+                isOpen: true,
+                title: 'Network Error',
+                message: 'Failed to delete gym due to network error.',
+                error: error instanceof Error ? error.message : 'Unknown error',
+                showRetry: true,
+                onRetry: () => performDelete(id)
+            });
         }
         setLoading(false);
     };
@@ -291,6 +416,76 @@ const GymManagement = () => {
         }
         
         setFormData(updatedFormData);
+    };
+
+    // Handle image edit modal
+    const openImageModal = (gym: Gym) => {
+        setSelectedGymForImages(gym);
+        setIsImageModalOpen(true);
+    };
+
+    const closeImageModal = () => {
+        setSelectedGymForImages(null);
+        setIsImageModalOpen(false);
+    };
+
+    const handleImageSave = async (gymId: number, images: string[]) => {
+        setLoading(true);
+        try {
+            const token = getAccessToken();
+            if (!token) {
+                setErrorModal({
+                    isOpen: true,
+                    title: 'Authentication Required',
+                    message: 'Please log in to update gym images.',
+                    error: 'No authentication token found'
+                });
+                return;
+            }
+
+            // Update gym with new images
+            const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.GYMS}/${gymId}/images`), {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ images })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                setSuccessModal({
+                    isOpen: true,
+                    title: 'Images Updated!',
+                    message: 'Gym images have been successfully updated.',
+                    actionLabel: 'Refresh List',
+                    onAction: fetchGyms
+                });
+                closeImageModal();
+            } else {
+                setErrorModal({
+                    isOpen: true,
+                    title: 'Update Failed',
+                    message: 'Failed to update gym images.',
+                    error: data.message,
+                    showRetry: true,
+                    onRetry: () => handleImageSave(gymId, images)
+                });
+            }
+        } catch (error) {
+            console.error('Error updating images:', error);
+            setErrorModal({
+                isOpen: true,
+                title: 'Network Error',
+                message: 'Failed to update images due to network error.',
+                error: error instanceof Error ? error.message : 'Unknown error',
+                showRetry: true,
+                onRetry: () => handleImageSave(gymId, images)
+            });
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -375,6 +570,11 @@ const GymManagement = () => {
                 </div>
             )}
 
+            {/* Debug Info */}
+            <div className="text-xs text-gray-400 bg-gray-50 p-2 rounded">
+                DEBUG: gyms.length = {gyms.length}, searchTerm = "{searchTerm}", filtered = {searchGyms(searchTerm).length}
+            </div>
+
             {/* Gyms List - Mobile First Design */}
             {!loading && !error && (
                 <div className="space-y-4">
@@ -391,7 +591,7 @@ const GymManagement = () => {
                         <div key={gym.id} className="bg-white rounded-lg shadow border p-4 hover:shadow-md transition-shadow">
                             <div className="flex items-start justify-between">
                                 <div className="flex-1 min-w-0">
-                                    <div className="flex items-center space-x-3 mb-2">
+                                    <div className="flex items-center space-x-3 mb-3">
                                         <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
                                             {gym.name[0]}
                                         </div>
@@ -399,31 +599,87 @@ const GymManagement = () => {
                                             <h3 className="text-lg font-semibold text-gray-900 truncate">
                                                 {gym.name}
                                             </h3>
-                                            <p className="text-sm text-gray-500">{gym.address}</p>
+                                            <p className="text-sm text-gray-500 mb-1">{gym.description}</p>
                                         </div>
                                     </div>
 
-                                    <div className="space-y-1 mb-3">
-                                        <div className="flex items-center text-sm text-gray-600">
-                                            <MapPin className="w-4 h-4 mr-2" />
-                                            <span className="truncate">Rating: {gym.rating}/5</span>
+                                    {/* Address Information */}
+                                    <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                                        <div className="flex items-start space-x-2">
+                                            <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-medium text-gray-900">{gym.address}</p>
+                                                <p className="text-xs text-gray-500">
+                                                    {gym.city}, {gym.state} {gym.zipCode}
+                                                </p>
+                                            </div>
                                         </div>
-                                        <p className="text-xs text-gray-400">
-                                            Capacity: {gym.currentOccupancy}/{gym.capacity} members
-                                        </p>
+                                    </div>
+
+                                    {/* Owner Information */}
+                                    <div className="bg-blue-50 rounded-lg p-3 mb-3">
+                                        <div className="flex items-center space-x-2">
+                                            <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                                                <span className="text-xs font-bold text-blue-600">
+                                                    {gym.owner.firstName[0]}{gym.owner.lastName[0]}
+                                                </span>
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-medium text-gray-900">
+                                                    {gym.owner.firstName} {gym.owner.lastName}
+                                                </p>
+                                                <p className="text-xs text-gray-500 truncate">
+                                                    {gym.owner.email}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Stats */}
+                                    <div className="grid grid-cols-2 gap-4 text-center">
+                                        <div className="bg-yellow-50 rounded-lg p-2">
+                                            <p className="text-sm font-bold text-yellow-700">
+                                                {gym.rating}/5
+                                            </p>
+                                            <p className="text-xs font-medium text-yellow-600">
+                                                Rating
+                                            </p>
+                                        </div>
+                                        <div className="bg-green-50 rounded-lg p-2">
+                                            <p className="text-sm font-bold text-green-700">
+                                                {gym.currentOccupancy}/{gym.capacity}
+                                            </p>
+                                            <p className="text-xs font-medium text-green-600">
+                                                Members
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Operating Hours */}
+                                    <div className="mt-3 text-xs text-gray-500">
+                                        <span className="font-medium">Hours:</span> {gym.openingTime} - {gym.closingTime}
                                     </div>
                                 </div>
 
                                 <div className="flex items-center space-x-2 ml-4">
                                     <button
+                                        onClick={() => openImageModal(gym)}
+                                        className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                                        title="Edit images"
+                                    >
+                                        <Image className="w-4 h-4" />
+                                    </button>
+                                    <button
                                         onClick={() => openModal(gym)}
                                         className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                        title="Edit gym details"
                                     >
                                         <Edit className="w-4 h-4" />
                                     </button>
                                     <button
-                                        onClick={() => handleDelete(gym.id)}
+                                        onClick={() => showDeleteConfirmation(gym)}
                                         className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                        title="Delete gym"
                                     >
                                         <Trash2 className="w-4 h-4" />
                                     </button>
@@ -451,15 +707,9 @@ const GymManagement = () => {
 
                         <div className="p-6 space-y-4">
                             {currentStep === 0 && <StepBasicInfo formData={formData} onChange={setFormData} />}
-                            {currentStep === 1 && <StepLocation formData={formData} onChange={setFormData} />}
+                            {currentStep === 1 && <StepLocation formData={formData} onChange={setFormData} isEditing={!!formData.id} />}
                             {currentStep === 2 && <StepOperatingHours formData={formData} onChange={setFormData} />}
                             {currentStep === 3 && <StepAmenities formData={formData} onChange={setFormData} />}
-                            {currentStep === 4 && <StepImageUpload formData={formData} onChange={(newData) => {
-                                console.log('[DEBUG] GymManagement onChange called');
-                                console.log('[DEBUG] Old formData images:', formData.images?.length || 0);
-                                console.log('[DEBUG] New formData images:', newData.images?.length || 0);
-                                setFormData(newData);
-                            }} />}
                         </div>
 
                         <div className="flex space-x-3 p-6 border-t">
@@ -472,7 +722,8 @@ const GymManagement = () => {
                                 </button>
                             )}
 
-                            {currentStep < 4 && (
+                            {/* For new gym creation, show Create button after step 3 (Amenities) */}
+                            {!formData.id && currentStep < 3 && (
                                 <button
                                     onClick={handleNextStep}
                                     className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -481,18 +732,97 @@ const GymManagement = () => {
                                 </button>
                             )}
 
-                            {currentStep === 4 && (
+                            {!formData.id && currentStep === 3 && (
+                                <button
+                                    onClick={handleSave}
+                                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                >
+                                    Create Gym
+                                </button>
+                            )}
+
+                            {/* For gym editing, show Update button after step 3 (Amenities) */}
+                            {formData.id && currentStep < 3 && (
+                                <button
+                                    onClick={handleNextStep}
+                                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                >
+                                    Next
+                                </button>
+                            )}
+
+                            {formData.id && currentStep === 3 && (
                                 <button
                                     onClick={handleSave}
                                     className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                                 >
-                                    {formData.id ? 'Update Gym' : 'Create Gym'}
+                                    Update Gym
                                 </button>
                             )}
                         </div>
                     </div>
                 </div>
             )}
+
+            {/* Image Edit Modal */}
+            <GymImageEditModal
+                gym={selectedGymForImages}
+                isOpen={isImageModalOpen}
+                onClose={closeImageModal}
+                onSave={handleImageSave}
+            />
+
+            {/* Success Modal */}
+            <SuccessModal
+                isOpen={successModal.isOpen}
+                onClose={() => setSuccessModal({ ...successModal, isOpen: false })}
+                title={successModal.title}
+                message={successModal.message}
+                actionLabel={successModal.actionLabel}
+                onAction={successModal.onAction}
+            />
+
+            {/* Error Modal */}
+            <ErrorModal
+                isOpen={errorModal.isOpen}
+                onClose={() => setErrorModal({ ...errorModal, isOpen: false })}
+                title={errorModal.title}
+                message={errorModal.message}
+                error={errorModal.error}
+                showRetry={errorModal.showRetry}
+                onRetry={errorModal.onRetry}
+            />
+
+            {/* Image Upload Modal */}
+            <ImageUploadModal
+                isOpen={isImageUploadModalOpen}
+                onClose={() => setIsImageUploadModalOpen(false)}
+                gymId={selectedGymForImages?.id || ''}
+                gymName={selectedGymForImages?.name || 'Unknown Gym'}
+                onSuccess={(uploadedImages) => {
+                    setSuccessModal({
+                        isOpen: true,
+                        title: 'Images Uploaded!',
+                        message: `Successfully uploaded ${uploadedImages.length} image(s)`,
+                        actionLabel: 'Refresh Gyms',
+                        onAction: fetchGyms
+                    });
+                    setIsImageUploadModalOpen(false);
+                }}
+            />
+
+            {/* Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={confirmModal.isOpen}
+                onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                itemName={confirmModal.itemName}
+                onConfirm={() => {
+                    confirmModal.onConfirm();
+                    setConfirmModal({ ...confirmModal, isOpen: false });
+                }}
+            />
         </div>
     );
 };

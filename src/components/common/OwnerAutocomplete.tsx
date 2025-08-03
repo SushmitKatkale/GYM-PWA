@@ -67,7 +67,7 @@ const OwnerAutocomplete: React.FC<OwnerAutocompleteProps> = ({
   // Update selected owner when value changes
   useEffect(() => {
     if (value && owners.length > 0) {
-      const owner = owners.find(o => o.id === value);
+      const owner = owners.find(o => o.email === value);
       setSelectedOwner(owner || null);
       if (owner) {
         setSearchQuery(`${owner.email} - ${owner.firstName} ${owner.lastName}`);
@@ -127,7 +127,7 @@ const OwnerAutocomplete: React.FC<OwnerAutocompleteProps> = ({
     setSelectedOwner(owner);
     setSearchQuery(`${owner.email} - ${owner.firstName} ${owner.lastName}`);
     setIsOpen(false);
-    onChange(owner.id);
+    onChange(owner.email);
   };
 
   const handleInputFocus = () => {
