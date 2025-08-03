@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Search, Plus, Edit, Trash2, Phone, Mail, UserCheck, AlertCircle, X } from 'lucide-react';
+import { User, Search, Plus, Edit, Trash2, Phone, Mail, UserCheck, AlertCircle, X, CheckCircle, AlertTriangleIcon } from 'lucide-react';
 import { buildApiUrl, API_CONFIG } from '../../config/api';
 
 interface Owner {
@@ -21,6 +21,11 @@ export function OwnerManagement() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedOwner, setSelectedOwner] = useState<Owner | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [ownerToDelete, setOwnerToDelete] = useState<Owner | null>(null);
+  const [modalMessage, setModalMessage] = useState('');
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -84,13 +89,16 @@ export function OwnerManagement() {
         fetchOwners();
         setShowAddModal(false);
         resetForm();
-        alert('Owner created successfully!');
+        setModalMessage('Owner created successfully!');
+        setShowSuccessModal(true);
       } else {
-        alert('Error creating owner: ' + data.message);
+        setModalMessage('Error creating owner: ' + data.message);
+        setShowErrorModal(true);
       }
     } catch (error) {
       console.error('Error creating owner:', error);
-      alert('Error creating owner');
+      setModalMessage('Error creating owner. Please try again.');
+      setShowErrorModal(true);
     }
   };
 
@@ -107,8 +115,8 @@ export function OwnerManagement() {
         body: JSON.stringify({
           firstName: formData.firstName,
           lastName: formData.lastName,
-          email: formData.email,
           username: formData.username,
+          email: selectedOwner.email,
           phoneNumber: formData.phoneNumber
         })
       });
@@ -118,20 +126,21 @@ export function OwnerManagement() {
         setShowEditModal(false);
         setSelectedOwner(null);
         resetForm();
-        alert('Owner updated successfully!');
+        setModalMessage('Owner updated successfully!');
+        setShowSuccessModal(true);
       } else {
-        alert('Error updating owner: ' + data.message);
+        setModalMessage('Error updating owner: ' + data.message);
+        setShowErrorModal(true);
       }
     } catch (error) {
       console.error('Error updating owner:', error);
-      alert('Error updating owner');
+      setModalMessage('Error updating owner. Please try again.');
+      setShowErrorModal(true);
     }
   };
 
   // Delete owner
   const deleteOwner = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this owner?')) return;
-    
     try {
       const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.OWNERS}/${id}`), {
         method: 'DELETE'
@@ -139,14 +148,25 @@ export function OwnerManagement() {
       const data = await response.json();
       if (data.success) {
         fetchOwners();
-        alert('Owner deleted successfully!');
+        setShowDeleteModal(false);
+        setOwnerToDelete(null);
+        setModalMessage('Owner deleted successfully!');
+        setShowSuccessModal(true);
       } else {
-        alert('Error deleting owner: ' + data.message);
+        setModalMessage('Error deleting owner: ' + data.message);
+        setShowErrorModal(true);
       }
     } catch (error) {
       console.error('Error deleting owner:', error);
-      alert('Error deleting owner');
+      setModalMessage('Error deleting owner. Please try again.');
+      setShowErrorModal(true);
     }
+  };
+
+  // Show delete confirmation modal
+  const showDeleteConfirmation = (owner: Owner) => {
+    setOwnerToDelete(owner);
+    setShowDeleteModal(true);
   };
 
   // Reset form
@@ -313,7 +333,7 @@ export function OwnerManagement() {
                     <Edit className="w-4 h-4" />
                   </button>
                   <button
-                    onClick={() => deleteOwner(owner.id)}
+                    onClick={() => showDeleteConfirmation(owner)}
                     className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -483,17 +503,6 @@ export function OwnerManagement() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
-              </div>
-              
-              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
                 <input
                   type="tel"
@@ -521,6 +530,82 @@ export function OwnerManagement() {
               >
                 Update Owner
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg w-full max-w-sm">
+            <div className="p-6 text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-8 h-8 text-green-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Success!</h3>
+              <p className="text-gray-600 mb-6">{modalMessage}</p>
+              <button
+                onClick={() => setShowSuccessModal(false)}
+                className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error Modal */}
+      {showErrorModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg w-full max-w-sm">
+            <div className="p-6 text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <X className="w-8 h-8 text-red-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Error</h3>
+              <p className="text-gray-600 mb-6">{modalMessage}</p>
+              <button
+                onClick={() => setShowErrorModal(false)}
+                className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && ownerToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg w-full max-w-sm">
+            <div className="p-6 text-center">
+              <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertTriangleIcon className="w-8 h-8 text-yellow-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Owner</h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to delete <strong>{ownerToDelete.firstName} {ownerToDelete.lastName}</strong>? This action cannot be undone.
+              </p>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setOwnerToDelete(null);
+                  }}
+                  className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => deleteOwner(ownerToDelete.id)}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
         </div>

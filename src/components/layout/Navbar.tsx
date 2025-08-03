@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Bell, Menu, X, User, AlertTriangle } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { useNotificationStore } from '../../stores/notificationStore';
+import { getAvatarImage } from '../../constants/images';
 
 interface NavbarProps {
   onMenuToggle: () => void;
@@ -39,17 +40,11 @@ export function Navbar({ onMenuToggle, isMobileMenuOpen }: NavbarProps) {
             
             {/* Profile - moved to left */}
             <div className="flex items-center space-x-3 text-white">
-              {user?.avatar ? (
-                <img
-                  src={user.avatar}
-                  alt={user.name}
-                  className="w-8 h-8 rounded-full object-cover"
-                />
-              ) : (
-                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                  <User className="w-5 h-5" />
-                </div>
-              )}
+              <img
+                src={getAvatarImage(user?.gender, user?.avatar)}
+                alt={user?.name || 'User Avatar'}
+                className="w-8 h-8 rounded-full object-cover"
+              />
               <div className="hidden sm:block text-left">
                 <div className="text-sm font-medium">{user?.name}</div>
                 <div className="text-xs opacity-75 capitalize">{user?.role}</div>

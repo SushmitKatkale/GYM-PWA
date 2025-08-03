@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="400" height="300" fill="url(#gymGradient1)"/>
+  
+  <!-- Floor -->
+  <rect y="250" width="400" height="50" fill="#374151"/>
+  
+  <!-- Equipment silhouettes -->
+  <!-- Treadmills -->
+  <rect x="50" y="200" width="60" height="40" rx="8" fill="#1F2937"/>
+  <rect x="130" y="200" width="60" height="40" rx="8" fill="#1F2937"/>
+  
+  <!-- Weight rack -->
+  <rect x="250" y="180" width="80" height="60" rx="4" fill="#374151"/>
+  <rect x="260" y="170" width="60" height="10" rx="2" fill="#4B5563"/>
+  
+  <!-- Dumbbells -->
+  <ellipse cx="320" cy="220" rx="8" ry="4" fill="#6B7280"/>
+  <ellipse cx="340" cy="220" rx="8" ry="4" fill="#6B7280"/>
+  
+  <!-- Text overlay -->
+  <rect x="0" y="0" width="400" height="300" fill="rgba(0,0,0,0.3)"/>
+  <text x="200" y="160" font-family="Arial, sans-serif" font-size="32" font-weight="bold" text-anchor="middle" fill="white">FitZone Downtown</text>
+  <text x="200" y="190" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#E5E7EB">Premium Fitness Center</text>
+  
+  <defs>
+    <linearGradient id="gymGradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1E40AF;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+</svg>

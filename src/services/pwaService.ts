@@ -1,4 +1,5 @@
 // PWA Service for handling service worker registration and push notifications
+import { registerSW } from 'virtual:pwa-register';
 
 declare global {
   interface Window {
@@ -22,26 +23,30 @@ interface ExtendedNotificationOptions extends NotificationOptions {
 class PWAService {
   private swRegistration: ServiceWorkerRegistration | null = null;
 
-  // Register service worker
+  // Register service worker using vite-plugin-pwa
   async registerServiceWorker(): Promise<void> {
     if ('serviceWorker' in navigator) {
       try {
-        const registration = await navigator.serviceWorker.register('/sw.js');
-        this.swRegistration = registration;
-        console.log('Service Worker registered successfully:', registration);
-        
-        // Check for updates
-        registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing;
-          if (newWorker) {
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                // New content is available, prompt user to refresh
-                this.showUpdateAvailable();
-              }
-            });
+        const updateSW = registerSW({
+          onNeedRefresh() {
+            // New content is available, prompt user to refresh
+            console.log('New content available, please refresh');
+          },
+          onOfflineReady() {
+            console.log('App ready to work offline');
+          },
+          onRegistered(registration) {
+            console.log('Service Worker registered successfully:', registration);
+          },
+          onRegisterError(error) {
+            console.error('Service Worker registration failed:', error);
           }
         });
+        
+        // Get the service worker registration for push notifications
+        if ('serviceWorker' in navigator && navigator.serviceWorker.ready) {
+          this.swRegistration = await navigator.serviceWorker.ready;
+        }
       } catch (error) {
         console.error('Service Worker registration failed:', error);
       }

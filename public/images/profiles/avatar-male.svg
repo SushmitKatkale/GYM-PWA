@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="64" cy="64" r="64" fill="#E5E7EB"/>
+  
+  <!-- Head -->
+  <circle cx="64" cy="48" r="20" fill="#9CA3AF"/>
+  
+  <!-- Body -->
+  <path d="M64 68C54 68 44 72 40 80V128H88V80C84 72 74 68 64 68Z" fill="#9CA3AF"/>
+  
+  <!-- Face details -->
+  <circle cx="59" cy="45" r="2" fill="#6B7280"/>
+  <circle cx="69" cy="45" r="2" fill="#6B7280"/>
+  <path d="M59 52 Q64 55 69 52" stroke="#6B7280" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+</svg>

@@ -6,6 +6,7 @@ export const API_CONFIG = {
     USERS: '/users',
     GYMS: '/gyms',
     SUBSCRIPTIONS: '/subscriptions',
+    SUBSCRIPTION_FEATURES: '/subscription-features',
     AUTH: '/auth',
     AMENITIES: '/amenities',
     PAYMENTS: '/payments',

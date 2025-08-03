@@ -23,16 +23,28 @@ export default defineConfig({
         categories: ['fitness', 'health', 'lifestyle'],
         icons: [
           {
-            src: 'https://www.pwabuilder.com/assets/icons/icon_512.png',
+            src: '/icons/manifest-icon-192.maskable.png',
             sizes: '192x192',
             type: 'image/png',
             purpose: 'any maskable'
           },
           {
-            src: 'https://www.pwabuilder.com/assets/icons/icon_512.png',
+            src: '/icons/manifest-icon-512.maskable2.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'
+          },
+          {
+            src: '/icons/app-icon.svg',
+            sizes: '192x192 512x512',
+            type: 'image/svg+xml',
+            purpose: 'any'
+          },
+          {
+            src: '/icons/apple-icon-180.png',
+            sizes: '180x180',
+            type: 'image/png',
+            purpose: 'apple-touch-icon'
           }
         ]
       },
@@ -82,7 +94,10 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 3000,
-    open: true
+    open: true,
+    headers: {
+      'Service-Worker-Allowed': '/'
+    }
   },
   build: {
     target: 'esnext',

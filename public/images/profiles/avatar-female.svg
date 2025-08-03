@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="64" cy="64" r="64" fill="#FDE7F3"/>
+  
+  <!-- Head -->
+  <circle cx="64" cy="48" r="20" fill="#F472B6"/>
+  
+  <!-- Hair -->
+  <path d="M44 40 Q44 25 64 25 Q84 25 84 40 Q84 35 80 32 Q76 30 72 30 Q68 28 64 28 Q60 28 56 30 Q52 30 48 32 Q44 35 44 40" fill="#EC4899"/>
+  
+  <!-- Body -->
+  <path d="M64 68C54 68 44 72 40 80V128H88V80C84 72 74 68 64 68Z" fill="#F472B6"/>
+  
+  <!-- Face details -->
+  <circle cx="59" cy="45" r="2" fill="#BE185D"/>
+  <circle cx="69" cy="45" r="2" fill="#BE185D"/>
+  <path d="M59 52 Q64 55 69 52" stroke="#BE185D" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+</svg>
