@@ -1,57 +1,12 @@
 import { create } from 'zustand';
+import { gymService, Gym as ApiGym } from '../services/gymService';
+import { slotService, TimeSlot as ApiTimeSlot, Booking as ApiBooking } from '../services/slotService';
+import { useAuthStore } from './authStore';
 
-export interface Gym {
-  id: string;
-  name: string;
-  address: string;
-  latitude: number;
-  longitude: number;
-  rating: number;
-  image: string;
-  description: string;
-  amenities: string[];
-  operatingHours: {
-    open: string;
-    close: string;
-  };
-  plans: {
-    daily: number;
-    weekly: number;
-    monthly: number;
-    yearly: number;
-  };
-  ownerId: string;
-  capacity: number;
-  currentOccupancy: number;
-}
-
-export interface TimeSlot {
-  id: string;
-  gymId: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  capacity: number;
-  booked: number;
-  type: 'general' | 'class' | 'personal';
-  title?: string;
-  instructor?: string;
-  price?: number;
-}
-
-export interface Booking {
-  id: string;
-  userId: string;
-  gymId: string;
-  slotId: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  status: 'confirmed' | 'cancelled' | 'completed';
-  type: 'general' | 'class' | 'personal';
-  amount: number;
-  createdAt: string;
-}
+// Use types from services
+export type Gym = ApiGym;
+export type TimeSlot = ApiTimeSlot;
+export type Booking = ApiBooking;
 
 interface GymState {
   gyms: Gym[];
@@ -62,6 +17,8 @@ interface GymState {
   error: string | null;
   
   // Actions
+  fetchGyms: () => Promise<boolean>;
+  fetchSlots: (gymId?: string, date?: string) => Promise<boolean>;
   setSelectedGym: (gym: Gym | null) => void;
   getGymById: (id: string) => Gym | undefined;
   getSlotsByGymAndDate: (gymId: string, date: string) => TimeSlot[];
@@ -181,12 +138,78 @@ const generateTimeSlots = (): TimeSlot[] => {
 };
 
 export const useGymStore = create<GymState>((set, get) => ({
-  gyms: mockGyms,
-  timeSlots: generateTimeSlots(),
+  gyms: [],
+  timeSlots: [],
   bookings: [],
   selectedGym: null,
   isLoading: false,
   error: null,
+
+  fetchGyms: async () => {
+    set({ isLoading: true, error: null });
+    
+    try {
+      const token = useAuthStore.getState().getAccessToken();
+      if (!token) {
+        set({ error: 'No authentication token found', isLoading: false });
+        return false;
+      }
+
+      const response = await gymService.getGyms(token);
+      
+      if (response.success && response.data) {
+        set({
+          gyms: response.data,
+          isLoading: false
+        });
+        return true;
+      } else {
+        set({
+          error: response.message || 'Failed to fetch gyms',
+          isLoading: false
+        });
+        return false;
+      }
+    } catch (error) {
+      console.error('Fetch gyms error:', error);
+      set({
+        error: 'Network error occurred. Please check your connection and try again.',
+        isLoading: false
+      });
+      return false;
+    }
+  },
+
+  fetchSlots: async (gymId?: string, date?: string) => {
+    set({ isLoading: true, error: null });
+    
+    try {
+      const token = useAuthStore.getState().getAccessToken();
+      
+      const response = await slotService.getSlots(gymId, date, token);
+      
+      if (response.success && response.data) {
+        set({
+          timeSlots: response.data,
+          isLoading: false
+        });
+        return true;
+      } else {
+        set({
+          error: response.message || 'Failed to fetch slots',
+          isLoading: false
+        });
+        return false;
+      }
+    } catch (error) {
+      console.error('Fetch slots error:', error);
+      set({
+        error: 'Network error occurred. Please check your connection and try again.',
+        isLoading: false
+      });
+      return false;
+    }
+  },
 
   setSelectedGym: (gym) => set({ selectedGym: gym }),
 
@@ -202,44 +225,36 @@ export const useGymStore = create<GymState>((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const slot = get().timeSlots.find(s => s.id === slotId);
-      if (!slot) {
-        set({ error: 'Slot not found', isLoading: false });
+      const token = useAuthStore.getState().getAccessToken();
+      if (!token) {
+        set({ error: 'No authentication token found', isLoading: false });
         return false;
       }
+
+      const response = await slotService.bookSlot({ userId, slotId }, token);
       
-      if (slot.booked >= slot.capacity) {
-        set({ error: 'Slot is fully booked', isLoading: false });
+      if (response.success && response.data) {
+        set(state => ({
+          bookings: [...state.bookings, response.data!],
+          timeSlots: state.timeSlots.map(s => 
+            s.id === slotId ? { ...s, booked: s.booked + 1 } : s
+          ),
+          isLoading: false
+        }));
+        return true;
+      } else {
+        set({
+          error: response.message || 'Booking failed',
+          isLoading: false
+        });
         return false;
       }
-      
-      const booking: Booking = {
-        id: Date.now().toString(),
-        userId,
-        gymId: slot.gymId,
-        slotId,
-        date: slot.date,
-        startTime: slot.startTime,
-        endTime: slot.endTime,
-        status: 'confirmed',
-        type: slot.type,
-        amount: slot.price || 0,
-        createdAt: new Date().toISOString()
-      };
-      
-      set(state => ({
-        bookings: [...state.bookings, booking],
-        timeSlots: state.timeSlots.map(s => 
-          s.id === slotId ? { ...s, booked: s.booked + 1 } : s
-        ),
-        isLoading: false
-      }));
-      
-      return true;
     } catch (error) {
-      set({ error: 'Booking failed. Please try again.', isLoading: false });
+      console.error('Book slot error:', error);
+      set({
+        error: 'Network error occurred. Please check your connection and try again.',
+        isLoading: false
+      });
       return false;
     }
   },

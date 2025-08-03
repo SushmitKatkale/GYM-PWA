@@ -6,7 +6,12 @@ export const API_CONFIG = {
     USERS: '/users',
     GYMS: '/gyms',
     SUBSCRIPTIONS: '/subscriptions',
-    AUTH: '/auth'
+    AUTH: '/auth',
+    AMENITIES: '/amenities',
+    PAYMENTS: '/payments',
+    INVOICES: '/invoices',
+    SLOTS: '/slots',
+    USER_SUBSCRIPTIONS: '/user-subscriptions'
   }
 };
 

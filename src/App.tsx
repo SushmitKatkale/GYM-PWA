@@ -23,7 +23,7 @@ import { MemberManagement } from './components/features/MemberManagement';
 import { OwnerManagement } from './components/features/OwnerManagement';
 import { SubscriptionManagement } from './components/features/SubscriptionManagement';
 import { HelpFaq } from './components/features/HelpFaq';
-import { AlertTriangle, Bell, User, Shield, Settings, Lock, LogOut, X } from 'lucide-react';
+import { Bell, User, Shield, Settings, Lock, LogOut, X } from 'lucide-react';
 
 function App() {
   const { user, logout } = useAuthStore();
@@ -31,11 +31,8 @@ function App() {
   const [pendingVerificationEmail, setPendingVerificationEmail] = useState('');
   const [activeView, setActiveView] = useState('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [showMobileAlerts, setShowMobileAlerts] = useState(false);
   const [showProfileSidebar, setShowProfileSidebar] = useState(false);
   const [activeSettingsTab, setActiveSettingsTab] = useState('profile');
-  
-  const alertsCount = 3; // Mock alerts count
 
   // Register service worker
   useEffect(() => {

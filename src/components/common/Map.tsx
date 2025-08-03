@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { Icon } from 'leaflet';
-import { MapPin, Navigation, Star } from 'lucide-react';
+import { Navigation, Star } from 'lucide-react';
 import { Gym } from '../../stores/gymStore';
 import 'leaflet/dist/leaflet.css';
 
@@ -38,7 +38,6 @@ export function Map({
   center = [40.7128, -74.0060], 
   zoom = 12, 
   onGymSelect,
-  selectedGym,
   showUserLocation = false,
   userLocation
 }: MapProps) {

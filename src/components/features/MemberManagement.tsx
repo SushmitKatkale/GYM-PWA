@@ -1,26 +1,50 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Plus, Filter, User, Mail, Calendar, MoreVertical, Edit, Trash2, Phone, MapPin, X } from 'lucide-react';
+import { useUserStore } from '../../stores/userStore';
+import { CreateUserRequest, UpdateUserRequest, User as ApiUser } from '../../services/userService';
+import { useAuthStore } from '../../stores/authStore';
 
 export function MemberManagement() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const {
+    filteredUsers,
+    isLoading,
+    error,
+    searchQuery,
+    filterStatus,
+    totalUsers,
+    fetchUsers,
+    searchUsers,
+    createUser,
+    updateUser,
+    deleteUser,
+    setSearchQuery,
+    setFilterStatus,
+    clearError
+  } = useUserStore();
+  
+  const { user: currentUser } = useAuthStore();
   const [showAddMember, setShowAddMember] = useState(false);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-  const [editingMember, setEditingMember] = useState<any>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
+  const [editingMember, setEditingMember] = useState<ApiUser | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const filterDropdownRef = useRef<HTMLDivElement>(null);
   
-  // Form state for adding new member
-  const [newMember, setNewMember] = useState({
-    name: '',
+  // Form state for adding/editing member
+  const [newMember, setNewMember] = useState<CreateUserRequest>({
+    firstName: '',
+    lastName: '',
+    username: '',
     email: '',
-    phone: '',
-    membership: 'Basic Monthly',
-    status: 'Active'
+    password: '',
+    phoneNumber: '',
+    type: '1' // Default to user type
   });
 
-  // Close dropdown when clicking outside
+  // Initialize data and close dropdown when clicking outside
   useEffect(() => {
+    // Fetch users on component mount
+    fetchUsers();
+    
     const handleClickOutside = (event: MouseEvent) => {
       if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target as Node)) {
         setShowFilterDropdown(false);
@@ -34,77 +58,42 @@ export function MemberManagement() {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showFilterDropdown]);
+  }, [showFilterDropdown, fetchUsers]);
 
-  // Mock member data
-  const members = [
-    {
-      id: 1,
-      name: 'John Doe',
-      email: 'john.doe@example.com',
-      phone: '+1 (555) 123-4567',
-      membership: 'Premium Annual',
-      status: 'Active',
-      joinDate: '2024-01-15',
-      avatar: null
-    },
-    {
-      id: 2,
-      name: 'Sarah Wilson',
-      email: 'sarah.wilson@example.com',
-      phone: '+1 (555) 234-5678',
-      membership: 'Basic Monthly',
-      status: 'Active',
-      joinDate: '2024-02-20',
-      avatar: null
-    },
-    {
-      id: 3,
-      name: 'Mike Johnson',
-      email: 'mike.johnson@example.com',
-      phone: '+1 (555) 345-6789',
-      membership: 'Premium Monthly',
-      status: 'Expired',
-      joinDate: '2023-11-10',
-      avatar: null
-    },
-    {
-      id: 4,
-      name: 'Emily Brown',
-      email: 'emily.brown@example.com',
-      phone: '+1 (555) 456-7890',
-      membership: 'Basic Annual',
-      status: 'Active',
-      joinDate: '2024-03-05',
-      avatar: null
-    },
-    {
-      id: 5,
-      name: 'David Lee',
-      email: 'david.lee@example.com',
-      phone: '+1 (555) 567-8901',
-      membership: 'Premium Annual',
-      status: 'Suspended',
-      joinDate: '2023-12-01',
-      avatar: null
-    }
-  ];
-
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'expired': return 'bg-red-100 text-red-800';
-      case 'suspended': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-gray-100 text-gray-800';
+  // Search functionality
+  const handleSearch = async (value: string) => {
+    setSearchQuery(value);
+    if (value.trim()) {
+      await searchUsers(value);
+    } else {
+      await fetchUsers();
     }
   };
 
-  const filteredMembers = members.filter(member => {
-    const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         member.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterStatus === 'all' || member.status.toLowerCase() === filterStatus;
-    return matchesSearch && matchesFilter;
-  });
+  // Handle debounced search
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
+  const debouncedSearch = (value: string) => {
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+    const timeout = setTimeout(() => {
+      handleSearch(value);
+    }, 300);
+    setSearchTimeout(timeout);
+  };
+
+  const getStatusColor = (user: ApiUser) => {
+    const isActive = user.activeStatus === '1';
+    return isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+  };
+
+  const getStatusText = (user: ApiUser) => {
+    return user.activeStatus === '1' ? 'Active' : 'Inactive';
+  };
+
+  const getUserDisplayName = (user: ApiUser) => {
+    return `${user.firstName} ${user.lastName}`.trim();
+  };
 
   // Handle form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -116,72 +105,88 @@ export function MemberManagement() {
   };
 
   // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Basic validation
-    if (!newMember.name || !newMember.email || !newMember.phone) {
+    if (!newMember.firstName || !newMember.lastName || !newMember.username || !newMember.email) {
       alert('Please fill in all required fields');
       return;
     }
 
-    // Here you would typically send the data to your backend
-    console.log('New member data:', {
-      ...newMember,
-      id: members.length + 1,
-      joinDate: new Date().toISOString().split('T')[0],
-      avatar: null
-    });
-    
-    // Show success message
-    alert('Member added successfully!');
-    
-    // Reset form and close modal
+    let success = false;
+    if (editingMember) {
+      // Update existing user
+      const updateData: UpdateUserRequest = {
+        firstName: newMember.firstName,
+        lastName: newMember.lastName,
+        username: newMember.username,
+        email: newMember.email,
+        phoneNumber: newMember.phoneNumber
+      };
+      success = await updateUser(editingMember.id, updateData);
+    } else {
+      // Create new user
+      success = await createUser(newMember);
+    }
+
+    if (success) {
+      alert(editingMember ? 'Member updated successfully!' : 'Member added successfully!');
+      resetForm();
+    } else {
+      alert(`Failed to ${editingMember ? 'update' : 'add'} member. Please try again.`);
+    }
+  };
+
+  // Reset form function
+  const resetForm = () => {
     setNewMember({
-      name: '',
+      firstName: '',
+      lastName: '',
+      username: '',
       email: '',
-      phone: '',
-      membership: 'Basic Monthly',
-      status: 'Active'
+      password: '',
+      phoneNumber: '',
+      type: '1'
     });
+    setEditingMember(null);
     setShowAddMember(false);
   };
 
   // Handle modal close
   const handleCloseModal = () => {
-    setNewMember({
-      name: '',
-      email: '',
-      phone: '',
-      membership: 'Basic Monthly',
-      status: 'Active'
-    });
-    setShowAddMember(false);
+    resetForm();
   };
 
   // Handle edit member
-  const handleEditMember = (member: any) => {
+  const handleEditMember = (member: ApiUser) => {
     setEditingMember(member);
     setNewMember({
-      name: member.name,
+      firstName: member.firstName,
+      lastName: member.lastName,
+      username: member.username,
       email: member.email,
-      phone: member.phone,
-      membership: member.membership,
-      status: member.status
+      password: '', // Don't populate password for editing
+      phoneNumber: member.phoneNumber || '',
+      type: member.type
     });
     setShowAddMember(true);
   };
 
   // Handle delete member
-  const handleDeleteMember = (memberId: number) => {
+  const handleDeleteMember = (memberId: string) => {
     setShowDeleteConfirm(memberId);
   };
 
   // Confirm delete member
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (showDeleteConfirm) {
-      console.log('Deleting member with ID:', showDeleteConfirm);
-      alert('Member deleted successfully!');
+      const success = await deleteUser(showDeleteConfirm);
+      if (success) {
+        alert('Member deleted successfully!');
+      } else {
+        alert('Failed to delete member. Please try again.');
+      }
       setShowDeleteConfirm(null);
     }
   };
@@ -202,8 +207,8 @@ export function MemberManagement() {
             <input
               type="text"
               placeholder="Search members..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={searchQuery}
+              onChange={(e) => debouncedSearch(e.target.value)}
               className="w-full pl-9 md:pl-10 pr-4 py-2.5 md:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm md:text-base"
             />
           </div>
@@ -249,25 +254,14 @@ export function MemberManagement() {
                     </button>
                     <button
                       onClick={() => {
-                        setFilterStatus('expired');
+                        setFilterStatus('inactive');
                         setShowFilterDropdown(false);
                       }}
                       className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${
-                        filterStatus === 'expired' ? 'bg-blue-50 text-blue-600' : 'text-gray-700'
+                        filterStatus === 'inactive' ? 'bg-blue-50 text-blue-600' : 'text-gray-700'
                       }`}
                     >
-                      Expired
-                    </button>
-                    <button
-                      onClick={() => {
-                        setFilterStatus('suspended');
-                        setShowFilterDropdown(false);
-                      }}
-                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${
-                        filterStatus === 'suspended' ? 'bg-blue-50 text-blue-600' : 'text-gray-700'
-                      }`}
-                    >
-                      Suspended
+                      Inactive
                     </button>
                   </div>
                 </div>
@@ -293,7 +287,7 @@ export function MemberManagement() {
               <User className="w-5 h-5 md:w-6 md:h-6 text-blue-600" />
             </div>
             <p className="text-xs text-gray-600 mb-1">Total</p>
-            <p className="text-lg md:text-2xl font-bold text-gray-900">{members.length}</p>
+            <p className="text-lg md:text-2xl font-bold text-gray-900">{totalUsers}</p>
             <p className="text-xs text-gray-500">Members</p>
           </div>
         </div>
@@ -304,7 +298,7 @@ export function MemberManagement() {
               <User className="w-5 h-5 md:w-6 md:h-6 text-green-600" />
             </div>
             <p className="text-xs text-gray-600 mb-1">Active</p>
-            <p className="text-lg md:text-2xl font-bold text-gray-900">{members.filter(m => m.status === 'Active').length}</p>
+            <p className="text-lg md:text-2xl font-bold text-gray-900">{filteredUsers.filter(u => u.activeStatus === '1').length}</p>
             <p className="text-xs text-green-600">Members</p>
           </div>
         </div>
@@ -315,26 +309,31 @@ export function MemberManagement() {
               <User className="w-5 h-5 md:w-6 md:h-6 text-red-600" />
             </div>
             <p className="text-xs text-gray-600 mb-1">Expired</p>
-            <p className="text-lg md:text-2xl font-bold text-gray-900">{members.filter(m => m.status === 'Expired').length}</p>
+            <p className="text-lg md:text-2xl font-bold text-gray-900">{filteredUsers.filter(u => u.activeStatus === '0').length}</p>
             <p className="text-xs text-red-600">Members</p>
           </div>
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
           <div className="text-center">
-            <div className="bg-yellow-100 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mx-auto mb-2">
-              <User className="w-5 h-5 md:w-6 md:h-6 text-yellow-600" />
+            <div className="bg-blue-100 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center mx-auto mb-2">
+              <User className="w-5 h-5 md:w-6 md:h-6 text-blue-600" />
             </div>
-            <p className="text-xs text-gray-600 mb-1">Suspended</p>
-            <p className="text-lg md:text-2xl font-bold text-gray-900">{members.filter(m => m.status === 'Suspended').length}</p>
-            <p className="text-xs text-yellow-600">Members</p>
+            <p className="text-xs text-gray-600 mb-1">Verified</p>
+            <p className="text-lg md:text-2xl font-bold text-gray-900">{filteredUsers.filter(u => u.isVerified).length}</p>
+            <p className="text-xs text-blue-600">Members</p>
           </div>
         </div>
       </div>
 
       {/* Mobile-Friendly Member Cards */}
       <div className="space-y-3">
-        {filteredMembers.map((member) => (
+        {isLoading ? (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="text-gray-600 mt-2">Loading members...</p>
+          </div>
+        ) : filteredUsers.map((member) => (
           <div key={member.id} className="bg-white rounded-lg md:rounded-xl shadow-sm border border-gray-200 p-3 md:p-5 hover:shadow-md transition-shadow">
             {/* Mobile: Stack layout, Desktop: Side by side */}
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between">
@@ -342,15 +341,15 @@ export function MemberManagement() {
               <div className="flex items-start space-x-3 flex-1 min-w-0">
                 {/* Avatar */}
                 <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
-                  {member.name.split(' ').map(n => n[0]).join('')}
+                  {getUserDisplayName(member).split(' ').map(n => n[0]).join('')}
                 </div>
                 
                 <div className="flex-1 min-w-0">
                   {/* Name and Status */}
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-semibold text-gray-900 text-sm md:text-lg truncate pr-2">{member.name}</h3>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ${getStatusColor(member.status)}`}>
-                      {member.status}
+                    <h3 className="font-semibold text-gray-900 text-sm md:text-lg truncate pr-2">{getUserDisplayName(member)}</h3>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ${getStatusColor(member)}`}>
+                      {getStatusText(member)}
                     </span>
                   </div>
                   
@@ -362,7 +361,7 @@ export function MemberManagement() {
                     </div>
                     <div className="flex items-center text-xs md:text-sm text-gray-600">
                       <Phone className="w-3 h-3 md:w-4 md:h-4 mr-2 flex-shrink-0" />
-                      <span>{member.phone}</span>
+                      <span>{member.phoneNumber || 'N/A'}</span>
                     </div>
                   </div>
                   
@@ -371,10 +370,10 @@ export function MemberManagement() {
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs md:text-sm gap-1 sm:gap-2">
                       <div className="flex items-center text-gray-600">
                         <Calendar className="w-3 h-3 md:w-4 md:h-4 mr-1" />
-                        <span>Joined: {new Date(member.joinDate).toLocaleDateString()}</span>
+                        <span>Joined: {new Date(member.createTimestamp).toLocaleDateString()}</span>
                       </div>
                       <div className="font-medium text-blue-600">
-                        {member.membership}
+                        User ID: {member.id}
                       </div>
                     </div>
                   </div>
@@ -404,7 +403,7 @@ export function MemberManagement() {
       </div>
 
       {/* Empty State */}
-      {filteredMembers.length === 0 && (
+      {!isLoading && filteredUsers.length === 0 && (
         <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-200">
           <User className="w-12 h-12 mx-auto text-gray-400 mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No members found</h3>
@@ -416,6 +415,27 @@ export function MemberManagement() {
             <Plus className="w-4 h-4" />
             <span>Add First Member</span>
           </button>
+        </div>
+      )}
+
+      {/* Error Display */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <div className="text-red-600 mr-3">
+              <X className="w-5 h-5" />
+            </div>
+            <div className="flex-1">
+              <p className="text-red-800 font-medium">Error</p>
+              <p className="text-red-700 text-sm">{error}</p>
+            </div>
+            <button
+              onClick={clearError}
+              className="text-red-600 hover:text-red-800 ml-2"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       )}
 

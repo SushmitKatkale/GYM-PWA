@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { X, Camera, Flashlight } from 'lucide-react';
+import { X, Camera } from 'lucide-react';
 
 interface QrScannerProps {
   onScan: (data: string) => void;
