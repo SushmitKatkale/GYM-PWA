@@ -5,6 +5,11 @@ import { useAuthStore } from '../../stores/authStore';
 import { GymDiscoveryMap } from '../common/GymDiscoveryMap';
 import { GymFilters } from '../../services/gymService';
 import { useGeolocation } from '../../hooks/useGeolocation';
+import { subscriptionService } from '../../services/subscriptionService';
+import { paymentService } from '../../services/paymentService';
+import SubscriptionPurchaseModal from '../ui/SubscriptionPurchaseModal';
+import SuccessModal from '../ui/SuccessModal';
+import ErrorModal from '../ui/ErrorModal';
 
 export function GymDiscovery() {
   const { gyms, selectedGym, setSelectedGym, fetchGymsWithFilters, isLoading, error, clearError } = useGymStore();
@@ -15,27 +20,58 @@ export function GymDiscovery() {
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
+  const [mapRefreshTrigger, setMapRefreshTrigger] = useState(0);
+  
+  // Subscription purchase states
+  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
+  const [selectedSubscription, setSelectedSubscription] = useState<any>(null);
+  const [selectedSubscriptions, setSelectedSubscriptions] = useState<any[]>([]);
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   const getCurrentLocation = async () => {
     setIsLoadingLocation(true);
     try {
       if ('geolocation' in navigator) {
         const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject);
+          navigator.geolocation.getCurrentPosition(
+            resolve, 
+            reject,
+            {
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 300000 // 5 minutes
+            }
+          );
         });
 
-        setCurrentLocation({
+        const newLocation = {
           lat: position.coords.latitude,
           lng: position.coords.longitude
-        });
+        };
+        
+        console.log('Got user location:', newLocation);
+        setCurrentLocation(newLocation);
+        // Trigger map refresh when location is updated
+        setMapRefreshTrigger(prev => prev + 1);
+        return;
       }
     } catch (error) {
       console.error('Error getting location:', error);
-      // Fallback to NYC coordinates
-      setCurrentLocation({
-        lat: 40.7128,
-        lng: -74.0060
-      });
+      // Fallback to Bangalore coordinates (change this to your preferred default location)
+      const fallbackLocation = {
+        lat: 12.9716,  // Bangalore, India
+        lng: 77.5946
+      };
+      
+      console.log('Using fallback location:', fallbackLocation);
+      setCurrentLocation(fallbackLocation);
+      // Trigger map refresh for fallback location too
+      setMapRefreshTrigger(prev => prev + 1);
     } finally {
       setIsLoadingLocation(false);
     }
@@ -95,6 +131,153 @@ export function GymDiscovery() {
       fetchGyms();
     }
   }, [filter, sortBy]);
+
+  // Check for active subscriptions
+  const checkActiveSubscriptions = async () => {
+    try {
+      const response = await subscriptionService.getUserSubscriptions();
+      if (response.success && response.data) {
+        const activeSubscriptions = response.data.filter(sub => sub.status === 'active');
+        setHasActiveSubscription(activeSubscriptions.length > 0);
+        return activeSubscriptions.length > 0;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error checking subscriptions:', error);
+      return false;
+    }
+  };
+
+  // Handle showing all gym subscriptions
+  const handleShowSubscriptions = async (gym: any) => {
+    if (!user) {
+      setErrorMessage('Please login to purchase a subscription');
+      setShowErrorModal(true);
+      return;
+    }
+
+    // Check for active subscriptions first
+    const hasActive = await checkActiveSubscriptions();
+    
+    // Prepare all subscription details for the modal
+    const subscriptionDetails = gym.subscriptions?.map((sub: any) => {
+      let planType = 'Custom';
+      if (sub.validityDays === 1) planType = 'Daily';
+      else if (sub.validityDays === 7) planType = 'Weekly';
+      else if (sub.validityDays === 30) planType = 'Monthly';
+      else if (sub.validityDays === 365) planType = 'Yearly';
+      
+      return {
+        id: sub.id,
+        planType,
+        price: parseFloat(sub.price),
+        discountedPrice: sub.discountedPrice ? parseFloat(sub.discountedPrice) : undefined,
+        gymName: gym.name,
+        validityDays: sub.validityDays,
+        subscriptionId: sub.id,
+        gymId: gym.id,
+        features: sub.features || [],  // Ensure features are included
+        isMostPopular: sub.isMostPopular || false,
+        isCheapest: sub.isCheapest || false,
+        amenities: gym.amenities || [],  // Add gym amenities
+        location: gym.address || 'Location not available'  // Add gym location/address
+      };
+    }) || [];
+
+    setSelectedSubscriptions(subscriptionDetails);
+    setHasActiveSubscription(hasActive);
+    setIsPurchaseModalOpen(true);
+  };
+
+  // Handle plan selection (for individual plan clicks - kept for backward compatibility)
+  const handlePlanClick = async (gym: any, planType: string, validityDays: number) => {
+    if (!user) {
+      setErrorMessage('Please login to purchase a subscription');
+      setShowErrorModal(true);
+      return;
+    }
+
+    // Check for active subscriptions first
+    const hasActive = await checkActiveSubscriptions();
+    
+    // Get plan details
+    const subscription = gym.subscriptions?.find((sub: any) => sub.validityDays === validityDays);
+    if (!subscription) {
+      setErrorMessage('Subscription plan not found');
+      setShowErrorModal(true);
+      return;
+    }
+
+    const subscriptionDetails = [{
+      id: subscription.id,
+      planType,
+      price: parseFloat(subscription.price),
+      discountedPrice: subscription.discountedPrice ? parseFloat(subscription.discountedPrice) : undefined,
+      gymName: gym.name,
+      validityDays,
+      subscriptionId: subscription.id,
+      gymId: gym.id
+    }];
+
+    setSelectedSubscriptions(subscriptionDetails);
+    setHasActiveSubscription(hasActive);
+    setIsPurchaseModalOpen(true);
+  };
+
+  // Handle payment confirmation
+  const handleConfirmPurchase = async (paymentMethod: string, subscriptionId: string) => {
+    if (!selectedSubscriptions.length || !user) return;
+    
+    const selectedSub = selectedSubscriptions.find(sub => sub.id === subscriptionId);
+    if (!selectedSub) return;
+
+    setIsProcessingPayment(true);
+    
+    try {
+      // Create payment
+      const finalPrice = selectedSub.discountedPrice || selectedSub.price;
+      
+      const paymentResponse = await paymentService.createPayment({
+        userId: user.id,
+        amount: finalPrice,
+        currency: 'INR',
+        method: paymentMethod as 'card' | 'bank' | 'cash',
+        description: `${selectedSub.planType} subscription for ${selectedSub.gymName}`
+      });
+
+      if (paymentResponse.success) {
+        // Create subscription
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setDate(startDate.getDate() + selectedSub.validityDays);
+
+        const subscriptionResponse = await subscriptionService.createSubscription({
+          userId: user.id,
+          type: selectedSub.planType.toLowerCase() as 'daily' | 'weekly' | 'monthly' | 'yearly',
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+          status: 'active'
+        });
+
+        if (subscriptionResponse.success) {
+          setSuccessMessage(`Successfully purchased ${selectedSub.planType} subscription for ${selectedSub.gymName}!`);
+          setShowSuccessModal(true);
+          setIsPurchaseModalOpen(false);
+        } else {
+          throw new Error('Failed to create subscription');
+        }
+      } else {
+        throw new Error('Payment failed');
+      }
+    } catch (error) {
+      console.error('Purchase error:', error);
+      setErrorMessage('Failed to process purchase. Please try again.');
+      setShowErrorModal(true);
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
   const calculateDistance = (gymLat: string | number, gymLng: string | number) => {
     if (!currentLocation) return 0;
 
@@ -247,13 +430,14 @@ export function GymDiscovery() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <GymDiscoveryMap
             gyms={filteredAndSortedGyms}
-            center={currentLocation || { lat: 40.7128, lng: -74.0060 }}
+            center={currentLocation || { lat: 12.9716, lng: 77.5946 }}
             zoom={12}
             height="600px"
             onGymSelect={setSelectedGym}
             selectedGym={selectedGym}
             showUserLocation={true}
             userLocation={currentLocation}
+            refreshTrigger={mapRefreshTrigger}
           />
         </div>
       ) : (
@@ -345,7 +529,10 @@ export function GymDiscovery() {
                   >
                     {selectedGym?.id === gym.id ? 'Hide Details' : 'View Details'}
                   </button>
-                  <button className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm sm:text-base">
+                  <button 
+                    onClick={() => handleShowSubscriptions(gym)}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm sm:text-base"
+                  >
                     Subscribe
                   </button>
                 </div>
@@ -366,7 +553,9 @@ export function GymDiscovery() {
                     <h4 className="font-medium text-gray-900 mb-4">Pricing Plans</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
                       {gym.plans.daily > 0 && (
-                        <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-3 sm:p-4 border border-gray-200 hover:shadow-md transition-shadow min-h-[120px] flex flex-col justify-center">
+                        <div 
+                          onClick={() => handlePlanClick(gym, 'Daily', 1)}
+                          className="relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-3 sm:p-4 border border-gray-200 hover:shadow-md transition-shadow min-h-[120px] flex flex-col justify-center cursor-pointer hover:border-green-300">
                           {gym.subscriptions.find(sub => sub.validityDays === 1)?.isMostPopular && (
                             <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
                               <span className="bg-green-500 text-white px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-bold">MOST POPULAR</span>
@@ -397,7 +586,9 @@ export function GymDiscovery() {
                       )}
                       
                       {gym.plans.weekly > 0 && (
-                        <div className="relative bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-3 sm:p-4 border border-purple-200 hover:shadow-md transition-shadow min-h-[120px] flex flex-col justify-center">
+                        <div 
+                          onClick={() => handlePlanClick(gym, 'Weekly', 7)}
+                          className="relative bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-3 sm:p-4 border border-purple-200 hover:shadow-md transition-shadow min-h-[120px] flex flex-col justify-center cursor-pointer hover:border-green-300">
                           {gym.subscriptions.find(sub => sub.validityDays === 7)?.isMostPopular && (
                             <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
                               <span className="bg-green-500 text-white px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-bold">MOST POPULAR</span>
@@ -428,7 +619,9 @@ export function GymDiscovery() {
                       )}
                       
                       {gym.plans.monthly > 0 && (
-                        <div className="relative bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-3 sm:p-4 border-2 border-green-300 hover:shadow-lg transition-shadow min-h-[120px] flex flex-col justify-center">
+                        <div 
+                          onClick={() => handlePlanClick(gym, 'Monthly', 30)}
+                          className="relative bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-3 sm:p-4 border-2 border-green-300 hover:shadow-lg transition-shadow min-h-[120px] flex flex-col justify-center cursor-pointer hover:border-green-400">
                           {gym.subscriptions.find(sub => sub.validityDays === 30)?.isMostPopular && (
                             <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
                               <span className="bg-green-500 text-white px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-bold">MOST POPULAR</span>
@@ -454,7 +647,9 @@ export function GymDiscovery() {
                       )}
                       
                       {gym.plans.yearly > 0 && (
-                        <div className="relative bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-3 sm:p-4 border border-blue-200 hover:shadow-md transition-shadow min-h-[120px] flex flex-col justify-center">
+                        <div 
+                          onClick={() => handlePlanClick(gym, 'Yearly', 365)}
+                          className="relative bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-3 sm:p-4 border border-blue-200 hover:shadow-md transition-shadow min-h-[120px] flex flex-col justify-center cursor-pointer hover:border-green-300">
                           <div className="text-center">
                             <p className="text-xs sm:text-sm font-medium text-blue-600 mb-2">Yearly</p>
                             {gym.plans.yearlyDiscounted ? (
@@ -490,6 +685,33 @@ export function GymDiscovery() {
         </div>
       )}
       {/* <p className="text-gray-600 text-sm mb-4">${gym.description}</p> */}
+
+      {/* Modals */}
+      {isPurchaseModalOpen && selectedSubscriptions.length > 0 && (
+        <SubscriptionPurchaseModal
+          isOpen={isPurchaseModalOpen}
+          subscriptions={selectedSubscriptions}
+          onClose={() => setIsPurchaseModalOpen(false)}
+          onSelectPlan={(subscriptionId) => {
+            // For now, just close the modal and show success
+            setIsPurchaseModalOpen(false);
+            setSuccessMessage('Plan selection implemented! Proceeding to payment...');
+            setShowSuccessModal(true);
+          }}
+        />
+      )}
+      {showSuccessModal && (
+        <SuccessModal
+          message={successMessage}
+          onClose={() => setShowSuccessModal(false)}
+        />
+      )}
+      {showErrorModal && (
+        <ErrorModal
+          message={errorMessage}
+          onClose={() => setShowErrorModal(false)}
+        />
+      )}
       {filteredAndSortedGyms.length === 0 && (
         <div className="text-center py-12">
           <MapPin className="w-16 h-16 text-gray-300 mx-auto mb-4" />
