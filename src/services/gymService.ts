@@ -60,20 +60,69 @@ export interface Gym {
 }
 
 
+export interface GymFilters {
+  latitude?: number;
+  longitude?: number;
+  radius?: number; // in kilometers
+  minRating?: number;
+  maxPrice?: number;
+  amenities?: string[];
+  city?: string;
+  state?: string;
+  sortBy?: 'distance' | 'rating' | 'price' | 'name';
+  sortOrder?: 'asc' | 'desc';
+}
+
 class GymService {
-  async getGyms(): Promise<ApiResponse<Gym[]>> {
-    const result = await apiClient.get<any>(API_CONFIG.ENDPOINTS.GYMS);
-    
-    // Handle the nested data structure from the API
-    if (result.success && result.data && result.data.gyms) {
+  async getGyms(filters?: GymFilters): Promise<ApiResponse<Gym[]>> {
+    try {
+      // Build query parameters
+      const params = new URLSearchParams();
+      
+      if (filters) {
+        if (filters.latitude !== undefined) params.append('latitude', filters.latitude.toString());
+        if (filters.longitude !== undefined) params.append('longitude', filters.longitude.toString());
+        if (filters.radius !== undefined) params.append('radius', filters.radius.toString());
+        if (filters.minRating !== undefined) params.append('minRating', filters.minRating.toString());
+        if (filters.maxPrice !== undefined) params.append('maxPrice', filters.maxPrice.toString());
+        if (filters.amenities && filters.amenities.length > 0) {
+          params.append('amenities', filters.amenities.join(','));
+        }
+        if (filters.city) params.append('city', filters.city);
+        if (filters.state) params.append('state', filters.state);
+        if (filters.sortBy) params.append('sortBy', filters.sortBy);
+        if (filters.sortOrder) params.append('sortOrder', filters.sortOrder);
+      }
+      
+      const queryString = params.toString();
+      const endpoint = queryString ? `${API_CONFIG.ENDPOINTS.GYMS_PUBLIC}?${queryString}` : API_CONFIG.ENDPOINTS.GYMS_PUBLIC;
+      
+      // Use direct fetch for public endpoint (no authentication required)
+      const response = await fetch(buildApiUrl(endpoint));
+      const result = await response.json();
+      
+      // Handle the response from the public API
+      if (result.success && result.data && result.data.gyms) {
+        return {
+          success: true,
+          message: result.message,
+          data: result.data.gyms
+        };
+      }
+      
       return {
-        success: true,
-        message: result.message,
-        data: result.data.gyms
+        success: false,
+        message: result.message || 'Failed to fetch gyms',
+        data: null
+      };
+    } catch (error) {
+      console.error('Error fetching gyms:', error);
+      return {
+        success: false,
+        message: 'Failed to fetch gyms. Please try again.',
+        data: null
       };
     }
-    
-    return result;
   }
 
   async getGymById(id: string): Promise<ApiResponse<Gym>> {

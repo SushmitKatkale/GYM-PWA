@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { gymService, Gym as ApiGym } from '../services/gymService';
+import { gymService, Gym as ApiGym, GymFilters } from '../services/gymService';
 import { slotService, TimeSlot as ApiTimeSlot, Booking as ApiBooking } from '../services/slotService';
 import { useAuthStore } from './authStore';
 
@@ -15,9 +15,11 @@ interface GymState {
   selectedGym: Gym | null;
   isLoading: boolean;
   error: string | null;
+  currentFilters: GymFilters | null;
   
   // Actions
   fetchGyms: () => Promise<boolean>;
+  fetchGymsWithFilters: (filters?: GymFilters) => Promise<boolean>;
   fetchSlots: (gymId?: string, date?: string) => Promise<boolean>;
   setSelectedGym: (gym: Gym | null) => void;
   getGymById: (id: string) => Gym | undefined;
@@ -26,6 +28,7 @@ interface GymState {
   cancelBooking: (bookingId: string) => Promise<boolean>;
   getUserBookings: (userId: string) => Booking[];
   updateGymOccupancy: (gymId: string, change: number) => void;
+  calculateDistance: (gymLat: number, gymLng: number, userLat: number, userLng: number) => number;
   clearError: () => void;
 }
 
@@ -144,6 +147,7 @@ export const useGymStore = create<GymState>((set, get) => ({
   selectedGym: null,
   isLoading: false,
   error: null,
+  currentFilters: null,
 
   fetchGyms: async () => {
     set({ isLoading: true, error: null });
@@ -178,6 +182,47 @@ export const useGymStore = create<GymState>((set, get) => ({
       });
       return false;
     }
+  },
+
+fetchGymsWithFilters: async (filters?: GymFilters) => {
+    set({ isLoading: true, error: null, currentFilters: filters ?? null });
+
+    try {
+      const response = await gymService.getGyms(filters);
+
+      if (response.success && response.data) {
+        set({
+          gyms: response.data,
+          isLoading: false
+        });
+        return true;
+      } else {
+        set({
+          error: response.message || 'Failed to fetch gyms with filters',
+          isLoading: false
+        });
+        return false;
+      }
+    } catch (error) {
+      console.error('Fetch gyms with filters error:', error);
+      set({
+        error: 'Network error occurred. Please check your connection and try again.',
+        isLoading: false
+      });
+      return false;
+    }
+  },
+
+  calculateDistance: (gymLat, gymLng, userLat, userLng) => {
+    const R = 6371; // Earth's radius in km
+    const dLat = (gymLat - userLat) * Math.PI / 180;
+    const dLng = (gymLng - userLng) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(userLat * Math.PI / 180) * Math.cos(gymLat * Math.PI / 180) * 
+      Math.sin(dLng/2) * Math.sin(dLng/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
   },
 
   fetchSlots: async (gymId?: string, date?: string) => {

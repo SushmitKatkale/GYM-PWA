@@ -5,6 +5,7 @@ export const API_CONFIG = {
     OWNERS: '/owners',
     USERS: '/users',
     GYMS: '/gyms',
+    GYMS_PUBLIC: '/gyms/public/discover',
     SUBSCRIPTIONS: '/subscriptions',
     SUBSCRIPTION_FEATURES: '/subscription-features',
     AUTH: '/auth',
