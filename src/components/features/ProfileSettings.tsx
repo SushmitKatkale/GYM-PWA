@@ -1,7 +1,22 @@
-import React, { useState } from 'react';
-import { User, Mail, Phone, Lock, Bell, Shield, Camera, Save, Eye, EyeOff, Settings } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { User, Mail, Phone, Lock, Bell, Shield, Camera, Save, Eye, EyeOff, Settings, Loader2, Plus, Trash2 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { useApp } from '../../contexts/AppContext';
+import { 
+  userService, 
+  type NotificationSettings, 
+  type PrivacySettings, 
+  type AppPreferences, 
+  type EmergencyContact,
+  type FitnessGoal 
+} from '../../services/userService';
+
+interface EmergencyContactInfo {
+  id?: string;
+  name: string;
+  phone: string;
+  relationship: string;
+}
 
 interface UserProfile {
   firstName: string;
@@ -13,18 +28,15 @@ interface UserProfile {
   height: string;
   weight: string;
   fitnessGoals: string[];
-  emergencyContact: {
-    name: string;
-    phone: string;
-    relationship: string;
-  };
+  emergencyContacts: EmergencyContactInfo[];
 }
 
 interface ProfileSettingsProps {
   activeSettingsTab?: string;
+  onTabChange?: (tab: string) => void;
 }
 
-export function ProfileSettings({ activeSettingsTab = 'profile' }: ProfileSettingsProps) {
+export function ProfileSettings({ activeSettingsTab = 'profile', onTabChange }: ProfileSettingsProps) {
   const { user, logout } = useAuthStore();
   const { addNotification } = useApp();
   
@@ -32,23 +44,24 @@ export function ProfileSettings({ activeSettingsTab = 'profile' }: ProfileSettin
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDataLoading, setIsDataLoading] = useState(true);
+  const [availableFitnessGoals, setAvailableFitnessGoals] = useState<any[]>([]);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [isImageUploading, setIsImageUploading] = useState(false);
 
   // Profile data
   const [profile, setProfile] = useState<UserProfile>({
     firstName: user?.name?.split(' ')[0] || '',
     lastName: user?.name?.split(' ')[1] || '',
     email: user?.email || '',
-    phone: '+1 (555) 123-4567',
-    dateOfBirth: '1990-01-01',
+    phone: '',
+    dateOfBirth: '',
     gender: '',
-    height: '175',
-    weight: '70',
-    fitnessGoals: ['Weight Loss', 'Muscle Building'],
-    emergencyContact: {
-      name: '',
-      phone: '',
-      relationship: ''
-    }
+    height: '',
+    weight: '',
+    fitnessGoals: [],
+    emergencyContacts: []
   });
 
   // Security settings
@@ -96,9 +109,139 @@ export function ProfileSettings({ activeSettingsTab = 'profile' }: ProfileSettin
     'General Fitness', 'Strength Training', 'Cardio Health'
   ];
 
-  const handleProfileSave = () => {
+  // Sync activeTab with prop changes
+  useEffect(() => {
+    setActiveTab(activeSettingsTab as any || 'profile');
+  }, [activeSettingsTab]);
+
+  // Handle tab change
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId as any);
+    if (onTabChange) {
+      onTabChange(tabId);
+    }
+  };
+
+  // Load user data on component mount
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        setIsDataLoading(true);
+        
+        // Load complete profile data
+        const profileResponse = await userService.getCompleteProfile();
+        if (profileResponse.success) {
+          const data = profileResponse.data;
+          
+          // Update profile state with backend data
+          setProfile(prev => ({
+            ...prev,
+            firstName: data.firstName || prev.firstName,
+            lastName: data.lastName || prev.lastName,
+            email: data.email || prev.email,
+            phone: data.phoneNumber || '',
+            dateOfBirth: data.profile?.dateOfBirth || '',
+            gender: data.profile?.gender || '',
+            height: data.profile?.height || '',
+            weight: data.profile?.weight || '',
+            emergencyContacts: data.emergencyContacts?.map(contact => ({
+              id: contact.id,
+              name: contact.name,
+              phone: contact.phoneNumber,
+              relationship: contact.relationship
+            })) || [],
+            fitnessGoals: data.fitnessGoals?.map(fg => fg.goalName) || []
+          }));
+
+          // Load current profile image if available
+          try {
+            const imageUrl = await userService.getProfileImageUrl();
+            setProfileImage(imageUrl);
+          } catch (error) {
+            // Profile image not found or error occurred - this is OK
+            console.log('No profile image found or error loading image:', error);
+          }
+
+          // Update settings with backend data
+          if (data.notificationSettings) {
+            setNotificationSettings({
+              emailNotifications: data.notificationSettings.emailNotifications ?? true,
+              pushNotifications: data.notificationSettings.pushNotifications ?? true,
+              smsNotifications: data.notificationSettings.smsNotifications ?? false,
+              subscriptionReminders: data.notificationSettings.subscriptionReminders ?? true,
+              classReminders: data.notificationSettings.classReminders ?? true,
+              promotionalEmails: data.notificationSettings.promotionalEmails ?? false,
+              workoutReminders: data.notificationSettings.workoutReminders ?? true
+            });
+          }
+          if (data.privacySettings) {
+            setPrivacySettings({
+              profileVisibility: data.privacySettings.profileVisibility ?? 'private',
+              shareWorkoutData: data.privacySettings.shareWorkoutData ?? false,
+              shareProgressPhotos: data.privacySettings.shareProgressPhotos ?? false,
+              allowFriendRequests: data.privacySettings.allowFriendRequests ?? true
+            });
+          }
+          if (data.appPreferences) {
+            setAppPreferences({
+              darkMode: data.appPreferences.darkMode ?? false,
+              language: data.appPreferences.language ?? 'en',
+              units: data.appPreferences.units ?? 'metric',
+              autoSync: data.appPreferences.autoSync ?? true,
+              offlineMode: data.appPreferences.offlineMode ?? false,
+              dataUsage: data.appPreferences.dataUsage ?? 'normal',
+              animationsEnabled: data.appPreferences.animationsEnabled ?? true,
+              soundEffects: data.appPreferences.soundEffects ?? true
+            });
+          }
+        }
+
+        // Load available fitness goals
+        const goalsResponse = await userService.getFitnessGoals();
+        if (goalsResponse.success) {
+          setAvailableFitnessGoals(goalsResponse.data);
+        }
+        
+      } catch (error) {
+        console.error('Error loading user data:', error);
+        addNotification({
+          title: 'Error',
+          message: 'Failed to load profile data',
+          type: 'error'
+        });
+      } finally {
+        setIsDataLoading(false);
+      }
+    };
+
+    loadUserData();
+  }, [addNotification]);
+
+  const handleAddEmergencyContact = () => {
+    setProfile((prev) => ({
+      ...prev,
+      emergencyContacts: [...prev.emergencyContacts, { name: '', phone: '', relationship: '' }]
+    }));
+  };
+
+  const handleRemoveEmergencyContact = (index: number) => {
+    setProfile((prev) => ({
+      ...prev,
+      emergencyContacts: prev.emergencyContacts.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleEmergencyContactChange = (index: number, field: keyof EmergencyContactInfo, value: string) => {
+    setProfile((prev) => {
+      const updatedContacts = [...prev.emergencyContacts];
+      updatedContacts[index] = { ...updatedContacts[index], [field]: value };
+      return { ...prev, emergencyContacts: updatedContacts };
+    });
+  };
+
+  const handleProfileSave = async () => {
     // Validate required fields
-    if (!profile.firstName || !profile.lastName || !profile.email) {
+    if (!profile.firstName || !profile.lastName) {
       addNotification({
         title: 'Validation Error',
         message: 'Please fill in all required fields',
@@ -107,14 +250,80 @@ export function ProfileSettings({ activeSettingsTab = 'profile' }: ProfileSettin
       return;
     }
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      setIsLoading(true);
+      
+      // Update basic profile information and extended data
+      // Validate and sanitize date before sending
+      let sanitizedDateOfBirth = profile.dateOfBirth;
+      if (profile.dateOfBirth) {
+        const date = new Date(profile.dateOfBirth);
+        if (isNaN(date.getTime())) {
+          sanitizedDateOfBirth = null;
+        }
+      } else {
+        sanitizedDateOfBirth = null;
+      }
+
+      await userService.updateUserProfile({
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        email: profile.email,
+        phoneNumber: profile.phone,
+        dateOfBirth: sanitizedDateOfBirth,
+        gender: profile.gender,
+        height: profile.height || null,
+        weight: profile.weight || null
+      });
+
+      // Update emergency contacts if provided
+      if (profile.emergencyContacts && profile.emergencyContacts.length > 0) {
+        for (const contact of profile.emergencyContacts) {
+          if (contact.name || contact.phone) {
+            if (contact.id) {
+              // Update existing contact
+              await userService.updateEmergencyContact(parseInt(contact.id), {
+                name: contact.name,
+                phoneNumber: contact.phone,
+                relationship: contact.relationship
+              });
+            } else {
+              // Add new contact
+              await userService.addEmergencyContact({
+                name: contact.name,
+                phoneNumber: contact.phone,
+                relationship: contact.relationship
+              });
+            }
+          }
+        }
+      }
+
+      // Update fitness goals
+      const goalIds = profile.fitnessGoals.map((goalName, index) => ({
+        goalId: availableFitnessGoals.find(g => g.goalName === goalName)?.id || index + 1,
+        priority: index + 1
+      }));
+      
+      if (goalIds.length > 0) {
+        await userService.updateFitnessGoals(goalIds);
+      }
+
       addNotification({
         title: 'Profile Updated',
         message: 'Your profile has been successfully updated',
         type: 'success'
       });
-    }, 1000);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      addNotification({
+        title: 'Update Failed',
+        message: 'Failed to update profile. Please try again.',
+        type: 'error'
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handlePasswordChange = () => {
@@ -145,15 +354,34 @@ export function ProfileSettings({ activeSettingsTab = 'profile' }: ProfileSettin
       return;
     }
 
-    // Simulate password change
-    setTimeout(() => {
-      addNotification({
-        title: 'Password Changed',
-        message: 'Your password has been successfully updated',
-        type: 'success'
+    setIsLoading(true);
+    userService.changePassword(profile.email, passwords.current, passwords.new)
+      .then((response) => {
+        if (response.success) {
+          addNotification({
+            title: 'Password Changed',
+            message: 'Your password has been successfully updated',
+            type: 'success'
+          });
+          setPasswords({ current: '', new: '', confirm: '' });
+        } else {
+          addNotification({
+            title: 'Update Failed',
+            message: response.message || 'Unable to change password',
+            type: 'error'
+          });
+        }
+      })
+      .catch(error => {
+        console.error('Error changing password:', error);
+        addNotification({
+          title: 'Error',
+          message: 'An unexpected error occurred while changing the password',
+          type: 'error'
+        });
+      }).finally(() => {
+        setIsLoading(false);
       });
-      setPasswords({ current: '', new: '', confirm: '' });
-    }, 1000);
   };
 
   const handleFitnessGoalToggle = (goal: string) => {
@@ -165,14 +393,144 @@ export function ProfileSettings({ activeSettingsTab = 'profile' }: ProfileSettin
     }));
   };
 
-  const handleAccountDeletion = () => {
-    if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-      // Simulate account deletion
+  const handleNotificationSettingsSave = async () => {
+    try {
+      setIsLoading(true);
+      await userService.updateNotificationSettings(notificationSettings);
       addNotification({
-        title: 'Account Deletion',
-        message: 'Your account deletion request has been submitted',
+        title: 'Settings Updated',
+        message: 'Your notification settings have been saved',
+        type: 'success'
+      });
+    } catch (error) {
+      console.error('Error updating notification settings:', error);
+      addNotification({
+        title: 'Update Failed',
+        message: 'Failed to update notification settings',
+        type: 'error'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePrivacySettingsSave = async () => {
+    try {
+      setIsLoading(true);
+      await userService.updatePrivacySettings(privacySettings);
+      addNotification({
+        title: 'Settings Updated',
+        message: 'Your privacy settings have been saved',
+        type: 'success'
+      });
+    } catch (error) {
+      console.error('Error updating privacy settings:', error);
+      addNotification({
+        title: 'Update Failed',
+        message: 'Failed to update privacy settings',
+        type: 'error'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAppPreferencesSave = async () => {
+    try {
+      setIsLoading(true);
+      await userService.updateAppPreferences(appPreferences);
+      addNotification({
+        title: 'Settings Updated',
+        message: 'Your app preferences have been saved',
+        type: 'success'
+      });
+    } catch (error) {
+      console.error('Error updating app preferences:', error);
+      addNotification({
+        title: 'Update Failed',
+        message: 'Failed to update app preferences',
+        type: 'error'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAccountDisable = () => {
+    if (window.confirm('Are you sure you want to disable your account? You can reactivate it later by contacting support.')) {
+      // Simulate account disable
+      addNotification({
+        title: 'Account Disabled',
+        message: 'Your account has been disabled. Contact support to reactivate.',
         type: 'info'
       });
+    }
+  };
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      addNotification({
+        title: 'Invalid File',
+        message: 'Please select a valid image file',
+        type: 'error'
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      addNotification({
+        title: 'File Too Large',
+        message: 'Image size should be less than 5MB',
+        type: 'error'
+      });
+      return;
+    }
+
+    try {
+      setIsImageUploading(true);
+      
+      // Create a preview URL for immediate feedback
+      const previewUrl = URL.createObjectURL(file);
+      setProfileImage(previewUrl);
+
+      // Upload to backend
+      const response = await userService.uploadProfileImage(file);
+      
+      if (response.success) {
+        // After successful upload, load the image from backend to get proper URL
+        try {
+          const imageUrl = await userService.getProfileImageUrl();
+          setProfileImage(imageUrl);
+        } catch (imageError) {
+          console.error('Error loading uploaded image:', imageError);
+          // Keep the preview URL if we can't load from backend
+        }
+        
+        addNotification({
+          title: 'Image Uploaded',
+          message: 'Profile image has been updated successfully',
+          type: 'success'
+        });
+      } else {
+        throw new Error(response.message || 'Upload failed');
+      }
+      
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      addNotification({
+        title: 'Upload Failed',
+        message: 'Failed to upload image. Please try again.',
+        type: 'error'
+      });
+      // Reset to previous state on error
+      setProfileImage(null);
+    } finally {
+      setIsImageUploading(false);
     }
   };
 
@@ -184,16 +542,42 @@ export function ProfileSettings({ activeSettingsTab = 'profile' }: ProfileSettin
             {/* Profile Photo */}
             <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
               <div className="relative">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xl sm:text-2xl font-bold">
-                  {profile.firstName[0]}{profile.lastName[0]}
+                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xl sm:text-2xl font-bold overflow-hidden">
+                  {profileImage ? (
+                    <img 
+                      src={profileImage}
+                      alt="Profile"
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                  ) : (
+                    <span>
+                      {profile.firstName[0]}{profile.lastName[0]}
+                    </span>
+                  )}
                 </div>
-                <button className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                  <Camera className="w-4 h-4 text-gray-600" />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  id="profile-image-upload"
+                />
+                <button 
+                  type="button"
+                  onClick={() => document.getElementById('profile-image-upload')?.click()}
+                  className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                  disabled={isImageUploading}
+                >
+                  {isImageUploading ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-gray-600" />
+                  ) : (
+                    <Camera className="w-4 h-4 text-gray-600" />
+                  )}
                 </button>
               </div>
               <div className="text-center sm:text-left">
                 <h3 className="text-lg font-semibold text-gray-900">Profile Photo</h3>
-                <p className="text-sm text-gray-600">Click the camera icon to upload a new photo</p>
+                <p className="text-sm text-gray-600">Click the camera icon to upload a new photo (max 5MB)</p>
               </div>
             </div>
 
@@ -214,15 +598,6 @@ export function ProfileSettings({ activeSettingsTab = 'profile' }: ProfileSettin
                   type="text"
                   value={profile.lastName}
                   onChange={(e) => setProfile(prev => ({ ...prev, lastName: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-                <input
-                  type="email"
-                  value={profile.email}
-                  onChange={(e) => setProfile(prev => ({ ...prev, email: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
@@ -299,47 +674,71 @@ export function ProfileSettings({ activeSettingsTab = 'profile' }: ProfileSettin
               </div>
             </div>
 
-            {/* Emergency Contact */}
+            {/* Emergency Contacts */}
             <div className="border-t pt-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Emergency Contact</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
-                  <input
-                    type="text"
-                    value={profile.emergencyContact.name}
-                    onChange={(e) => setProfile(prev => ({
-                      ...prev,
-                      emergencyContact: { ...prev.emergencyContact, name: e.target.value }
-                    }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-                  <input
-                    type="tel"
-                    value={profile.emergencyContact.phone}
-                    onChange={(e) => setProfile(prev => ({
-                      ...prev,
-                      emergencyContact: { ...prev.emergencyContact, phone: e.target.value }
-                    }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Relationship</label>
-                  <input
-                    type="text"
-                    value={profile.emergencyContact.relationship}
-                    onChange={(e) => setProfile(prev => ({
-                      ...prev,
-                      emergencyContact: { ...prev.emergencyContact, relationship: e.target.value }
-                    }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="e.g., Spouse, Parent, Friend"
-                  />
-                </div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Emergency Contacts</h3>
+                <button
+                  onClick={handleAddEmergencyContact}
+                  className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="text-sm font-medium">Add Contact</span>
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                {profile.emergencyContacts.length === 0 ? (
+                  <p className="text-gray-500 text-sm">No emergency contacts added yet.</p>
+                ) : (
+                  profile.emergencyContacts.map((contact, index) => (
+                    <div key={index} className="bg-gray-50 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-sm font-medium text-gray-900">Contact {index + 1}</h4>
+                        {profile.emergencyContacts.length > 0 && (
+                          <button
+                            onClick={() => handleRemoveEmergencyContact(index)}
+                            className="text-red-600 hover:text-red-700 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                          <input
+                            type="text"
+                            value={contact.name}
+                            onChange={(e) => handleEmergencyContactChange(index, 'name', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Full name"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                          <input
+                            type="tel"
+                            value={contact.phone}
+                            onChange={(e) => handleEmergencyContactChange(index, 'phone', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Phone number"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Relationship</label>
+                          <input
+                            type="text"
+                            value={contact.relationship}
+                            onChange={(e) => handleEmergencyContactChange(index, 'relationship', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="e.g., Spouse, Parent, Friend"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 
@@ -440,7 +839,7 @@ export function ProfileSettings({ activeSettingsTab = 'profile' }: ProfileSettin
             </div>
 
             {/* Two-Factor Authentication */}
-            <div className="bg-gray-50 rounded-lg p-6">
+            {/* <div className="bg-gray-50 rounded-lg p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">Two-Factor Authentication</h3>
@@ -456,19 +855,19 @@ export function ProfileSettings({ activeSettingsTab = 'profile' }: ProfileSettin
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                 </label>
               </div>
-            </div>
+            </div> */}
 
-            {/* Account Deletion */}
-            <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-red-900 mb-2">Delete Account</h3>
-              <p className="text-sm text-red-700 mb-4">
-                Once you delete your account, there is no going back. Please be certain.
+            {/* Account Disable */}
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-orange-900 mb-2">Disable Account</h3>
+              <p className="text-sm text-orange-700 mb-4">
+                Temporarily disable your account. You can reactivate it later by contacting support.
               </p>
               <button
-                onClick={handleAccountDeletion}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
+                onClick={handleAccountDisable}
+                className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg transition-colors"
               >
-                Delete My Account
+                Disable My Account
               </button>
             </div>
           </div>
@@ -501,6 +900,21 @@ export function ProfileSettings({ activeSettingsTab = 'profile' }: ProfileSettin
                 </label>
               </div>
             ))}
+            
+            <div className="pt-4 border-t">
+              <button
+                onClick={handleNotificationSettingsSave}
+                disabled={isLoading}
+                className="flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-6 py-3 rounded-lg transition-colors font-medium"
+              >
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                <span>Save Notification Settings</span>
+              </button>
+            </div>
           </div>
         );
 
@@ -553,6 +967,21 @@ export function ProfileSettings({ activeSettingsTab = 'profile' }: ProfileSettin
                 </label>
               </div>
             ))}
+            
+            <div className="pt-4 border-t">
+              <button
+                onClick={handlePrivacySettingsSave}
+                disabled={isLoading}
+                className="flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-6 py-3 rounded-lg transition-colors font-medium"
+              >
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                <span>Save Privacy Settings</span>
+              </button>
+            </div>
           </div>
         );
 
@@ -580,6 +1009,21 @@ export function ProfileSettings({ activeSettingsTab = 'profile' }: ProfileSettin
                 </label>
               </div>
             ))}
+            
+            <div className="pt-4 border-t">
+              <button
+                onClick={handleAppPreferencesSave}
+                disabled={isLoading}
+                className="flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-6 py-3 rounded-lg transition-colors font-medium"
+              >
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                <span>Save App Preferences</span>
+              </button>
+            </div>
           </div>
         );
 
@@ -625,7 +1069,7 @@ export function ProfileSettings({ activeSettingsTab = 'profile' }: ProfileSettin
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => handleTabChange(tab.id)}
                 className={`flex items-center space-x-2 py-4 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === tab.id
                     ? 'border-blue-500 text-blue-600'

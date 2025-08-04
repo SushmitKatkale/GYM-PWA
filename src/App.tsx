@@ -24,6 +24,8 @@ import { OwnerManagement } from './components/features/OwnerManagement';
 import { SubscriptionManagement } from './components/features/SubscriptionManagement';
 import { HelpFaq } from './components/features/HelpFaq';
 import { Bell, User, Shield, Settings, Lock, LogOut, X } from 'lucide-react';
+import { getAvatarImage } from './constants/images';
+import { userService } from './services/userService';
 
 function App() {
   const { user, logout, initializeAuth } = useAuthStore();
@@ -33,6 +35,26 @@ function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showProfileSidebar, setShowProfileSidebar] = useState(false);
   const [activeSettingsTab, setActiveSettingsTab] = useState('profile');
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+
+  // Load profile image
+  useEffect(() => {
+    const loadProfileImage = async () => {
+      if (user) {
+        try {
+          const imageUrl = await userService.getProfileImageUrl();
+          setProfileImageUrl(imageUrl);
+        } catch (error) {
+          // Profile image not found - use default avatar
+          setProfileImageUrl(null);
+        }
+      } else {
+        setProfileImageUrl(null);
+      }
+    };
+
+    loadProfileImage();
+  }, [user]);
 
   // Initialize authentication and register service worker
   useEffect(() => {
@@ -80,7 +102,10 @@ function App() {
           case 'analytics':
             return <AnalyticsPage />;
           case 'settings':
-            return <ProfileSettings activeSettingsTab={activeSettingsTab} />;
+            return <ProfileSettings 
+              activeSettingsTab={activeSettingsTab} 
+              onTabChange={setActiveSettingsTab}
+            />;
           case 'wallet':
             return <WalletPage />;
           case 'gym-management':
@@ -167,14 +192,26 @@ function App() {
                 className="flex items-center space-x-3 hover:bg-gray-50 p-2 rounded-lg transition-colors"
               >
                 {/* Profile Photo/Avatar - Top Left */}
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md">
-                  {user?.firstName?.[0] || user?.email?.[0] || 'U'}
-                </div>
+                {profileImageUrl ? (
+                  <img
+                    src={profileImageUrl}
+                    alt="User Avatar"
+                    className="w-10 h-10 rounded-full object-cover shadow-md"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = getAvatarImage(user?.gender, user?.avatar);
+                    }}
+                  />
+                ) : (
+                  <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md">
+                    {user?.firstName?.[0] || user?.email?.[0] || 'U'}
+                  </div>
+                )}
                 <div className="text-left">
                   <h1 className="text-lg font-semibold text-gray-900">
                     {user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.email || 'User'}
                   </h1>
-                  <p className="text-xs text-gray-500 capitalize">{user?.role || 'Member'}</p>
+                  <p className="text-xs text-gray-500 capitalize">{user?.id || ''}</p>
                 </div>
               </button>
               
@@ -220,9 +257,21 @@ function App() {
             {/* Sidebar Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
               <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-lg font-bold shadow-md">
-                  {user?.firstName?.[0] || user?.email?.[0] || 'U'}
-                </div>
+                {profileImageUrl ? (
+                  <img
+                    src={profileImageUrl}
+                    alt="User Avatar"
+                    className="w-12 h-12 rounded-full object-cover shadow-md"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = getAvatarImage(user?.gender, user?.avatar);
+                    }}
+                  />
+                ) : (
+                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-lg font-bold shadow-md">
+                    {user?.firstName?.[0] || user?.email?.[0] || 'U'}
+                  </div>
+                )}
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900">
                     {user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.email || 'User'}

@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bell, Menu, X, User, AlertTriangle } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { useNotificationStore } from '../../stores/notificationStore';
 import { getAvatarImage } from '../../constants/images';
+import { userService } from '../../services/userService';
 
 interface NavbarProps {
   onMenuToggle: () => void;
@@ -13,9 +14,29 @@ export function Navbar({ onMenuToggle, isMobileMenuOpen }: NavbarProps) {
   const { user } = useAuthStore();
   const { getUnreadCount } = useNotificationStore();
   const [showAlertsDropdown, setShowAlertsDropdown] = useState(false);
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
   
   const unreadCount = user ? getUnreadCount(user.id, user.role) : 0;
   const alertsCount = 3; // Mock alerts count
+
+  // Load profile image
+  useEffect(() => {
+    const loadProfileImage = async () => {
+      if (user) {
+        try {
+          const imageUrl = await userService.getProfileImageUrl();
+          setProfileImageUrl(imageUrl);
+        } catch (error) {
+          // Profile image not found - use default avatar
+          setProfileImageUrl(null);
+        }
+      } else {
+        setProfileImageUrl(null);
+      }
+    };
+
+    loadProfileImage();
+  }, [user]);
 
   const getRoleColor = () => {
     switch (user?.role) {
@@ -41,13 +62,18 @@ export function Navbar({ onMenuToggle, isMobileMenuOpen }: NavbarProps) {
             {/* Profile - moved to left */}
             <div className="flex items-center space-x-3 text-white">
               <img
-                src={getAvatarImage(user?.gender, user?.avatar)}
-                alt={user?.name || 'User Avatar'}
+                src={profileImageUrl || getAvatarImage(user?.gender, user?.avatar)}
+                alt={user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.username || 'User Avatar'}
                 className="w-8 h-8 rounded-full object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = getAvatarImage(user?.gender, user?.avatar);
+                  setProfileImageUrl(null);
+                }}
               />
               <div className="hidden sm:block text-left">
-                <div className="text-sm font-medium">{user?.name}</div>
-                <div className="text-xs opacity-75 capitalize">{user?.role}</div>
+                <div className="text-sm font-medium">{user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.username || user?.email}</div>
+                <div className="text-xs opacity-75 capitalize">{user?.id}</div>
               </div>
             </div>
           </div>

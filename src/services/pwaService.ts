@@ -100,10 +100,14 @@ class PWAService {
   // Send subscription to server
   async sendSubscriptionToServer(subscription: PushSubscription): Promise<void> {
     try {
-      const response = await fetch('/api/push-subscription', {
+      // Get the token from localStorage or wherever it's stored
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch('/api/users/push-subscription', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
         },
         body: JSON.stringify({
           subscription: subscription,

@@ -9,6 +9,9 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      srcDir: 'public',
+      filename: 'sw.js',
+      strategies: 'injectManifest',
       manifest: {
         name: 'FItEsperro - Fitness Management',
         short_name: 'FItEsperro',
