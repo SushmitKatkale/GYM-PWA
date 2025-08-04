@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, User, ChevronDown, Check } from 'lucide-react';
-import { buildApiUrl, API_CONFIG } from '../../config/api';
+import { API_CONFIG } from '../../config/api';
+import { apiClient } from '../../services/apiClient';
 
 interface Owner {
   id: string;
@@ -45,8 +46,7 @@ const OwnerAutocomplete: React.FC<OwnerAutocompleteProps> = ({
     const fetchOwners = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.OWNERS));
-        const data = await response.json();
+        const data = await apiClient.get(API_CONFIG.ENDPOINTS.OWNERS);
         if (data.success) {
           const activeOwners = data.data.filter((owner: Owner) => owner.activeStatus === '1');
           setOwners(activeOwners);

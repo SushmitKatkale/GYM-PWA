@@ -12,7 +12,6 @@ const mockUseAuthStore = useAuthStore as jest.MockedFunction<typeof useAuthStore
 const login = vi.fn();
 mockUseAuthStore.mockReturnValue({
   login,
-  loginWithCode: vi.fn(),
   isLoading: false,
   error: null,
   clearError: vi.fn(),
@@ -22,22 +21,14 @@ describe('LoginForm', () => {
   it('renders login form with email and password inputs', () => {
     render(<LoginForm onToggleMode={vi.fn()} />);
 
-    expect(screen.getByPlaceholderText('admin@gymms.com')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('admin123')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Enter your email address')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Enter your password')).toBeInTheDocument();
   });
 
-  it('allows user to toggle between email and code login modes', async () => {
-    render(<LoginForm onToggleMode={vi.fn()} />);
-    const codeButton = screen.getByRole('button', { name: /Quick Code/i });
-
-    fireEvent.click(codeButton);
-    expect(screen.getByPlaceholderText('123456')).toBeInTheDocument();
-  });
 
   it('handles login error from auth store', async () => {
     mockUseAuthStore.mockReturnValueOnce({
       login: vi.fn(),
-      loginWithCode: vi.fn(),
       isLoading: false,
       error: 'Invalid credentials',
       clearError: vi.fn(),
@@ -55,7 +46,6 @@ describe('LoginForm', () => {
     // Mock the store for this specific test
     mockUseAuthStore.mockImplementation(() => ({
       login,
-      loginWithCode: vi.fn(),
       isLoading: false,
       error: null,
       clearError: vi.fn(),
@@ -64,8 +54,8 @@ describe('LoginForm', () => {
     render(<LoginForm onToggleMode={vi.fn()} />);
     
     // Use data-testid or role-based selectors if placeholders are problematic
-    const emailInput = screen.getByPlaceholderText('admin@gymms.com');
-    const passwordInput = screen.getByPlaceholderText('admin123');
+    const emailInput = screen.getByPlaceholderText('Enter your email address');
+    const passwordInput = screen.getByPlaceholderText('Enter your password');
     const signInButton = screen.getByRole('button', { name: /Sign In/i });
 
     // Clear inputs and fill with test data

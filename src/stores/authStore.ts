@@ -45,7 +45,6 @@ interface AuthState {
   
   // Authentication methods
   login: (email: string, password: string) => Promise<boolean>;
-  loginWithCode: (code: string) => Promise<boolean>;
   sendOtp: (email: string, firstName?: string) => Promise<boolean>;
   verifyOtp: (email: string, otp: string) => Promise<boolean>;
   resendOtp: (email: string) => Promise<boolean>;
@@ -55,6 +54,7 @@ interface AuthState {
   
   // User management
   updateUser: (userData: Partial<User>) => void;
+  fetchUserProfile: () => Promise<boolean>;
   
   // Utility methods
   clearError: () => void;
@@ -112,21 +112,52 @@ export const useAuthStore = create<AuthState>()(
               isLoading: false 
             });
             
-            // TODO: Get user profile from the backend
-            // For now, create a minimal user object
-            const user: User = {
+            // Create a basic user object first to allow login
+            const basicUser: User = {
               id: '',
               firstName: '',
               lastName: '',
               username: '',
               email: email,
-              role: 'user', // Will be updated when we get the profile
+              role: 'user',
               isVerified: true,
               activeStatus: '1',
               createTimestamp: new Date().toISOString()
             };
             
-            set({ user });
+            set({ user: basicUser });
+            
+            // Try to fetch detailed user profile from the backend (optional)
+            // This runs in the background and updates the user object if successful
+            authService.getUserProfile(tokens.accessToken)
+              .then(profileResponse => {
+                if (profileResponse.success && profileResponse.data) {
+                  const profileData = profileResponse.data;
+                  const enhancedUser: User = {
+                    id: profileData.id || basicUser.id,
+                    firstName: profileData.firstName || basicUser.firstName,
+                    lastName: profileData.lastName || basicUser.lastName,
+                    username: profileData.username || basicUser.username,
+                    email: profileData.email || email,
+                    role: mapUserTypeToRole(profileData.type || '1'),
+                    gymId: profileData.gymId,
+                    phoneNumber: profileData.phoneNumber,
+                    avatar: profileData.avatar,
+                    isVerified: profileData.isVerified !== false,
+                    activeStatus: profileData.activeStatus || '1',
+                    createTimestamp: profileData.createTimestamp || basicUser.createTimestamp
+                  };
+                  
+                  console.log('User profile loaded successfully:', enhancedUser);
+                  set({ user: enhancedUser });
+                } else {
+                  console.warn('Failed to fetch user profile, using basic user info:', profileResponse.message);
+                }
+              })
+              .catch(profileError => {
+                console.warn('Error fetching user profile, using basic user info:', profileError);
+              });
+            
             return true;
           } else {
             set({ 
@@ -150,63 +181,6 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      loginWithCode: async (code: string) => {
-        set({ isLoading: true, error: null });
-        
-        try {
-          // For demo purposes, check against predefined codes
-          const demoCredentials = {
-            '123456': { email: 'admin@gymms.com', role: 'admin' as UserRole },
-            '234567': { email: 'owner@gym.com', role: 'owner' as UserRole },
-            '345678': { email: 'user@email.com', role: 'user' as UserRole }
-          };
-          
-          const credential = demoCredentials[code as keyof typeof demoCredentials];
-          
-          if (credential) {
-            // Create mock tokens for demo
-            const tokens = {
-              accessToken: `demo_access_token_${code}`,
-              refreshToken: `demo_refresh_token_${code}`
-            };
-            
-            const user: User = {
-              id: `demo_user_${code}`,
-              firstName: credential.role === 'admin' ? 'Admin' : credential.role === 'owner' ? 'Owner' : 'User',
-              lastName: 'Demo',
-              username: credential.role,
-              email: credential.email,
-              role: credential.role,
-              isVerified: true,
-              activeStatus: '1',
-              createTimestamp: new Date().toISOString()
-            };
-            
-            set({ 
-              tokens, 
-              user,
-              isAuthenticated: true,
-              isLoading: false 
-            });
-            
-            return true;
-          } else {
-            set({ 
-              error: 'Invalid access code', 
-              isLoading: false,
-              isAuthenticated: false 
-            });
-            return false;
-          }
-        } catch (error) {
-          set({ 
-            error: 'Network error occurred', 
-            isLoading: false,
-            isAuthenticated: false 
-          });
-          return false;
-        }
-      },
 
       sendOtp: async (email: string, firstName?: string) => {
         set({ isLoading: true, error: null });
@@ -382,6 +356,47 @@ export const useAuthStore = create<AuthState>()(
         const currentUser = get().user;
         if (currentUser) {
           set({ user: { ...currentUser, ...userData } });
+        }
+      },
+
+      fetchUserProfile: async () => {
+        const { tokens, user } = get();
+        
+        if (!tokens?.accessToken) {
+          console.warn('Cannot fetch user profile: No access token available');
+          return false;
+        }
+        
+        try {
+          const profileResponse = await authService.getUserProfile(tokens.accessToken);
+          
+          if (profileResponse.success && profileResponse.data) {
+            const profileData = profileResponse.data;
+            const enhancedUser: User = {
+              id: profileData.id || user?.id || '',
+              firstName: profileData.firstName || user?.firstName || '',
+              lastName: profileData.lastName || user?.lastName || '',
+              username: profileData.username || user?.username || '',
+              email: profileData.email || user?.email || '',
+              role: mapUserTypeToRole(profileData.type || '1'),
+              gymId: profileData.gymId,
+              phoneNumber: profileData.phoneNumber,
+              avatar: profileData.avatar,
+              isVerified: profileData.isVerified !== false,
+              activeStatus: profileData.activeStatus || '1',
+              createTimestamp: profileData.createTimestamp || user?.createTimestamp || new Date().toISOString()
+            };
+            
+            console.log('User profile fetched successfully:', enhancedUser);
+            set({ user: enhancedUser });
+            return true;
+          } else {
+            console.warn('Failed to fetch user profile:', profileResponse.message);
+            return false;
+          }
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+          return false;
         }
       },
 

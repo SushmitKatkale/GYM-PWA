@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogIn, Smartphone, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { LogIn, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { authService } from '../../services/authService';
 
@@ -8,16 +8,14 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onToggleMode }: LoginFormProps) {
-  const [loginMode, setLoginMode] = useState<'email' | 'code'>('email');
   const [formData, setFormData] = useState({
     email: '',
-    password: '',
-    code: ''
+    password: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   
-  const { login, loginWithCode, isLoading, error: authError, clearError } = useAuthStore();
+  const { login, isLoading, error: authError, clearError } = useAuthStore();
 
   React.useEffect(() => {
     if (authError) {
@@ -31,26 +29,13 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
     setError('');
 
     // Basic required field validation only
-    if (loginMode === 'email') {
-      if (!formData.email.trim() || !formData.password.trim()) {
-        setError('Please fill in all required fields');
-        return;
-      }
-    } else {
-      if (!formData.code.trim()) {
-        setError('Access code is required');
-        return;
-      }
+    if (!formData.email.trim() || !formData.password.trim()) {
+      setError('Please fill in all required fields');
+      return;
     }
 
     try {
-      let success = false;
-      
-      if (loginMode === 'email') {
-        success = await login(formData.email, formData.password);
-      } else {
-        success = await loginWithCode(formData.code);
-      }
+      const success = await login(formData.email, formData.password);
 
       // Error handling is now done through the store
       if (!success && !authError) {
@@ -73,33 +58,6 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
           <p className="text-gray-600 mt-2">Sign in to your gym account</p>
         </div>
 
-        {/* Login Mode Toggle */}
-        <div className="flex bg-gray-100 rounded-lg p-1 mb-6">
-          <button
-            type="button"
-            onClick={() => setLoginMode('email')}
-            className={`flex-1 flex items-center justify-center py-2 px-4 rounded-md text-sm font-medium transition-all ${
-              loginMode === 'email'
-                ? 'bg-white text-indigo-600 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            <Mail className="w-4 h-4 mr-2" />
-            Email
-          </button>
-          <button
-            type="button"
-            onClick={() => setLoginMode('code')}
-            className={`flex-1 flex items-center justify-center py-2 px-4 rounded-md text-sm font-medium transition-all ${
-              loginMode === 'code'
-                ? 'bg-white text-indigo-600 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            <Smartphone className="w-4 h-4 mr-2" />
-            Quick Code
-          </button>
-        </div>
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
@@ -108,68 +66,46 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {loginMode === 'email' ? (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                    placeholder="admin@gymms.com"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                    placeholder="admin123"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                6-Digit Access Code
-              </label>
-              <div className="relative">
-                <Smartphone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  required
-                  maxLength={6}
-                  value={formData.code}
-                  onChange={(e) => setFormData({ ...formData, code: e.target.value.replace(/\D/g, '') })}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-center text-2xl tracking-widest"
-                  placeholder="123456"
-                />
-              </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Email Address
+            </label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="email"
+                required
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                placeholder="Enter your email address"
+              />
             </div>
-          )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Password
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                placeholder="Enter your password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
+          </div>
 
           <button
             type="submit"
@@ -190,16 +126,6 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
               Sign up
             </button>
           </p>
-        </div>
-
-        {/* Demo Credentials */}
-        <div className="mt-8 p-4 bg-gray-50 rounded-lg">
-          <h4 className="text-sm font-medium text-gray-700 mb-2">Demo Credentials:</h4>
-          <div className="text-xs text-gray-600 space-y-1">
-            <p><strong>Admin:</strong> admin@gymms.com / admin123 (Code: 123456)</p>
-            <p><strong>Owner:</strong> owner@gym.com / owner123 (Code: 234567)</p>
-            <p><strong>User:</strong> user@email.com / user123 (Code: 345678)</p>
-          </div>
         </div>
       </div>
     </div>

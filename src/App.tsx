@@ -26,7 +26,7 @@ import { HelpFaq } from './components/features/HelpFaq';
 import { Bell, User, Shield, Settings, Lock, LogOut, X } from 'lucide-react';
 
 function App() {
-  const { user, logout } = useAuthStore();
+  const { user, logout, initializeAuth } = useAuthStore();
   const [authMode, setAuthMode] = useState<'login' | 'register' | 'otp'>('login');
   const [pendingVerificationEmail, setPendingVerificationEmail] = useState('');
   const [activeView, setActiveView] = useState('dashboard');
@@ -34,14 +34,18 @@ function App() {
   const [showProfileSidebar, setShowProfileSidebar] = useState(false);
   const [activeSettingsTab, setActiveSettingsTab] = useState('profile');
 
-  // Register service worker
+  // Initialize authentication and register service worker
   useEffect(() => {
+    // Initialize authentication state from stored tokens
+    initializeAuth();
+    
+    // Register service worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js')
         .then(() => console.log('Service Worker registered'))
         .catch(error => console.error('Service Worker registration failed:', error));
     }
-  }, []);
+  }, [initializeAuth]);
 
   // Handle view changes
   const handleViewChange = (view: string) => {
@@ -164,11 +168,11 @@ function App() {
               >
                 {/* Profile Photo/Avatar - Top Left */}
                 <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md">
-                  {user?.name?.[0] || 'U'}
+                  {user?.firstName?.[0] || user?.email?.[0] || 'U'}
                 </div>
                 <div className="text-left">
                   <h1 className="text-lg font-semibold text-gray-900">
-                    {user?.name || 'User'}
+                    {user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.email || 'User'}
                   </h1>
                   <p className="text-xs text-gray-500 capitalize">{user?.role || 'Member'}</p>
                 </div>
@@ -217,10 +221,12 @@ function App() {
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
               <div className="flex items-center space-x-3">
                 <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-lg font-bold shadow-md">
-                  {user?.name?.[0] || 'U'}
+                  {user?.firstName?.[0] || user?.email?.[0] || 'U'}
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900">{user?.name || 'User'}</h2>
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    {user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.email || 'User'}
+                  </h2>
                   <p className="text-sm text-gray-500">{user?.email || 'user@example.com'}</p>
                 </div>
               </div>

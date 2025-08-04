@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { User, Search, Plus, Edit, Trash2, Phone, Mail, UserCheck, AlertCircle, X, CheckCircle, AlertTriangleIcon } from 'lucide-react';
-import { buildApiUrl, API_CONFIG } from '../../config/api';
+import { API_CONFIG } from '../../config/api';
+import { apiClient } from '../../services/apiClient';
+import { useAuthStore } from '../../stores/authStore';
 
 interface Owner {
   id: string;
@@ -14,6 +16,7 @@ interface Owner {
 }
 
 export function OwnerManagement() {
+  const { user, hasRole } = useAuthStore();
   const [owners, setOwners] = useState<Owner[]>([]);
   const [filteredOwners, setFilteredOwners] = useState<Owner[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -35,12 +38,15 @@ export function OwnerManagement() {
     password: ''
   });
 
+  // Check if current user is admin
+  const isAdmin = hasRole('admin');
+  const isOwner = hasRole('owner');
+
   // Fetch owners from API
   const fetchOwners = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.OWNERS));
-      const data = await response.json();
+      const data = await apiClient.get(API_CONFIG.ENDPOINTS.OWNERS);
       if (data.success) {
         setOwners(data.data);
         setFilteredOwners(data.data);
@@ -77,14 +83,7 @@ export function OwnerManagement() {
   // Create owner
   const createOwner = async () => {
     try {
-      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.OWNERS), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      });
-      const data = await response.json();
+      const data = await apiClient.post(API_CONFIG.ENDPOINTS.OWNERS, formData);
       if (data.success) {
         fetchOwners();
         setShowAddModal(false);
@@ -107,20 +106,14 @@ export function OwnerManagement() {
     if (!selectedOwner) return;
     
     try {
-      const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.OWNERS}/${selectedOwner.id}`), {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          username: formData.username,
-          email: selectedOwner.email,
-          phoneNumber: formData.phoneNumber
-        })
-      });
-      const data = await response.json();
+      const updateData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        username: formData.username,
+        email: selectedOwner.email,
+        phoneNumber: formData.phoneNumber
+      };
+      const data = await apiClient.put(`${API_CONFIG.ENDPOINTS.OWNERS}/${selectedOwner.id}`, updateData);
       if (data.success) {
         fetchOwners();
         setShowEditModal(false);
@@ -142,10 +135,7 @@ export function OwnerManagement() {
   // Delete owner
   const deleteOwner = async (id: string) => {
     try {
-      const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.OWNERS}/${id}`), {
-        method: 'DELETE'
-      });
-      const data = await response.json();
+      const data = await apiClient.delete(`${API_CONFIG.ENDPOINTS.OWNERS}/${id}`);
       if (data.success) {
         fetchOwners();
         setShowDeleteModal(false);
@@ -171,14 +161,21 @@ export function OwnerManagement() {
 
   // Reset form
   const resetForm = () => {
-    setFormData({
+    const initialFormData = {
       firstName: '',
       lastName: '',
       email: '',
       username: '',
       phoneNumber: '',
       password: ''
-    });
+    };
+    
+    // For owners, set their own email as username and disable it
+    if (isOwner && user?.email) {
+      initialFormData.username = user.email;
+    }
+    
+    setFormData(initialFormData);
   };
 
   // Open edit modal
@@ -193,6 +190,12 @@ export function OwnerManagement() {
       password: ''
     });
     setShowEditModal(true);
+  };
+
+  // Handle opening add modal
+  const handleOpenAddModal = () => {
+    resetForm();
+    setShowAddModal(true);
   };
 
   useEffect(() => {
@@ -216,7 +219,7 @@ export function OwnerManagement() {
           <p className="text-gray-600">Manage gym owners and their accounts</p>
         </div>
         <button
-          onClick={() => setShowAddModal(true)}
+          onClick={handleOpenAddModal}
           className="flex items-center justify-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
         >
           <Plus className="w-5 h-5" />
@@ -391,9 +394,15 @@ export function OwnerManagement() {
                   type="text"
                   value={formData.username}
                   onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    isOwner ? 'bg-gray-100 cursor-not-allowed' : ''
+                  }`}
+                  disabled={isOwner}
                   required
                 />
+                {isOwner && (
+                  <p className="text-xs text-gray-500 mt-1">As an owner, your username is set to your email address</p>
+                )}
               </div>
               
               <div>
@@ -497,9 +506,15 @@ export function OwnerManagement() {
                   type="text"
                   value={formData.username}
                   onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    isOwner ? 'bg-gray-100 cursor-not-allowed' : ''
+                  }`}
+                  disabled={isOwner}
                   required
                 />
+                {isOwner && (
+                  <p className="text-xs text-gray-500 mt-1">As an owner, username cannot be changed</p>
+                )}
               </div>
               
               <div>

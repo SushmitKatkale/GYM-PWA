@@ -53,7 +53,11 @@ const GymManagement = () => {
         onConfirm: () => void;
     }>({ isOpen: false, title: '', message: '', onConfirm: () => {} });
     
-    const { getAccessToken } = useAuthStore();
+    const { getAccessToken, user, hasRole } = useAuthStore();
+    
+    // Check if current user is admin or owner
+    const isAdmin = hasRole('admin');
+    const isOwner = hasRole('owner');
     const [formData, setFormData] = useState({
         id: '',
         name: '',
@@ -174,7 +178,7 @@ const GymManagement = () => {
                 imageUrls: gym.images || [],
             });
         } else {
-            setFormData({
+            const initialFormData = {
                 id: '',
                 name: '',
                 description: '',
@@ -197,7 +201,14 @@ const GymManagement = () => {
                 amenities: [],
                 images: [],
                 imageUrls: [],
-            });
+            };
+            
+            // For owners, set their own email as ownerId
+            if (isOwner && user?.email) {
+                initialFormData.ownerId = user.email;
+            }
+            
+            setFormData(initialFormData);
         }
         setCurrentStep(0);
         setIsModalOpen(true);
@@ -205,7 +216,7 @@ const GymManagement = () => {
 
     const closeModal = () => {
         setIsModalOpen(false);
-        setFormData({
+        const initialFormData = {
             id: '',
             name: '',
             description: '',
@@ -228,7 +239,14 @@ const GymManagement = () => {
             amenities: [],
             images: [],
             imageUrls: [],
-        });
+        };
+        
+        // For owners, set their own email as ownerId
+        if (isOwner && user?.email) {
+            initialFormData.ownerId = user.email;
+        }
+        
+        setFormData(initialFormData);
     };
 
     const handleNextStep = () => {

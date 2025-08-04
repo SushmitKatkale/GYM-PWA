@@ -1,4 +1,5 @@
 import { buildApiUrl, API_CONFIG } from '../config/api';
+import { apiClient, ApiResponse } from './apiClient';
 
 export interface Payment {
   id: string;
@@ -19,101 +20,26 @@ export interface CreatePaymentRequest {
   description?: string;
 }
 
-export interface ApiResponse<T = any> {
-  success: boolean;
-  message: string;
-  data?: T;
-  error?: string;
-}
 
 class PaymentService {
-  private getAuthHeaders(token?: string): HeadersInit {
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-    };
-    
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    
-    return headers;
+  async createPayment(paymentData: CreatePaymentRequest): Promise<ApiResponse<Payment>> {
+    return apiClient.post<Payment>(API_CONFIG.ENDPOINTS.PAYMENTS, paymentData);
   }
 
-  private async handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
-    try {
-      const data = await response.json();
-
-      if (!response.ok) {
-        let errorMessage = '';
-
-        if (data.message) {
-          errorMessage = data.message;
-        } else if (data.error) {
-          if (typeof data.error === 'string') {
-            errorMessage = data.error;
-          } else if (Array.isArray(data.error)) {
-            errorMessage = data.error.join(', ');
-          } else if (typeof data.error === 'object') {
-            errorMessage = data.error.message || JSON.stringify(data.error);
-          }
-        } else {
-          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-        }
-
-        return {
-          success: false,
-          message: errorMessage,
-          error: errorMessage
-        };
-      }
-
-      return data;
-    } catch (parseError) {
-      return {
-        success: false,
-        message: response.ok 
-          ? 'Invalid response format from server'
-          : `HTTP ${response.status}: ${response.statusText}`,
-        error: response.statusText
-      };
-    }
+  async getPayments(): Promise<ApiResponse<Payment[]>> {
+    return apiClient.get<Payment[]>(API_CONFIG.ENDPOINTS.PAYMENTS);
   }
 
-  async createPayment(paymentData: CreatePaymentRequest, token: string): Promise<ApiResponse<Payment>> {
-    try {
-      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.PAYMENTS), {
-        method: 'POST',
-        headers: this.getAuthHeaders(token),
-        body: JSON.stringify(paymentData),
-      });
-
-      return await this.handleResponse<Payment>(response);
-    } catch (error) {
-      console.error('Create payment network error:', error);
-      return {
-        success: false,
-        message: 'Network error occurred. Please check your connection and try again.',
-        error: error instanceof Error ? error.message : 'Unknown network error'
-      };
-    }
+  async getPaymentById(id: string): Promise<ApiResponse<Payment>> {
+    return apiClient.get<Payment>(`${API_CONFIG.ENDPOINTS.PAYMENTS}/${id}`);
   }
 
-  async getPayments(token: string): Promise<ApiResponse<Payment[]>> {
-    try {
-      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.PAYMENTS), {
-        method: 'GET',
-        headers: this.getAuthHeaders(token),
-      });
+  async updatePayment(id: string, paymentData: Partial<Payment>): Promise<ApiResponse<Payment>> {
+    return apiClient.put<Payment>(`${API_CONFIG.ENDPOINTS.PAYMENTS}/${id}`, paymentData);
+  }
 
-      return await this.handleResponse<Payment[]>(response);
-    } catch (error) {
-      console.error('Get payments network error:', error);
-      return {
-        success: false,
-        message: 'Network error occurred. Please check your connection and try again.',
-        error: error instanceof Error ? error.message : 'Unknown network error'
-      };
-    }
+  async deletePayment(id: string): Promise<ApiResponse> {
+    return apiClient.delete(`${API_CONFIG.ENDPOINTS.PAYMENTS}/${id}`);
   }
 }
 

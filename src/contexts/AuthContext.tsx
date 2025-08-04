@@ -27,7 +27,6 @@ export interface Subscription {
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
-  loginWithCode: (code: string) => Promise<boolean>;
   logout: () => void;
   register: (userData: Partial<User>, password: string) => Promise<boolean>;
   updateUser: (userData: Partial<User>) => void;
@@ -37,13 +36,12 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Mock users for demo
-const mockUsers: (User & { password: string; code?: string })[] = [
+const mockUsers: (User & { password: string })[] = [
   {
     id: '1',
     name: 'System Admin',
     email: 'admin@gymms.com',
     password: 'admin123',
-    code: '123456',
     role: 'admin',
     avatar: 'https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=150'
   },
@@ -52,7 +50,6 @@ const mockUsers: (User & { password: string; code?: string })[] = [
     name: 'John Smith',
     email: 'owner@gym.com',
     password: 'owner123',
-    code: '234567',
     role: 'owner',
     gymId: 'gym1',
     phone: '+1234567890',
@@ -63,7 +60,6 @@ const mockUsers: (User & { password: string; code?: string })[] = [
     name: 'Sarah Johnson',
     email: 'user@email.com',
     password: 'user123',
-    code: '345678',
     role: 'user',
     phone: '+1234567891',
     avatar: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=150',
@@ -103,7 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     const foundUser = mockUsers.find(u => u.email === email && u.password === password);
     if (foundUser) {
-      const { password: _, code: __, ...userData } = foundUser;
+      const { password: _, ...userData } = foundUser;
       setUser(userData);
       localStorage.setItem('gymms_user', JSON.stringify(userData));
       setIsLoading(false);
@@ -114,23 +110,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return false;
   };
 
-  const loginWithCode = async (code: string): Promise<boolean> => {
-    setIsLoading(true);
-    
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    const foundUser = mockUsers.find(u => u.code === code);
-    if (foundUser) {
-      const { password: _, code: __, ...userData } = foundUser;
-      setUser(userData);
-      localStorage.setItem('gymms_user', JSON.stringify(userData));
-      setIsLoading(false);
-      return true;
-    }
-    
-    setIsLoading(false);
-    return false;
-  };
 
   const register = async (userData: Partial<User>, password: string): Promise<boolean> => {
     setIsLoading(true);
@@ -169,7 +148,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider value={{
       user,
       login,
-      loginWithCode,
       logout,
       register,
       updateUser,

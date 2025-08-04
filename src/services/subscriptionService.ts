@@ -1,4 +1,5 @@
 import { buildApiUrl, API_CONFIG } from '../config/api';
+import { apiClient, ApiResponse } from './apiClient';
 
 export interface Subscription {
   id: string;
@@ -9,78 +10,26 @@ export interface Subscription {
   status: 'active' | 'inactive';
 }
 
-export interface ApiResponse<T = any> {
-  success: boolean;
-  message: string;
-  data?: T;
-  error?: string;
-}
 
 class SubscriptionService {
-  private getAuthHeaders(token?: string): HeadersInit {
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    return headers;
+  async getUserSubscriptions(): Promise<ApiResponse<Subscription[]>> {
+    return apiClient.get<Subscription[]>(API_CONFIG.ENDPOINTS.USER_SUBSCRIPTIONS);
   }
 
-  private async handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
-    try {
-      const data = await response.json();
-      if (!response.ok) {
-        let errorMessage = '';
-        if (data.message) {
-          errorMessage = data.message;
-        } else if (data.error) {
-          if (typeof data.error === 'string') {
-            errorMessage = data.error;
-          } else if (Array.isArray(data.error)) {
-            errorMessage = data.error.join(', ');
-          } else if (typeof data.error === 'object') {
-            errorMessage = data.error.message || JSON.stringify(data.error);
-          }
-        } else {
-          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-        }
-        return {
-          success: false,
-          message: errorMessage,
-          error: errorMessage
-        };
-      }
-      return data;
-    } catch (parseError) {
-      return {
-        success: false,
-        message: response.ok 
-          ? 'Invalid response format from server'
-          : `HTTP ${response.status}: ${response.statusText}`,
-        error: response.statusText
-      };
-    }
+  async getSubscriptionById(id: string): Promise<ApiResponse<Subscription>> {
+    return apiClient.get<Subscription>(`${API_CONFIG.ENDPOINTS.USER_SUBSCRIPTIONS}/${id}`);
   }
 
-  async getUserSubscriptions(token: string): Promise<ApiResponse<Subscription[]>> {
-    try {
-      const url = buildApiUrl(API_CONFIG.ENDPOINTS.USER_SUBSCRIPTIONS);
+  async createSubscription(subscriptionData: Partial<Subscription>): Promise<ApiResponse<Subscription>> {
+    return apiClient.post<Subscription>(API_CONFIG.ENDPOINTS.USER_SUBSCRIPTIONS, subscriptionData);
+  }
 
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: this.getAuthHeaders(token),
-      });
+  async updateSubscription(id: string, subscriptionData: Partial<Subscription>): Promise<ApiResponse<Subscription>> {
+    return apiClient.put<Subscription>(`${API_CONFIG.ENDPOINTS.USER_SUBSCRIPTIONS}/${id}`, subscriptionData);
+  }
 
-      return await this.handleResponse<Subscription[]>(response);
-    } catch (error) {
-      console.error('Get user subscriptions network error:', error);
-      return {
-        success: false,
-        message: 'Network error occurred. Please check your connection and try again.',
-        error: error instanceof Error ? error.message : 'Unknown network error'
-      };
-    }
+  async cancelSubscription(id: string): Promise<ApiResponse> {
+    return apiClient.delete(`${API_CONFIG.ENDPOINTS.USER_SUBSCRIPTIONS}/${id}`);
   }
 }
 

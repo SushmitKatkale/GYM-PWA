@@ -1,6 +1,7 @@
 import React from 'react';
 import { Building2, Users, Star, FileText, User } from 'lucide-react';
 import OwnerAutocomplete from '../../common/OwnerAutocomplete';
+import { useAuthStore } from '../../../stores/authStore';
 
 interface FormData {
   id: string;
@@ -19,6 +20,12 @@ interface StepBasicInfoProps {
 }
 
 const StepBasicInfo: React.FC<StepBasicInfoProps> = ({ formData, onChange }) => {
+  const { hasRole } = useAuthStore();
+  
+  // Check if current user is admin or owner
+  const isAdmin = hasRole('admin');
+  const isOwner = hasRole('owner');
+  
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     const processedValue = type === 'number' ? parseFloat(value) || 0 : value;
@@ -172,10 +179,14 @@ const StepBasicInfo: React.FC<StepBasicInfoProps> = ({ formData, onChange }) => 
           <OwnerAutocomplete
             value={formData.ownerId}
             onChange={(ownerId) => onChange({ ...formData, ownerId })}
-            placeholder="Search for owner by email or name"
+            placeholder={isOwner ? "Your owner account" : "Search for owner by email or name"}
+            disabled={isOwner}
             required
-            className="w-full"
+            className={`w-full ${isOwner ? 'cursor-not-allowed' : ''}`}
           />
+          {isOwner && (
+            <p className="text-xs text-gray-500 mt-1">As an owner, this gym will be automatically assigned to your account</p>
+          )}
         </div>
       </div>
 
