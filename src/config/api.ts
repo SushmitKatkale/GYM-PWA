@@ -1,6 +1,6 @@
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: 'http://localhost:8080/api',
+  BASE_URL: `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'}/api`,
   ENDPOINTS: {
     OWNERS: '/owners',
     USERS: '/users',
@@ -13,7 +13,8 @@ export const API_CONFIG = {
     PAYMENTS: '/payments',
     INVOICES: '/invoices',
     SLOTS: '/slots',
-    USER_SUBSCRIPTIONS: '/user-subscriptions'
+    USER_SUBSCRIPTIONS: '/user-subscriptions',
+    ADMIN: '/admin'
   }
 };
 

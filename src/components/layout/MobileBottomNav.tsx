@@ -84,6 +84,7 @@ export function MobileBottomNav({ activeMenu, setActiveMenu }: MobileBottomNavPr
   const getMoreMenuItems = () => {
     if (user?.role === 'admin') {
       return [
+        { id: 'payment-management', label: 'Payments', icon: CreditCard },
         { id: 'owner-management', label: 'Owner Mgmt', icon: UserCheck },
         { id: 'help', label: 'Support', icon: HelpCircle }
       ];
