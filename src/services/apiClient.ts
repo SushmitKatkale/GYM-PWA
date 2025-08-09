@@ -181,6 +181,10 @@ class ApiClient {
   async delete<T = any>(endpoint: string, config: Omit<ApiRequestConfig, 'method'> = {}) {
     return this.request<T>(endpoint, { ...config, method: 'DELETE' });
   }
+
+  async postFormData<T = any>(endpoint: string, formData: FormData, config: Omit<ApiRequestConfig, 'method' | 'body'> = {}) {
+    return this.request<T>(endpoint, { ...config, method: 'POST', body: formData });
+  }
 }
 
 // Export a singleton instance

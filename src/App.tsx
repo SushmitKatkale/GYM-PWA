@@ -25,6 +25,7 @@ import { SubscriptionManagement } from './components/features/SubscriptionManage
 import { PaymentManagement } from './components/features/PaymentManagement';
 import { UserManagement } from './components/features/UserManagement';
 import { HelpFaq } from './components/features/HelpFaq';
+import { AdvertisementManagement } from './components/features/advertisements/AdvertisementManagement';
 import { Bell, User, Shield, Settings, Lock, LogOut, X } from 'lucide-react';
 import { getAvatarImage } from './constants/images';
 import { userService } from './services/userService';
@@ -125,6 +126,8 @@ function App() {
             return <UserManagement />;
           case 'members':
             return <MemberManagement />;
+          case 'advertisements':
+            return <AdvertisementManagement />;
           case 'help':
             return <HelpFaq />;
       default:

@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   Home, Users, Building, Calendar, QrCode, CreditCard, 
-  BarChart3, Settings, MapPin, Bell, Clock, Wallet, UserCheck, Package
+  BarChart3, Settings, MapPin, Bell, Clock, Wallet, UserCheck, Package, Megaphone
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 
@@ -28,6 +28,7 @@ export function Sidebar({ activeView, onViewChange, isOpen }: SidebarProps) {
           { id: 'gym-management', label: 'Gym Management', icon: Building },
           // { id: 'subscription-management', label: 'Subscription Management', icon: Package },
           { id: 'users', label: 'User Management', icon: Users },
+          { id: 'advertisements', label: 'Advertisement Management', icon: Megaphone },
           { id: 'payment-management', label: 'Payment Management', icon: CreditCard },
           { id: 'analytics', label: 'Analytics', icon: BarChart3 },
           ...commonItems.slice(1)
@@ -84,7 +85,7 @@ export function Sidebar({ activeView, onViewChange, isOpen }: SidebarProps) {
       
       {/* Sidebar */}
       <div className={`
-        fixed inset-y-0 left-0 z-50 w-72 ${getRoleColor()} transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-0 h-full
+        fixed inset-y-0 left-0 z-50 w-80 ${getRoleColor()} transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-0 h-full
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         <div className="flex flex-col h-full">

@@ -14,7 +14,8 @@ export const API_CONFIG = {
     INVOICES: '/invoices',
     SLOTS: '/slots',
     USER_SUBSCRIPTIONS: '/user-subscriptions',
-    ADMIN: '/admin'
+    ADMIN: '/admin',
+    ADVERTISEMENTS: '/advertisements'
   }
 };
 
