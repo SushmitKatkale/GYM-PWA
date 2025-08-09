@@ -189,7 +189,7 @@ export function WalletPage() {
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <p className="text-gray-600 text-xs sm:text-sm font-medium">Total Spent</p>
-              <p className="text-lg sm:text-xl font-bold text-gray-900 mt-1">${walletData.totalSpent.toFixed(2)}</p>
+              <p className="text-lg sm:text-xl font-bold text-gray-900 mt-1">${walletData?.totalSpent.toFixed(2)}</p>
             </div>
             <CreditCard className="w-6 h-6 sm:w-7 sm:h-7 text-red-500 flex-shrink-0" />
           </div>

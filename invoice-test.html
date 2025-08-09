@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Functionality Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border-left: 4px solid #007bff;
+            background: #f8f9fa;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px 10px 0;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧾 Invoice Functionality Test</h1>
+        <p>This page demonstrates the invoice generation and download functionality that works in the MySubscriptions component.</p>
+        
+        <div class="test-section">
+            <h3>📝 Test Invoice Generation</h3>
+            <p>Generate a mock invoice (simulates what happens when backend is not available)</p>
+            <button onclick="testInvoiceGeneration()">Generate Test Invoice</button>
+            <div id="generateResult" class="result" style="display: none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>📋 Test Invoice Retrieval</h3>
+            <p>Check if invoices exist for a user (simulates invoice status checking)</p>
+            <button onclick="testInvoiceRetrieval()">Check User Invoices</button>
+            <div id="retrieveResult" class="result" style="display: none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>💾 Test Invoice Download</h3>
+            <p>Generate and download an invoice PDF (HTML format for demo)</p>
+            <button onclick="testInvoiceDownload()">Download Test Invoice</button>
+            <div id="downloadResult" class="result" style="display: none;"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🗑️ Clear Test Data</h3>
+            <p>Remove all mock invoices from localStorage</p>
+            <button onclick="clearTestData()" style="background: #dc3545;">Clear All Mock Data</button>
+            <div id="clearResult" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Mock invoice service functionality for testing
+        class TestInvoiceService {
+            generateMockInvoice(data) {
+                const invoiceId = `INV-${Date.now()}`;
+                const invoiceNumber = `GYM-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
+                
+                const invoice = {
+                    id: invoiceId,
+                    invoiceNumber,
+                    userId: 'test-user-id',
+                    userEmail: data.userEmail,
+                    subscriptionId: 0,
+                    paymentId: data.paymentId,
+                    amount: data.amount,
+                    tax: Math.round(data.amount * 0.18),
+                    totalAmount: Math.round(data.amount * 1.18),
+                    currency: 'INR',
+                    status: 'generated',
+                    generatedAt: new Date().toISOString(),
+                    userDetails: {
+                        name: data.userEmail.split('@')[0],
+                        email: data.userEmail,
+                    },
+                    gymDetails: {
+                        id: 1,
+                        name: data.gymName,
+                        address: '123 Gym Street, Fitness City, 123456',
+                        phone: '+91 9876543210',
+                        email: `contact@${data.gymName.toLowerCase().replace(/\s+/g, '')}.com`,
+                        gst: '27AAAAA0000A1Z5'
+                    },
+                    subscriptionDetails: {
+                        title: data.subscriptionTitle,
+                        validityDays: data.validityDays,
+                        validFrom: data.validFrom,
+                        validTo: data.validTo,
+                        price: data.amount,
+                    },
+                    paymentDetails: {
+                        transactionId: data.transactionId,
+                        gateway: data.paymentMethod,
+                        completedAt: new Date().toISOString()
+                    }
+                };
+                
+                this.storeInvoice(invoice);
+                return invoice;
+            }
+            
+            storeInvoice(invoice) {
+                const stored = localStorage.getItem('mock-invoices');
+                let allInvoices = [];
+                
+                if (stored) {
+                    allInvoices = JSON.parse(stored);
+                }
+                
+                allInvoices.push(invoice);
+                localStorage.setItem('mock-invoices', JSON.stringify(allInvoices));
+            }
+            
+            getUserInvoices(userEmail) {
+                const stored = localStorage.getItem('mock-invoices');
+                if (stored) {
+                    const allInvoices = JSON.parse(stored);
+                    return allInvoices.filter(inv => inv.userEmail === userEmail);
+                }
+                return [];
+            }
+            
+            generatePDFBlob(invoice) {
+                const htmlContent = `
+                <html>
+                  <head>
+                    <title>Invoice ${invoice.invoiceNumber}</title>
+                    <style>
+                      body { font-family: Arial, sans-serif; margin: 40px; }
+                      .header { text-align: center; margin-bottom: 30px; }
+                      .invoice-details { margin: 20px 0; }
+                      .table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                      .table th, .table td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+                      .table th { background-color: #f2f2f2; }
+                      .total { text-align: right; font-weight: bold; }
+                    </style>
+                  </head>
+                  <body>
+                    <div class="header">
+                      <h1>INVOICE</h1>
+                      <h2>${invoice.gymDetails.name}</h2>
+                      <p>${invoice.gymDetails.address}</p>
+                      <p>GST: ${invoice.gymDetails.gst}</p>
+                    </div>
+                    
+                    <div class="invoice-details">
+                      <p><strong>Invoice Number:</strong> ${invoice.invoiceNumber}</p>
+                      <p><strong>Date:</strong> ${new Date(invoice.generatedAt).toLocaleDateString()}</p>
+                      <p><strong>Customer:</strong> ${invoice.userDetails.name}</p>
+                      <p><strong>Email:</strong> ${invoice.userDetails.email}</p>
+                    </div>
+                    
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th>Description</th>
+                          <th>Validity</th>
+                          <th>Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>${invoice.subscriptionDetails.title}</td>
+                          <td>${invoice.subscriptionDetails.validityDays} days</td>
+                          <td>₹${invoice.subscriptionDetails.price}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    
+                    <div class="total">
+                      <p>Subtotal: ₹${invoice.amount}</p>
+                      <p>Tax (18%): ₹${invoice.tax}</p>
+                      <p><strong>Total: ₹${invoice.totalAmount}</strong></p>
+                    </div>
+                    
+                    <p style="margin-top: 40px;"><strong>Payment Details:</strong></p>
+                    <p>Transaction ID: ${invoice.paymentDetails.transactionId}</p>
+                    <p>Payment Method: ${invoice.paymentDetails.gateway}</p>
+                    <p>Payment Date: ${new Date(invoice.paymentDetails.completedAt).toLocaleDateString()}</p>
+                  </body>
+                </html>
+                `;
+                
+                return new Blob([htmlContent], { type: 'text/html' });
+            }
+        }
+
+        const testService = new TestInvoiceService();
+
+        window.testInvoiceGeneration = function() {
+            try {
+                const testData = {
+                    paymentId: Math.floor(Math.random() * 1000000),
+                    userEmail: 'testuser@example.com',
+                    subscriptionTitle: 'Premium Gym Membership',
+                    gymName: 'FitLife Gym',
+                    amount: 2999,
+                    validityDays: 30,
+                    validFrom: new Date().toISOString().split('T')[0],
+                    validTo: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    paymentMethod: 'razorpay',
+                    transactionId: `txn_${Math.random().toString(36).substr(2, 9)}`
+                };
+
+                const invoice = testService.generateMockInvoice(testData);
+                
+                const result = document.getElementById('generateResult');
+                result.className = 'result success';
+                result.style.display = 'block';
+                result.textContent = `✅ Invoice generated successfully!
+                
+Invoice ID: ${invoice.id}
+Invoice Number: ${invoice.invoiceNumber}
+Amount: ₹${invoice.totalAmount}
+User: ${invoice.userDetails.name}
+Gym: ${invoice.gymDetails.name}`;
+                
+            } catch (error) {
+                const result = document.getElementById('generateResult');
+                result.className = 'result error';
+                result.style.display = 'block';
+                result.textContent = `❌ Error: ${error.message}`;
+            }
+        };
+
+        window.testInvoiceRetrieval = function() {
+            try {
+                const userEmail = 'testuser@example.com';
+                const invoices = testService.getUserInvoices(userEmail);
+                
+                const result = document.getElementById('retrieveResult');
+                result.className = 'result success';
+                result.style.display = 'block';
+                
+                if (invoices.length > 0) {
+                    result.textContent = `✅ Found ${invoices.length} invoice(s) for ${userEmail}:
+                    
+${invoices.map(inv => `• ${inv.invoiceNumber} - ₹${inv.totalAmount} (${inv.status})`).join('\n')}`;
+                } else {
+                    result.textContent = `ℹ️ No invoices found for ${userEmail}. Generate an invoice first.`;
+                }
+                
+            } catch (error) {
+                const result = document.getElementById('retrieveResult');
+                result.className = 'result error';
+                result.style.display = 'block';
+                result.textContent = `❌ Error: ${error.message}`;
+            }
+        };
+
+        window.testInvoiceDownload = function() {
+            try {
+                const userEmail = 'testuser@example.com';
+                const invoices = testService.getUserInvoices(userEmail);
+                
+                if (invoices.length === 0) {
+                    // Generate an invoice first
+                    const testData = {
+                        paymentId: Math.floor(Math.random() * 1000000),
+                        userEmail: userEmail,
+                        subscriptionTitle: 'Premium Gym Membership',
+                        gymName: 'FitLife Gym',
+                        amount: 2999,
+                        validityDays: 30,
+                        validFrom: new Date().toISOString().split('T')[0],
+                        validTo: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                        paymentMethod: 'razorpay',
+                        transactionId: `txn_${Math.random().toString(36).substr(2, 9)}`
+                    };
+                    
+                    const invoice = testService.generateMockInvoice(testData);
+                    invoices.push(invoice);
+                }
+                
+                const invoice = invoices[0];
+                const blob = testService.generatePDFBlob(invoice);
+                
+                // Create download link
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `invoice-${invoice.invoiceNumber}.html`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+                
+                const result = document.getElementById('downloadResult');
+                result.className = 'result success';
+                result.style.display = 'block';
+                result.textContent = `✅ Invoice downloaded successfully!
+                
+Downloaded: invoice-${invoice.invoiceNumber}.html
+Note: This is an HTML file that opens in your browser (mock PDF for demo)`;
+                
+            } catch (error) {
+                const result = document.getElementById('downloadResult');
+                result.className = 'result error';
+                result.style.display = 'block';
+                result.textContent = `❌ Error: ${error.message}`;
+            }
+        };
+
+        window.clearTestData = function() {
+            try {
+                localStorage.removeItem('mock-invoices');
+                
+                const result = document.getElementById('clearResult');
+                result.className = 'result success';
+                result.style.display = 'block';
+                result.textContent = '✅ All mock invoice data cleared from localStorage.';
+                
+            } catch (error) {
+                const result = document.getElementById('clearResult');
+                result.className = 'result error';
+                result.style.display = 'block';
+                result.textContent = `❌ Error: ${error.message}`;
+            }
+        };
+    </script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 import { buildApiUrl, API_CONFIG } from '../config/api';
 import { apiClient, ApiResponse } from './apiClient';
+import { invoiceService } from './invoiceService';
 
 export interface Payment {
   id: string;
@@ -228,6 +229,171 @@ class PaymentService {
       console.error('Payment processing error:', error);
       return { success: false, error: 'Payment processing failed' };
     }
+  }
+
+  /**
+   * Check payment status by payment ID
+   */
+  async checkPaymentStatus(paymentId: number): Promise<ApiResponse<any>> {
+    return apiClient.get(`/payments/status/${paymentId}`);
+  }
+
+  /**
+   * Get user's subscription history
+   */
+  async getUserSubscriptions(userEmail: string): Promise<ApiResponse<any>> {
+    return apiClient.get(`/subscriptions/user/${userEmail}`);
+  }
+
+  /**
+   * Download invoice for a payment
+   */
+  async downloadInvoice(paymentId: number): Promise<Blob> {
+    const response = await fetch(buildApiUrl(`/payments/${paymentId}/invoice`), {
+      headers: {
+        'Authorization': `Bearer ${this.getToken()}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to download invoice');
+    }
+
+    return await response.blob();
+  }
+
+  /**
+   * Retry a failed payment
+   */
+  async retryPayment(paymentId: number): Promise<ApiResponse<PaymentInitiationResponse>> {
+    return apiClient.post(`/payments/${paymentId}/retry`);
+  }
+
+  /**
+   * Cancel a pending payment
+   */
+  async cancelPayment(paymentId: number): Promise<ApiResponse<{ success: boolean }>> {
+    return apiClient.post(`/payments/${paymentId}/cancel`);
+  }
+
+  /**
+   * Get subscription analytics for user
+   */
+  async getSubscriptionAnalytics(userEmail: string): Promise<ApiResponse<any>> {
+    return apiClient.get(`/subscriptions/user/${userEmail}/analytics`);
+  }
+
+  /**
+   * Format currency for display
+   */
+  formatCurrency(amount: number, currency: string = 'INR'): string {
+    if (currency === 'INR') {
+      return `₹${amount.toFixed(2)}`;
+    }
+    return `${currency} ${amount.toFixed(2)}`;
+  }
+
+  /**
+   * Get payment status color for UI
+   */
+  getStatusColor(status: string): string {
+    switch (status) {
+      case 'completed':
+        return 'text-green-600 bg-green-100';
+      case 'failed':
+        return 'text-red-600 bg-red-100';
+      case 'cancelled':
+        return 'text-gray-600 bg-gray-100';
+      case 'pending':
+      default:
+        return 'text-yellow-600 bg-yellow-100';
+    }
+  }
+
+  /**
+   * Get gateway display name
+   */
+  getGatewayDisplayName(gateway: string): string {
+    switch (gateway) {
+      case 'razorpay':
+        return 'Razorpay';
+      case 'phonepe':
+        return 'PhonePe';
+      default:
+        return gateway.charAt(0).toUpperCase() + gateway.slice(1);
+    }
+  }
+
+  /**
+   * Generate invoice after successful payment
+   */
+  async generateInvoiceAfterPayment(subscriptionId: number, paymentId: number, userEmail: string): Promise<{ success: boolean; invoiceId?: string; error?: string }> {
+    try {
+      const invoiceResponse = await invoiceService.generateInvoice({
+        subscriptionId,
+        paymentId,
+        userEmail
+      });
+
+      if (invoiceResponse.success && invoiceResponse.data) {
+        return { 
+          success: true, 
+          invoiceId: invoiceResponse.data.id 
+        };
+      } else {
+        return { 
+          success: false, 
+          error: invoiceResponse.message || 'Failed to generate invoice' 
+        };
+      }
+    } catch (error) {
+      console.error('Invoice generation error:', error);
+      return { 
+        success: false, 
+        error: 'Failed to generate invoice' 
+      };
+    }
+  }
+
+  /**
+   * Complete payment process with invoice generation
+   */
+  async completePaymentWithInvoice(
+    subscriptionId: number,
+    paymentId: number, 
+    userEmail: string
+  ): Promise<{ success: boolean; invoiceId?: string; error?: string }> {
+    try {
+      // First verify payment status
+      const paymentStatus = await this.verifyPaymentStatus(paymentId);
+      
+      if (paymentStatus.success && paymentStatus.data?.status === 'completed') {
+        // Generate invoice after successful payment
+        return await this.generateInvoiceAfterPayment(subscriptionId, paymentId, userEmail);
+      } else {
+        return {
+          success: false,
+          error: 'Payment not completed yet'
+        };
+      }
+    } catch (error) {
+      console.error('Complete payment with invoice error:', error);
+      return {
+        success: false,
+        error: 'Failed to complete payment process'
+      };
+    }
+  }
+
+  /**
+   * Get current user's auth token
+   */
+  private getToken(): string {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      throw new Error('No authentication token found. Please login again.');
+    }
+    return token;
   }
 }
 

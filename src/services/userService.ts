@@ -180,6 +180,14 @@ class UserService {
       }
       throw new Error('Profile image URL not found');
     } catch (error) {
+      // Don't log errors when backend is not available - this is expected
+      if (error instanceof Error && 
+          (error.message.includes('404') || 
+           error.message.includes('ECONNREFUSED') || 
+           error.message.includes('fetch'))) {
+        // Backend not available - fail silently
+        throw new Error('Backend not available');
+      }
       console.error('Error getting profile image URL:', error);
       throw error;
     }

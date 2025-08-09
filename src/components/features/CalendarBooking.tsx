@@ -74,7 +74,7 @@ export function CalendarBooking() {
                   {gym.currentOccupancy}/{gym.capacity} occupied
                 </span>
                 <span className="text-sm font-medium text-green-600">
-                  ${gym.plans.monthly}/month
+                  ${gym?.plans?.monthly}/month
                 </span>
               </div>
             </button>

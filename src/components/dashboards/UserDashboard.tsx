@@ -21,6 +21,7 @@ import {
 } from 'chart.js';
 import { useDashboardStore } from '../../stores/dashboardStore';
 import { useAuthStore } from '../../stores/authStore';
+import { paymentService } from '../../services/paymentService';
 
 ChartJS.register(
   CategoryScale,
