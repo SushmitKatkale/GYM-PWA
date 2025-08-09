@@ -103,7 +103,7 @@ class PWAService {
       // Get the token from localStorage or wherever it's stored
       const token = localStorage.getItem('token');
       
-      const response = await fetch('/api/users/push-subscription', {
+      const response = await fetch('http://localhost:8080/api/users/push-subscription', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

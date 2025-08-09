@@ -23,6 +23,7 @@ import { MemberManagement } from './components/features/MemberManagement';
 import { OwnerManagement } from './components/features/OwnerManagement';
 import { SubscriptionManagement } from './components/features/SubscriptionManagement';
 import { PaymentManagement } from './components/features/PaymentManagement';
+import { UserManagement } from './components/features/UserManagement';
 import { HelpFaq } from './components/features/HelpFaq';
 import { Bell, User, Shield, Settings, Lock, LogOut, X } from 'lucide-react';
 import { getAvatarImage } from './constants/images';
@@ -120,6 +121,10 @@ function App() {
             return <SubscriptionManagement />;
           case 'payment-management':
             return <PaymentManagement />;
+          case 'users':
+            return <UserManagement />;
+          case 'members':
+            return <MemberManagement />;
           case 'help':
             return <HelpFaq />;
       default:
