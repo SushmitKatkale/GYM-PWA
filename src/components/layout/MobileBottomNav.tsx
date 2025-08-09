@@ -36,7 +36,8 @@ export function MobileBottomNav({ activeMenu, setActiveMenu }: MobileBottomNavPr
       const baseItems = [
         { id: 'dashboard', label: 'Dashboard', icon: Home },
         { id: 'gym-management', label: 'Gyms', icon: Building2 },
-        { id: 'member-management', label: 'Members', icon: Users },
+        // { id: 'member-management', label: 'Members', icon: Users },
+        { id: 'users', label: 'Uers', icon: Users },
         { id: 'analytics', label: 'Analytics', icon: BarChart3 }
       ];
       
@@ -85,7 +86,7 @@ export function MobileBottomNav({ activeMenu, setActiveMenu }: MobileBottomNavPr
     if (user?.role === 'admin') {
       return [
         { id: 'payment-management', label: 'Payments', icon: CreditCard },
-        { id: 'owner-management', label: 'Owner Mgmt', icon: UserCheck },
+        // { id: 'users', label: 'User Mgmt', icon: UserCheck },
         { id: 'help', label: 'Support', icon: HelpCircle }
       ];
     }

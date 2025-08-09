@@ -27,9 +27,8 @@ export function Sidebar({ activeView, onViewChange, isOpen }: SidebarProps) {
           { id: 'dashboard', label: 'Dashboard', icon: Home },
           { id: 'gym-management', label: 'Gym Management', icon: Building },
           { id: 'subscription-management', label: 'Subscription Management', icon: Package },
-          { id: 'owner-management', label: 'Owner Management', icon: UserCheck },
+          { id: 'users', label: 'User Management', icon: Users },
           { id: 'payment-management', label: 'Payment Management', icon: CreditCard },
-          { id: 'users', label: 'All Users', icon: Users },
           { id: 'analytics', label: 'Analytics', icon: BarChart3 },
           ...commonItems.slice(1)
         ];

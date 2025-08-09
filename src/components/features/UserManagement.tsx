@@ -334,18 +334,18 @@ export function UserManagement() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center md:space-y-0">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
-          <p className="text-gray-600">Manage users, permissions, and account settings</p>
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900">User Management</h1>
+          <p className="text-sm md:text-base text-gray-600">Manage users, permissions, and account settings</p>
         </div>
-        <div className="flex space-x-3">
+        <div className="flex flex-col space-y-2 md:flex-row md:space-y-0 md:space-x-3">
           {selectedUserIds.length > 0 && (
             <button
               onClick={handleBulkActions}
-              className="flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+              className="flex items-center justify-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm md:text-base"
             >
               <Users className="w-4 h-4 mr-2" />
               Bulk Actions ({selectedUserIds.length})
@@ -353,14 +353,14 @@ export function UserManagement() {
           )}
           {/* <button
             onClick={handleExportUsers}
-            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            className="flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm md:text-base"
           >
             <Download className="w-4 h-4 mr-2" />
             Export
           </button> */}
           <button
             onClick={handleCreateUser}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm md:text-base"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add User
@@ -497,8 +497,8 @@ export function UserManagement() {
         </div>
       </div>
 
-      {/* Users Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      {/* Desktop Table View */}
+      <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -619,21 +619,21 @@ export function UserManagement() {
                         <div className="flex justify-end space-x-1">
                           <button
                             onClick={() => handleViewUser(user)}
-                            className="text-blue-600 hover:text-blue-900"
+                            className="text-blue-600 hover:text-blue-900 p-1"
                             title="View Details"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleEditUser(user)}
-                            className="text-green-600 hover:text-green-900"
+                            className="text-green-600 hover:text-green-900 p-1"
                             title="Edit User"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleViewActivity(user)}
-                            className="text-purple-600 hover:text-purple-900"
+                            className="text-purple-600 hover:text-purple-900 p-1"
                             title="View Activity"
                           >
                             <Activity className="w-4 h-4" />
@@ -641,7 +641,7 @@ export function UserManagement() {
                           {user.activeStatus === '1' ? (
                             <button
                               onClick={() => handleQuickAction('deactivate', user)}
-                              className="text-red-600 hover:text-red-900"
+                              className="text-red-600 hover:text-red-900 p-1"
                               title="Deactivate User"
                             >
                               <UserX className="w-4 h-4" />
@@ -649,7 +649,7 @@ export function UserManagement() {
                           ) : (
                             <button
                               onClick={() => handleQuickAction('activate', user)}
-                              className="text-green-600 hover:text-green-900"
+                              className="text-green-600 hover:text-green-900 p-1"
                               title="Activate User"
                             >
                               <UserCheck className="w-4 h-4" />
@@ -664,81 +664,261 @@ export function UserManagement() {
             </tbody>
           </table>
         </div>
+      </div>
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="bg-white px-4 py-3 border-t border-gray-200">
-            <div className="hidden sm:flex sm:items-center sm:justify-between">
-              <div className="flex items-center space-x-4">
-                <p className="text-sm text-gray-700">
-                  Showing <span className="font-medium">{((currentPage - 1) * itemsPerPage) + 1}</span> to{' '}
-                  <span className="font-medium">{Math.min(currentPage * itemsPerPage, totalRecords)}</span> of{' '}
-                  <span className="font-medium">{totalRecords}</span> results
-                </p>
-                <div className="flex items-center space-x-2">
-                  <label className="text-sm text-gray-700">Show:</label>
-                  <select
-                    value={itemsPerPage}
-                    onChange={(e) => setItemsPerPage(Number(e.target.value))}
-                    className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value={5}>5</option>
-                    <option value={10}>10</option>
-                    <option value={25}>25</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                  </select>
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-3">
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <RefreshCw className="w-6 h-6 animate-spin text-gray-400" />
+          </div>
+        ) : users.length === 0 ? (
+          <div className="text-center py-12 text-gray-500">
+            <Users className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+            <p>No users found</p>
+          </div>
+        ) : (
+          users.map((user) => {
+            const typeBadge = getUserTypeBadge(user.type);
+            const TypeIcon = typeBadge.icon;
+            
+            return (
+              <div key={user.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                {/* Header with checkbox and user info */}
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center space-x-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedUserIds.includes(user.id)}
+                      onChange={() => handleToggleUserSelection(user.id)}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mt-1"
+                    />
+                    <div className="h-12 w-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-medium text-lg">
+                      {user.firstName[0]}{user.lastName[0]}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">
+                        {user.firstName} {user.lastName}
+                      </h3>
+                      <p className="text-sm text-gray-500">@{user.username}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    {getStatusIcon(user)}
+                    <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${typeBadge.class}`}>
+                      <TypeIcon className="w-3 h-3 mr-1" />
+                      {typeBadge.label}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Contact Information */}
+                <div className="space-y-2 mb-4">
+                  <div className="flex items-center text-sm text-gray-600">
+                    <Mail className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+                    <span className="truncate">{user.email}</span>
+                  </div>
+                  {user.phoneNumber && (
+                    <div className="flex items-center text-sm text-gray-600">
+                      <Phone className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+                      <span>{user.phoneNumber}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center text-sm text-gray-600">
+                    <Calendar className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+                    <span>Joined {new Date(user.createTimestamp).toLocaleDateString()}</span>
+                  </div>
+                </div>
+
+                {/* Status badges */}
+                <div className="flex items-center space-x-2 mb-4">
+                  <span className={`inline-flex items-center px-2 py-1 text-xs rounded-full ${
+                    user.activeStatus === '1' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  }`}>
+                    {user.activeStatus === '1' ? 'Active' : 'Inactive'}
+                  </span>
+                  {user.isVerified && (
+                    <span className="inline-flex items-center px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                      <Shield className="w-3 h-3 mr-1" />
+                      Verified
+                    </span>
+                  )}
+                  {user.lastLoginAt && (
+                    <span className="text-xs text-gray-500">
+                      Last login: {new Date(user.lastLoginAt).toLocaleDateString()}
+                    </span>
+                  )}
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex justify-between items-center pt-3 border-t border-gray-100">
+                  <div className="flex space-x-1">
+                    <button
+                      onClick={() => handleViewUser(user)}
+                      className="flex items-center px-3 py-2 text-xs bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                    >
+                      <Eye className="w-3 h-3 mr-1" />
+                      View
+                    </button>
+                    <button
+                      onClick={() => handleEditUser(user)}
+                      className="flex items-center px-3 py-2 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+                    >
+                      <Edit className="w-3 h-3 mr-1" />
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleViewActivity(user)}
+                      className="flex items-center px-3 py-2 text-xs bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
+                    >
+                      <Activity className="w-3 h-3 mr-1" />
+                      Activity
+                    </button>
+                  </div>
+                  <div>
+                    {user.activeStatus === '1' ? (
+                      <button
+                        onClick={() => handleQuickAction('deactivate', user)}
+                        className="flex items-center px-3 py-2 text-xs bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+                      >
+                        <UserX className="w-3 h-3 mr-1" />
+                        Deactivate
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleQuickAction('activate', user)}
+                        className="flex items-center px-3 py-2 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+                      >
+                        <UserCheck className="w-3 h-3 mr-1" />
+                        Activate
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
-
-              <div className="flex items-center space-x-1">
-                <button
-                  onClick={() => loadUsers(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  className="relative inline-flex items-center px-2 py-2 border border-gray-300 text-sm font-medium text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  let page;
-                  if (totalPages <= 5) {
-                    page = i + 1;
-                  } else if (currentPage <= 3) {
-                    page = i + 1;
-                  } else if (currentPage >= totalPages - 2) {
-                    page = totalPages - 4 + i;
-                  } else {
-                    page = currentPage - 2 + i;
-                  }
-
-                  return (
-                    <button
-                      key={page}
-                      onClick={() => loadUsers(page)}
-                      className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                        page === currentPage
-                          ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                          : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  );
-                })}
-
-                <button
-                  onClick={() => loadUsers(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                  className="relative inline-flex items-center px-2 py-2 border border-gray-300 text-sm font-medium text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          </div>
+            );
+          })
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="bg-white rounded-lg border border-gray-200 px-4 py-3 mt-4">
+          {/* Desktop Pagination */}
+          <div className="hidden sm:flex sm:items-center sm:justify-between">
+            <div className="flex items-center space-x-4">
+              <p className="text-sm text-gray-700">
+                Showing <span className="font-medium">{((currentPage - 1) * itemsPerPage) + 1}</span> to{' '}
+                <span className="font-medium">{Math.min(currentPage * itemsPerPage, totalRecords)}</span> of{' '}
+                <span className="font-medium">{totalRecords}</span> results
+              </p>
+              <div className="flex items-center space-x-2">
+                <label className="text-sm text-gray-700">Show:</label>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                  className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-1">
+              <button
+                onClick={() => loadUsers(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="relative inline-flex items-center px-2 py-2 border border-gray-300 text-sm font-medium text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed rounded-l"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let page;
+                if (totalPages <= 5) {
+                  page = i + 1;
+                } else if (currentPage <= 3) {
+                  page = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  page = totalPages - 4 + i;
+                } else {
+                  page = currentPage - 2 + i;
+                }
+
+                return (
+                  <button
+                    key={page}
+                    onClick={() => loadUsers(page)}
+                    className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                      page === currentPage
+                        ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                        : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                );
+              })}
+
+              <button
+                onClick={() => loadUsers(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="relative inline-flex items-center px-2 py-2 border border-gray-300 text-sm font-medium text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed rounded-r"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile Pagination */}
+          <div className="sm:hidden">
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-sm text-gray-600">
+                Page {currentPage} of {totalPages}
+              </div>
+              <div className="flex items-center space-x-2">
+                <label className="text-sm text-gray-600">Show:</label>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                  className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => loadUsers(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="flex items-center px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="w-4 h-4 mr-1" />
+                Previous
+              </button>
+              <div className="text-sm text-gray-600">
+                {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, totalRecords)} of {totalRecords}
+              </div>
+              <button
+                onClick={() => loadUsers(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="flex items-center px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modals */}
       {showCreateModal && (

@@ -225,24 +225,24 @@ export function PaymentManagement() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center md:space-y-0">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Payment Management</h1>
-          <p className="text-gray-600">Manage vendor configurations and payment processing</p>
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900">Payment Management</h1>
+          <p className="text-sm md:text-base text-gray-600">Manage vendor configurations and payment processing</p>
         </div>
-        <div className="flex space-x-3">
+        <div className="flex flex-col space-y-2 md:flex-row md:space-y-0 md:space-x-3">
           {/* <button
             onClick={handleCreateOrder}
-            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            className="flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm md:text-base"
           >
             <CreditCard className="w-4 h-4 mr-2" />
             Create Order
           </button> */}
           <button
             onClick={handleCreateConfig}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm md:text-base"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Vendor Config
@@ -425,8 +425,143 @@ export function PaymentManagement() {
           </div>
           
 
-          {/* Vendor Configs Table */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          {/* Mobile Card View */}
+          <div className="md:hidden space-y-4">
+            {loading ? (
+              <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+                <RefreshCw className="w-8 h-8 animate-spin text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-500">Loading vendor configurations...</p>
+              </div>
+            ) : filteredConfigs.length === 0 ? (
+              <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+                <Building className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-500">No vendor configurations found</p>
+              </div>
+            ) : (
+              filteredConfigs.map((config) => (
+                <div key={config.id} className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+                  {/* Header with gym name and status */}
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <div className="flex items-center mb-2">
+                        <Building className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+                        <h3 className="text-sm font-semibold text-gray-900 truncate">
+                          {config.gym?.name || 'N/A'}
+                        </h3>
+                      </div>
+                      <div className="flex items-center text-xs text-gray-500">
+                        <User className="w-3 h-3 mr-1 flex-shrink-0" />
+                        <span className="truncate">{config.ownerEmail}</span>
+                      </div>
+                    </div>
+                    
+                    {/* Quick Status Badge */}
+                    <div className="ml-3">
+                      <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadge(config.onboardingStatus)}`}>
+                        {getStatusIcon(config.onboardingStatus)}
+                        <span className="ml-1">
+                          {config.onboardingStatus.replace('_', ' ').toUpperCase()}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Key Information Grid */}
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    {/* Commission */}
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="text-xs text-gray-500 mb-1">Commission</div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {config.cutValue}{config.cutType === 'percentage' ? '%' : ' ₹'}
+                      </div>
+                      <div className="text-xs text-gray-500 capitalize">{config.cutType}</div>
+                    </div>
+
+                    {/* Razorpay Status */}
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="text-xs text-gray-500 mb-1">Razorpay Status</div>
+                      <div className="flex items-center">
+                        {config.isRazorpayActive ? (
+                          <CheckCircle className="w-3 h-3 text-green-500 mr-1" />
+                        ) : (
+                          <XCircle className="w-3 h-3 text-red-500 mr-1" />
+                        )}
+                        <span className={`text-xs font-medium ${config.isRazorpayActive ? 'text-green-600' : 'text-red-600'}`}>
+                          {config.isRazorpayActive ? 'Active' : 'Inactive'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Additional Info */}
+                  <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
+                    <div className="flex items-center">
+                      <Calendar className="w-3 h-3 mr-1" />
+                      <span>Created: {new Date(config.createTimestamp).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => handleViewConfig(config)}
+                      className="flex-1 flex items-center justify-center px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors text-sm"
+                    >
+                      <Eye className="w-4 h-4 mr-1" />
+                      View
+                    </button>
+                    <button
+                      onClick={() => handleEditConfig(config)}
+                      className="flex-1 flex items-center justify-center px-3 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors text-sm"
+                    >
+                      <Edit className="w-4 h-4 mr-1" />
+                      Edit
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+            
+            {/* Mobile Pagination */}
+            {totalPages > 1 && (
+              <div className="bg-white rounded-lg border border-gray-200 p-4">
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => loadVendorConfigs(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                    className="flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <ChevronLeft className="w-4 h-4 mr-1" />
+                    Previous
+                  </button>
+                  
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-gray-700">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                  </div>
+                  
+                  <button
+                    onClick={() => loadVendorConfigs(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                    className="flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </button>
+                </div>
+                
+                <div className="mt-4 text-center">
+                  <p className="text-xs text-gray-500">
+                    Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalRecords)} of {totalRecords} results
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
