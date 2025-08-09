@@ -93,6 +93,10 @@ export interface Payment {
   completedAt?: string;
   createdAt: string;
   updatedAt: string;
+  // Refund tracking fields
+  refunded?: boolean;
+  totalRefunded?: number;
+  refundableAmount?: number;
   subscription?: {
     id: number;
     title: string;
@@ -203,6 +207,76 @@ export interface UserSubscriptionStats {
   expiredSubscriptions: number;
   expiringSubscriptions: number;
   todaySubscriptions: number;
+}
+
+export interface Refund {
+  id: number;
+  paymentId: number;
+  userEmail: string;
+  subscriptionId?: number;
+  originalAmount: number;
+  refundAmount: number;
+  refundReason?: string;
+  refundType: 'full' | 'partial';
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled';
+  gatewayRefundId?: string;
+  gatewayResponse?: any;
+  processedBy?: string;
+  processedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  // Related data
+  payment?: {
+    id: number;
+    paymentAmount: number;
+    status: string;
+    gateway: string;
+    transactionId?: string;
+    userEmail: string;
+  };
+  subscription?: {
+    id: number;
+    title: string;
+    validityDays: number;
+    gym?: {
+      id: number;
+      name: string;
+      city: string;
+    };
+  };
+  user?: {
+    name: string;
+    email: string;
+    phoneNumber?: string;
+  };
+}
+
+export interface CreateRefundRequest {
+  paymentId: number;
+  subscriptionId?: number;
+  refundAmount: number;
+  refundReason: string;
+  refundType: 'full' | 'partial';
+}
+
+export interface RefundStats {
+  totalRefunds: number;
+  totalRefundAmount: number;
+  pendingRefunds: number;
+  completedRefunds: number;
+  failedRefunds: number;
+  todayRefunds: number;
+  todayRefundAmount: number;
+}
+
+export interface PaginatedRefunds {
+  refunds: Refund[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
 }
 
 export interface PaginatedUserSubscriptions {
@@ -403,6 +477,95 @@ class AdminPaymentService {
 
   async getUserSubscriptionStats(): Promise<ApiResponse<UserSubscriptionStats>> {
     return apiClient.get(`${this.baseEndpoint}/user-subscriptions/stats`);
+  }
+
+  // Refund Management
+  async getAllRefunds(
+    page = 1,
+    limit = 10,
+    filters?: {
+      status?: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled';
+      userEmail?: string;
+      refundType?: 'full' | 'partial';
+      dateFrom?: string;
+      dateTo?: string;
+    }
+  ): Promise<ApiResponse<PaginatedRefunds>> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+    
+    if (filters) {
+      if (filters.status) params.append('status', filters.status);
+      if (filters.userEmail) params.append('userEmail', filters.userEmail);
+      if (filters.refundType) params.append('refundType', filters.refundType);
+      if (filters.dateFrom) params.append('dateFrom', filters.dateFrom);
+      if (filters.dateTo) params.append('dateTo', filters.dateTo);
+    }
+
+    return apiClient.get(`${this.baseEndpoint}/refunds?${params.toString()}`);
+  }
+
+  async getRefundById(id: number): Promise<ApiResponse<Refund>> {
+    return apiClient.get(`${this.baseEndpoint}/refunds/${id}`);
+  }
+
+  async createRefund(data: CreateRefundRequest): Promise<ApiResponse<Refund>> {
+    return apiClient.post(`${this.baseEndpoint}/refunds`, data);
+  }
+
+  async updateRefundStatus(
+    id: number,
+    status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled',
+    notes?: string
+  ): Promise<ApiResponse<Refund>> {
+    return apiClient.put(`${this.baseEndpoint}/refunds/${id}/status`, {
+      status,
+      notes
+    });
+  }
+
+  async processRefund(id: number): Promise<ApiResponse<{ success: boolean; gatewayRefundId?: string; message: string }>> {
+    return apiClient.post(`${this.baseEndpoint}/refunds/${id}/process`);
+  }
+
+  // New method: Initiate refund with gateway first, then create refund record
+  async initiateRefundWithGateway(data: CreateRefundRequest): Promise<ApiResponse<{ 
+    refund: Refund;
+    gatewayRefundId: string;
+    message: string;
+  }>> {
+    return apiClient.post(`${this.baseEndpoint}/refunds/initiate-with-gateway`, data);
+  }
+
+  async getRefundStats(): Promise<ApiResponse<RefundStats>> {
+    return apiClient.get(`${this.baseEndpoint}/refunds/stats`);
+  }
+
+  // Alias for getAllRefunds to maintain consistency
+  async getRefunds(
+    page = 1,
+    limit = 10,
+    filters?: {
+      status?: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled';
+      userEmail?: string;
+      refundType?: 'full' | 'partial';
+      dateFrom?: string;
+      dateTo?: string;
+    }
+  ): Promise<ApiResponse<PaginatedRefunds>> {
+    return this.getAllRefunds(page, limit, filters);
+  }
+
+  // Check if payment is refundable
+  async checkPaymentRefundable(paymentId: number): Promise<ApiResponse<{ 
+    isRefundable: boolean; 
+    reason?: string; 
+    maxRefundAmount: number;
+    alreadyRefunded: number;
+  }>> {
+    return apiClient.get(`${this.baseEndpoint}/payments/${paymentId}/refund-check`);
   }
 
   // Commission calculation helper

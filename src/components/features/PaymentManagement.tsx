@@ -25,7 +25,7 @@ import {
   Receipt,
   FileText
 } from 'lucide-react';
-import { adminPaymentService, VendorPaymentConfig, PaginatedVendorConfigs, Payment, UserSubscription } from '../../services/adminPaymentService';
+import { adminPaymentService, VendorPaymentConfig, PaginatedVendorConfigs, Payment, UserSubscription, Refund, PaginatedRefunds, CreateRefundRequest } from '../../services/adminPaymentService';
 import { CreateVendorConfigModal } from './payment/CreateVendorConfigModal';
 import { EditVendorConfigModal } from './payment/EditVendorConfigModal';
 import { ViewVendorConfigModal } from './payment/ViewVendorConfigModal';
@@ -34,9 +34,11 @@ import { CommissionCalculator } from './payment/CommissionCalculator';
 import { CreateOrderModal } from './payment/CreateOrderModal';
 import { PaymentDetailsModal } from './payment/PaymentDetailsModal';
 import { UserSubscriptionDetailsModal } from './payment/UserSubscriptionDetailsModal';
+import { CreateRefundModal } from './payment/CreateRefundModal';
+import { RefundProcessingModal } from './payment/RefundProcessingModal';
 
 export function PaymentManagement() {
-  const [activeTab, setActiveTab] = useState<'configs' | 'payments' | 'subscriptions' | 'calculator'>('configs');
+  const [activeTab, setActiveTab] = useState<'configs' | 'payments' | 'subscriptions' | 'refunds' | 'calculator'>('configs');
   
   // Vendor Configs State
   const [vendorConfigs, setVendorConfigs] = useState<VendorPaymentConfig[]>([]);
@@ -85,6 +87,26 @@ export function PaymentManagement() {
   const [subscriptionItemsPerPage, setSubscriptionItemsPerPage] = useState(10);
   const [showSubscriptionDetailsModal, setShowSubscriptionDetailsModal] = useState(false);
   const [selectedSubscription, setSelectedSubscription] = useState<UserSubscription | null>(null);
+
+  // Refund Management State
+  const [refunds, setRefunds] = useState<Refund[]>([]);
+  const [refundLoading, setRefundLoading] = useState(false);
+  const [refundSearchTerm, setRefundSearchTerm] = useState('');
+  const [refundStatusFilter, setRefundStatusFilter] = useState('');
+  const [refundTypeFilter, setRefundTypeFilter] = useState('');
+  const [refundCurrentPage, setRefundCurrentPage] = useState(1);
+  const [refundTotalPages, setRefundTotalPages] = useState(1);
+  const [refundTotalRecords, setRefundTotalRecords] = useState(0);
+  const [refundItemsPerPage, setRefundItemsPerPage] = useState(10);
+  const [showCreateRefundModal, setShowCreateRefundModal] = useState(false);
+  const [refundTargetPayment, setRefundTargetPayment] = useState<Payment | null>(null);
+  const [refundTargetSubscription, setRefundTargetSubscription] = useState<UserSubscription | null>(null);
+  const [showRefundConfirmDialog, setShowRefundConfirmDialog] = useState(false);
+  const [pendingRefundPayment, setPendingRefundPayment] = useState<Payment | null>(null);
+  const [pendingRefundSubscription, setPendingRefundSubscription] = useState<UserSubscription | null>(null);
+  const [showRefundProcessingModal, setShowRefundProcessingModal] = useState(false);
+  const [createdRefund, setCreatedRefund] = useState<Refund | null>(null);
+  const [createdRefundData, setCreatedRefundData] = useState<CreateRefundRequest | null>(null);
 
   const loadVendorConfigs = async (page = 1, resetPage = false) => {
     setLoading(true);
@@ -315,12 +337,116 @@ export function PaymentManagement() {
     setShowSubscriptionDetailsModal(true);
   };
 
+  // Refund Management Functions
+  const loadRefunds = async (page = 1, resetPage = false) => {
+    setRefundLoading(true);
+    try {
+      const filters: any = {};
+      if (refundSearchTerm) {
+        if (refundSearchTerm.includes('@')) {
+          filters.userEmail = refundSearchTerm;
+        } else {
+          filters.refundId = refundSearchTerm;
+        }
+      }
+      if (refundStatusFilter) filters.status = refundStatusFilter;
+      if (refundTypeFilter) filters.type = refundTypeFilter;
+
+      const response = await adminPaymentService.getRefunds(
+        resetPage ? 1 : page,
+        refundItemsPerPage,
+        Object.keys(filters).length > 0 ? filters : undefined
+      );
+
+      if (response.success && response.data) {
+        setRefunds(response.data.refunds);
+        setRefundTotalPages(response.data.pagination.totalPages);
+        setRefundTotalRecords(response.data.pagination.total);
+        setRefundCurrentPage(resetPage ? 1 : page);
+      }
+    } catch (error) {
+      console.error('Failed to load refunds:', error);
+    } finally {
+      setRefundLoading(false);
+    }
+  };
+
+  const handleRefundSearch = () => {
+    loadRefunds(1, true);
+  };
+
+  const handleRefundKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleRefundSearch();
+    }
+  };
+
+  const clearRefundFilters = () => {
+    setRefundSearchTerm('');
+    setRefundStatusFilter('');
+    setRefundTypeFilter('');
+    setRefundCurrentPage(1);
+    loadRefunds(1, true);
+  };
+
+  const handleInitiateRefund = (payment?: Payment, subscription?: UserSubscription) => {
+    if (payment) {
+      setPendingRefundPayment(payment);
+      setPendingRefundSubscription(null);
+    } else if (subscription) {
+      setPendingRefundSubscription(subscription);
+      setPendingRefundPayment(null);
+    }
+    setShowRefundConfirmDialog(true);
+  };
+
+  const handleConfirmRefund = () => {
+    if (pendingRefundPayment) {
+      setRefundTargetPayment(pendingRefundPayment);
+      setRefundTargetSubscription(null);
+    } else if (pendingRefundSubscription) {
+      setRefundTargetSubscription(pendingRefundSubscription);
+      setRefundTargetPayment(null);
+    }
+    setShowRefundConfirmDialog(false);
+    setPendingRefundPayment(null);
+    setPendingRefundSubscription(null);
+    setShowCreateRefundModal(true);
+  };
+
+  const handleCancelRefund = () => {
+    setShowRefundConfirmDialog(false);
+    setPendingRefundPayment(null);
+    setPendingRefundSubscription(null);
+  };
+
+  const handleRefundSuccess = (refundData: CreateRefundRequest) => {
+    setShowCreateRefundModal(false);
+    
+    // Show the refund processing modal with prepared data
+    setCreatedRefundData(refundData);
+    setShowRefundProcessingModal(true);
+  };
+  
+  const handleRefundStatusUpdate = (updatedRefund: Refund) => {
+    setCreatedRefund(updatedRefund);
+    
+    // Reload data to reflect updated refund status
+    if (activeTab === 'refunds') {
+      loadRefunds(refundCurrentPage);
+    }
+    if (payments.length > 0) loadPayments(paymentCurrentPage);
+    if (userSubscriptions.length > 0) loadUserSubscriptions(subscriptionCurrentPage);
+  };
+
   // Load data when tab changes
   useEffect(() => {
     if (activeTab === 'payments' && payments.length === 0) {
       loadPayments(1, true);
     } else if (activeTab === 'subscriptions' && userSubscriptions.length === 0) {
       loadUserSubscriptions(1, true);
+    } else if (activeTab === 'refunds' && refunds.length === 0) {
+      loadRefunds(1, true);
     }
   }, [activeTab]);
 
@@ -340,6 +466,17 @@ export function PaymentManagement() {
       active: 'bg-green-100 text-green-800 border-green-200',
       expired: 'bg-red-100 text-red-800 border-red-200',
       cancelled: 'bg-gray-100 text-gray-800 border-gray-200',
+    };
+    return badges[status as keyof typeof badges] || 'bg-gray-100 text-gray-800 border-gray-200';
+  };
+
+  // Refund status badge function
+  const getRefundStatusBadge = (status: string) => {
+    const badges = {
+      pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      processing: 'bg-blue-100 text-blue-800 border-blue-200',
+      completed: 'bg-green-100 text-green-800 border-green-200',
+      failed: 'bg-red-100 text-red-800 border-red-200',
     };
     return badges[status as keyof typeof badges] || 'bg-gray-100 text-gray-800 border-gray-200';
   };
@@ -462,6 +599,7 @@ export function PaymentManagement() {
             { id: 'configs', label: 'Vendor Configurations', icon: Building },
             { id: 'payments', label: 'All Payments', icon: Receipt },
             { id: 'subscriptions', label: 'User Subscriptions', icon: Users },
+            { id: 'refunds', label: 'Refund Management', icon: RefreshCw },
             // { id: 'calculator', label: 'Commission Calculator', icon: TrendingUp }
           ].map((tab) => {
             const Icon = tab.icon;
@@ -1329,13 +1467,24 @@ export function PaymentManagement() {
                           {new Date(payment.createdAt).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <button
-                            onClick={() => handleViewPaymentDetails(payment)}
-                            className="text-blue-600 hover:text-blue-900"
-                            title="View Details"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
+                          <div className="flex justify-end space-x-2">
+                            <button
+                              onClick={() => handleViewPaymentDetails(payment)}
+                              className="text-blue-600 hover:text-blue-900"
+                              title="View Details"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            {payment.status === 'completed' && !payment.refunded && (!payment.totalRefunded || payment.totalRefunded < payment.paymentAmount) && (
+                              <button
+                                onClick={() => handleInitiateRefund(payment)}
+                                className="text-orange-600 hover:text-orange-900"
+                                title="Initiate Full Refund"
+                              >
+                                <RefreshCw className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -1505,13 +1654,24 @@ export function PaymentManagement() {
                           {subscription.endDate ? new Date(subscription.endDate).toLocaleDateString() : 'N/A'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <button
-                            onClick={() => handleViewSubscriptionDetails(subscription)}
-                            className="text-blue-600 hover:text-blue-900"
-                            title="View Details"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
+                          <div className="flex justify-end space-x-2">
+                            <button
+                              onClick={() => handleViewSubscriptionDetails(subscription)}
+                              className="text-blue-600 hover:text-blue-900"
+                              title="View Details"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            {/* {subscription.status === 'active' && subscription.paidAmount > 0 && !subscription.refunded && (
+                              <button
+                                onClick={() => handleInitiateRefund(undefined, subscription)}
+                                className="text-orange-600 hover:text-orange-900"
+                                title="Initiate Refund"
+                              >
+                                <RefreshCw className="w-4 h-4" />
+                              </button>
+                            )} */}
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -1541,6 +1701,172 @@ export function PaymentManagement() {
                     <button
                       onClick={() => loadUserSubscriptions(Math.min(subscriptionTotalPages, subscriptionCurrentPage + 1))}
                       disabled={subscriptionCurrentPage === subscriptionTotalPages}
+                      className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'refunds' && (
+        <div className="space-y-6">
+          {/* Refund Filters */}
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                <input
+                  type="text"
+                  placeholder="Refund ID or user email..."
+                  value={refundSearchTerm}
+                  onChange={(e) => setRefundSearchTerm(e.target.value)}
+                  onKeyPress={handleRefundKeyPress}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select
+                  value={refundStatusFilter}
+                  onChange={(e) => setRefundStatusFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-sm"
+                >
+                  <option value="">All Status</option>
+                  <option value="pending">Pending</option>
+                  <option value="processing">Processing</option>
+                  <option value="completed">Completed</option>
+                  <option value="failed">Failed</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                <select
+                  value={refundTypeFilter}
+                  onChange={(e) => setRefundTypeFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-sm"
+                >
+                  <option value="">All Types</option>
+                  <option value="full">Full Refund</option>
+                  <option value="partial">Partial Refund</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={handleRefundSearch}
+                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Search className="w-4 h-4 mr-2" />
+                Search
+              </button>
+              {(refundSearchTerm || refundStatusFilter || refundTypeFilter) && (
+                <button
+                  onClick={clearRefundFilters}
+                  className="flex items-center px-4 py-2 text-red-600 hover:text-red-700 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Refunds Table */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Refund ID</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Original Amount</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Refund Amount</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {refundLoading ? (
+                    <tr>
+                      <td colSpan={7} className="px-6 py-12 text-center">
+                        <RefreshCw className="w-6 h-6 animate-spin text-gray-400 mx-auto mb-2" />
+                        <p className="text-gray-500">Loading refunds...</p>
+                      </td>
+                    </tr>
+                  ) : refunds.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                        No refunds found
+                      </td>
+                    </tr>
+                  ) : (
+                    refunds.map((refund) => (
+                      <tr key={refund.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">#{refund.id}</div>
+                          <div className="text-sm text-gray-500">{refund.refundId || 'Pending'}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{refund.userEmail || refund.payment?.userEmail}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">{formatCurrency(refund.originalAmount)}</div>
+                          <div className="text-xs text-gray-500">{refund.paymentGateway}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">{formatCurrency(refund.refundAmount)}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getRefundStatusBadge(refund.status)}`}>
+                            {refund.status.toUpperCase()}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                            refund.refundAmount === refund.originalAmount 
+                              ? 'bg-blue-100 text-blue-800' 
+                              : 'bg-orange-100 text-orange-800'
+                          }`}>
+                            {refund.refundAmount === refund.originalAmount ? 'Full' : 'Partial'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(refund.createdAt).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Refund Pagination */}
+            {refundTotalPages > 1 && (
+              <div className="bg-white px-4 py-3 border-t border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-700">
+                    Showing {((refundCurrentPage - 1) * refundItemsPerPage) + 1} to {Math.min(refundCurrentPage * refundItemsPerPage, refundTotalRecords)} of {refundTotalRecords} results
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => loadRefunds(Math.max(1, refundCurrentPage - 1))}
+                      disabled={refundCurrentPage === 1}
+                      className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Previous
+                    </button>
+                    <span className="text-sm text-gray-700">
+                      Page {refundCurrentPage} of {refundTotalPages}
+                    </span>
+                    <button
+                      onClick={() => loadRefunds(Math.min(refundTotalPages, refundCurrentPage + 1))}
+                      disabled={refundCurrentPage === refundTotalPages}
                       className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Next
@@ -1641,6 +1967,103 @@ export function PaymentManagement() {
             setSelectedSubscription(null);
           }}
           subscription={selectedSubscription}
+        />
+      )}
+
+      {/* Refund Confirmation Dialog */}
+      {showRefundConfirmDialog && (pendingRefundPayment || pendingRefundSubscription) && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md mx-4">
+            <div className="flex items-center mb-4">
+              <div className="flex-shrink-0">
+                <AlertCircle className="h-6 w-6 text-orange-600" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Confirm Refund Initiation
+                </h3>
+              </div>
+            </div>
+            <div className="mb-4">
+              <p className="text-sm text-gray-500">
+                Are you sure you want to initiate a refund for {pendingRefundPayment ? 'this payment' : 'this subscription'}?
+              </p>
+              {pendingRefundPayment && (
+                <div className="mt-3 p-3 bg-gray-50 rounded-md">
+                  <div className="text-sm">
+                    <p><strong>Payment ID:</strong> #{pendingRefundPayment.id}</p>
+                    <p><strong>User:</strong> {pendingRefundPayment.userEmail}</p>
+                    <p><strong>Amount:</strong> {formatCurrency(pendingRefundPayment.paymentAmount)}</p>
+                    <p><strong>Gateway:</strong> {pendingRefundPayment.gateway}</p>
+                  </div>
+                </div>
+              )}
+              {pendingRefundSubscription && (
+                <div className="mt-3 p-3 bg-gray-50 rounded-md">
+                  <div className="text-sm">
+                    <p><strong>Subscription:</strong> {pendingRefundSubscription.subscription?.title || pendingRefundSubscription.title || 'N/A'}</p>
+                    <p><strong>User:</strong> {pendingRefundSubscription.userEmail}</p>
+                    <p><strong>Paid Amount:</strong> {formatCurrency(pendingRefundSubscription.paidAmount || pendingRefundSubscription.payment?.paymentAmount || pendingRefundSubscription.price || 0)}</p>
+                    <p><strong>Status:</strong> {pendingRefundSubscription.status?.toUpperCase()}</p>
+                  </div>
+                </div>
+              )}
+              <div className="mt-3 p-3 bg-yellow-50 rounded-md">
+                <div className="flex">
+                  <AlertCircle className="h-5 w-5 text-yellow-400 mt-0.5" />
+                  <div className="ml-2">
+                    <p className="text-sm text-yellow-700">
+                      <strong>Warning:</strong> {pendingRefundSubscription ? 'The subscription will be automatically deactivated when the refund is completed.' : 'This action cannot be undone once the refund is processed.'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="flex space-x-3">
+              <button
+                onClick={handleCancelRefund}
+                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmRefund}
+                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-orange-600 border border-transparent rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+              >
+                Proceed with Refund
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Refund Modal */}
+      {showCreateRefundModal && (refundTargetPayment || refundTargetSubscription) && (
+        <CreateRefundModal
+          isOpen={showCreateRefundModal}
+          onClose={() => {
+            setShowCreateRefundModal(false);
+            setRefundTargetPayment(null);
+            setRefundTargetSubscription(null);
+          }}
+          payment={refundTargetPayment}
+          subscription={refundTargetSubscription}
+          onSuccess={handleRefundSuccess}
+        />
+      )}
+
+      {/* Refund Processing Modal */}
+      {showRefundProcessingModal && (createdRefund || createdRefundData) && (
+        <RefundProcessingModal
+          isOpen={showRefundProcessingModal}
+          onClose={() => {
+            setShowRefundProcessingModal(false);
+            setCreatedRefund(null);
+            setCreatedRefundData(null);
+          }}
+          refund={createdRefund}
+          refundData={createdRefundData}
+          onRefundStatusUpdate={handleRefundStatusUpdate}
         />
       )}
     </div>
