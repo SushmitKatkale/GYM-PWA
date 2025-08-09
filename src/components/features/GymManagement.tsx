@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Edit, Trash2, MapPin, X, Image, Info } from 'lucide-react';
+import { Plus, Edit, Trash2, MapPin, X, Image, Info, Search, Filter, Star, Users, Building, Grid, List } from 'lucide-react';
 import StepBasicInfo from './gymSteps/StepBasicInfo';
 import StepLocation from './gymSteps/StepLocation';
 import StepOperatingHours from './gymSteps/StepOperatingHours';
@@ -81,7 +81,14 @@ const GymManagement = () => {
         imageUrls: [] as string[],
     });
     const [searchTerm, setSearchTerm] = useState('');
+    const [ownerFilter, setOwnerFilter] = useState('');
+    const [ratingFilter, setRatingFilter] = useState('');
+    const [capacityFilter, setCapacityFilter] = useState('');
+    const [showFilters, setShowFilters] = useState(false);
     const [currentStep, setCurrentStep] = useState(0);
+    const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
 
     useEffect(() => {
         fetchGyms();
@@ -401,15 +408,84 @@ const GymManagement = () => {
         setLoading(false);
     };
 
-    const searchGyms = (query: string) => {
-        return gyms?.length > 0 ? gyms.filter(gym =>
-            gym.name.toLowerCase().includes(query.toLowerCase()) ||
-            gym.address.toLowerCase().includes(query.toLowerCase())
-        ) : [];
+    // Enhanced filtering function
+    const getFilteredGyms = () => {
+        if (!gyms || gyms.length === 0) return [];
+        
+        return gyms.filter(gym => {
+            // Search term filter (includes city and state in search now)
+            const matchesSearch = !searchTerm || 
+                gym.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                gym.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                gym.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                gym.state.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                gym.owner.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                gym.owner.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                gym.owner.email.toLowerCase().includes(searchTerm.toLowerCase());
+                
+            // Owner filter
+            const matchesOwner = !ownerFilter || 
+                gym.owner.firstName.toLowerCase().includes(ownerFilter.toLowerCase()) ||
+                gym.owner.lastName.toLowerCase().includes(ownerFilter.toLowerCase()) ||
+                gym.owner.email.toLowerCase().includes(ownerFilter.toLowerCase());
+                
+            // Rating filter
+            const matchesRating = !ratingFilter || 
+                (ratingFilter === '4+' && parseFloat(gym.rating) >= 4) ||
+                (ratingFilter === '3+' && parseFloat(gym.rating) >= 3) ||
+                (ratingFilter === '2+' && parseFloat(gym.rating) >= 2) ||
+                (ratingFilter === '1+' && parseFloat(gym.rating) >= 1);
+                
+            // Capacity filter
+            const matchesCapacity = !capacityFilter || 
+                (capacityFilter === 'small' && gym.capacity <= 50) ||
+                (capacityFilter === 'medium' && gym.capacity > 50 && gym.capacity <= 200) ||
+                (capacityFilter === 'large' && gym.capacity > 200);
+                
+            return matchesSearch && matchesOwner && matchesRating && matchesCapacity;
+        });
     };
 
-    const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearchTerm(e.target.value);
+    const handleSearch = () => {
+        // Trigger re-render with current filters
+    };
+
+    const handleKeyPress = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            handleSearch();
+        }
+    };
+
+    const clearAllFilters = () => {
+        setSearchTerm('');
+        setOwnerFilter('');
+        setRatingFilter('');
+        setCapacityFilter('');
+    };
+
+    const hasActiveFilters = searchTerm || ownerFilter || ratingFilter || capacityFilter;
+
+    const filteredGyms = getFilteredGyms();
+
+    // Pagination logic
+    const totalPages = Math.ceil(filteredGyms.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedGyms = filteredGyms.slice(startIndex, endIndex);
+
+    // Reset to first page when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, ownerFilter, ratingFilter, capacityFilter]);
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleItemsPerPageChange = (newItemsPerPage: number) => {
+        setItemsPerPage(newItemsPerPage);
+        setCurrentPage(1);
     };
 
     // Handle location selection from Google Places or Map
@@ -521,39 +597,140 @@ const GymManagement = () => {
                 </button>
             </div>
 
-            {/* Search */}
+            {/* Search and Filters */}
             <div className="space-y-4">
-                <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <input
-                        type="text"
-                        placeholder="Search gyms by name or location..."
-                        value={searchTerm}
-                        onChange={handleSearch}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                </div>
+                {/* Advanced Filter Panel */}
+                <div className="bg-white rounded-lg border border-gray-200 p-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Search Gyms</label>
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    placeholder="Name, location, owner..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    onKeyPress={handleKeyPress}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                />
+                            </div>
+                        </div>
 
-                {/* Search Results Count */}
-                {searchTerm && (
-                    <div className="text-sm text-gray-600">
-                        {searchGyms(searchTerm).length === 0
-                            ? 'No gyms found'
-                            : `Found ${searchGyms(searchTerm).length} gym${searchGyms(searchTerm).length !== 1 ? 's' : ''}`
-                        }
-                        {searchTerm && (
-                            <span className="ml-2">
-                                for "{searchTerm}"
-                                <button
-                                    onClick={() => setSearchTerm('')}
-                                    className="ml-2 text-blue-600 hover:text-blue-800 underline"
-                                >
-                                    Clear
-                                </button>
-                            </span>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Owner</label>
+                            <input
+                                type="text"
+                                placeholder="Owner name or email..."
+                                value={ownerFilter}
+                                onChange={(e) => setOwnerFilter(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Rating</label>
+                            <select
+                                value={ratingFilter}
+                                onChange={(e) => setRatingFilter(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-sm"
+                            >
+                                <option value="">All Ratings</option>
+                                <option value="4+">4+ Stars</option>
+                                <option value="3+">3+ Stars</option>
+                                <option value="2+">2+ Stars</option>
+                                <option value="1+">1+ Stars</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Capacity</label>
+                            <select
+                                value={capacityFilter}
+                                onChange={(e) => setCapacityFilter(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-sm"
+                            >
+                                <option value="">All Sizes</option>
+                                <option value="small">Small (≤50)</option>
+                                <option value="medium">Medium (51-200)</option>
+                                <option value="large">Large (200+)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center mt-4">
+                        <div className="flex gap-2">
+                            <button
+                                onClick={handleSearch}
+                                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            >
+                                <Search className="w-4 h-4 mr-2" />
+                                Search
+                            </button>
+                        </div>
+                        {hasActiveFilters && (
+                            <button
+                                onClick={clearAllFilters}
+                                className="flex items-center px-4 py-2 text-red-600 hover:text-red-700 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                            >
+                                <X className="w-4 h-4 mr-2" />
+                                Clear All
+                            </button>
                         )}
                     </div>
-                )}
+
+                    <div className="mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <p className="text-sm text-gray-600">
+                            Showing {startIndex + 1}-{Math.min(endIndex, filteredGyms.length)} of {filteredGyms.length} gyms
+                            {hasActiveFilters && (
+                                <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                                    <Filter className="w-3 h-3 mr-1" />
+                                    {[searchTerm, ownerFilter, ratingFilter, capacityFilter].filter(Boolean).length} filter{[searchTerm, ownerFilter, ratingFilter, capacityFilter].filter(Boolean).length !== 1 ? 's' : ''} active
+                                </span>
+                            )}
+                        </p>
+                        <div className="flex items-center gap-4">
+                            {/* Items per page selector */}
+                            <div className="flex items-center gap-2">
+                                <label className="text-sm text-gray-600">Show:</label>
+                                <select
+                                    value={itemsPerPage}
+                                    onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+                                    className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                >
+                                    <option value={5}>5</option>
+                                    <option value={10}>10</option>
+                                    <option value={25}>25</option>
+                                    <option value={50}>50</option>
+                                </select>
+                            </div>
+                            {/* View mode toggle */}
+                            <div className="flex bg-gray-100 rounded-lg p-1">
+                                <button
+                                    onClick={() => setViewMode('grid')}
+                                    className={`p-2 rounded transition-colors ${
+                                        viewMode === 'grid'
+                                            ? 'bg-white text-blue-600 shadow-sm'
+                                            : 'text-gray-600 hover:text-gray-800'
+                                    }`}
+                                    title="Grid View"
+                                >
+                                    <Grid className="w-4 h-4" />
+                                </button>
+                                <button
+                                    onClick={() => setViewMode('table')}
+                                    className={`p-2 rounded transition-colors ${
+                                        viewMode === 'table'
+                                            ? 'bg-white text-blue-600 shadow-sm'
+                                            : 'text-gray-600 hover:text-gray-800'
+                                    }`}
+                                    title="Table View"
+                                >
+                                    <List className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {/* Error State */}
@@ -586,141 +763,292 @@ const GymManagement = () => {
                 </div>
             )}
 
-            {/* Gyms List - Mobile First Design */}
+            {/* Gyms Display */}
             {!loading && !error && (
                 <div className="space-y-4">
-                    {searchGyms(searchTerm).length === 0 ? (
+                    {filteredGyms.length === 0 ? (
                         <div className="text-center py-12 bg-white rounded-lg shadow border">
                             <MapPin className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                             <h3 className="text-lg font-medium text-gray-900 mb-2">No gyms found</h3>
                             <p className="text-gray-500">
-                                {searchTerm ? 'Try adjusting your search criteria' : 'Start by adding your first gym'}
+                                {hasActiveFilters ? 'Try adjusting your search criteria' : 'Start by adding your first gym'}
                             </p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
-                            {searchGyms(searchTerm).map((gym) => (
-                                <div key={gym.id} className="bg-white rounded-lg shadow border p-4 hover:shadow-md transition-shadow -1/2">
-                                    <div className="flex items-start justify-between relative">
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center space-x-3 mb-3">
-                                                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                                                    {gym.name[0]}
-                                                </div>
+                        <>
+                            {/* Grid View */}
+                            {viewMode === 'grid' && (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
+                                    {paginatedGyms.map((gym) => (
+                                        <div key={gym.id} className="bg-white rounded-lg shadow border p-4 hover:shadow-md transition-shadow">
+                                            <div className="flex items-start justify-between relative">
                                                 <div className="flex-1 min-w-0">
-                                                    <h3 className="text-lg font-semibold text-gray-900 truncate">
-                                                        {gym.name}
-                                                    </h3>
-                                                </div>
-                                            </div>
-
-                                            {/* Owner Information */}
-                                            <div className="bg-blue-50 rounded-lg p-3 mb-3">
-                                                <div className="flex items-center space-x-2">
-                                                    <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                                                        <span className="text-xs font-bold text-blue-600">
-                                                            {gym.owner.firstName[0]}{gym.owner.lastName[0]}
-                                                        </span>
+                                                    <div className="flex items-center space-x-3 mb-3">
+                                                        <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+                                                            {gym.name[0]}
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <h3 className="text-lg font-semibold text-gray-900 truncate">
+                                                                {gym.name}
+                                                            </h3>
+                                                        </div>
                                                     </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="text-sm font-medium text-gray-900">
-                                                            {gym.owner.firstName} {gym.owner.lastName}
-                                                        </p>
-                                                        <p className="text-xs text-gray-500 truncate">
-                                                            {gym.owner.email}
-                                                        </p>
+
+                                                    {/* Owner Information */}
+                                                    <div className="bg-blue-50 rounded-lg p-3 mb-3">
+                                                        <div className="flex items-center space-x-2">
+                                                            <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                                                                <span className="text-xs font-bold text-blue-600">
+                                                                    {gym.owner.firstName[0]}{gym.owner.lastName[0]}
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-sm font-medium text-gray-900">
+                                                                    {gym.owner.firstName} {gym.owner.lastName}
+                                                                </p>
+                                                                <p className="text-xs text-gray-500 truncate">
+                                                                    {gym.owner.email}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Address Information */}
+                                                    <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                                                        <div className="flex items-start space-x-2">
+                                                            <MapPin className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-sm font-medium text-gray-900">{gym.address}</p>
+                                                                <p className="text-xs text-gray-500">
+                                                                    {gym.city}, {gym.state} {gym.zipCode}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Description */}
+                                                    <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                                                        <div className="flex items-start space-x-2">
+                                                            <Info className="w-4 h-4 text-blue-700 mt-0.5 flex-shrink-0" />
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-sm text-gray-500 mb-1 line-clamp-2">{gym.description}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Stats */}
+                                                    <div className="grid grid-cols-2 gap-2 text-center">
+                                                        <div className="bg-yellow-50 rounded-lg p-2">
+                                                            <p className="text-sm font-bold text-yellow-700">
+                                                                {gym.rating}/5
+                                                            </p>
+                                                            <p className="text-xs font-medium text-yellow-600">
+                                                                Rating
+                                                            </p>
+                                                        </div>
+                                                        <div className="bg-green-50 rounded-lg p-2">
+                                                            <p className="text-sm font-bold text-green-700">
+                                                                {gym.currentOccupancy}/{gym.capacity}
+                                                            </p>
+                                                            <p className="text-xs font-medium text-green-600">
+                                                                Members
+                                                            </p>
+                                                        </div>
+                                                        <div className="bg-green-50 rounded-lg p-2">
+                                                            <p className="text-sm font-bold text-green-700">
+                                                                {gym.openingTime.slice(0, 5)}
+                                                            </p>
+                                                            <p className="text-xs font-medium text-green-600">
+                                                                Opening
+                                                            </p>
+                                                        </div>
+                                                        <div className="bg-green-50 rounded-lg p-2">
+                                                            <p className="text-sm font-bold text-green-700">
+                                                                {gym.closingTime.slice(0, 5)}
+                                                            </p>
+                                                            <p className="text-xs font-medium text-green-600">
+                                                                Closing
+                                                            </p>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
 
-
-                                            {/* Address Information */}
-                                            <div className="bg-gray-50 rounded-lg p-3 mb-3">
-                                                <div className="flex items-start space-x-2">
-                                                    <MapPin className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="text-sm font-medium text-gray-900">{gym.address}</p>
-                                                        <p className="text-xs text-gray-500">
-                                                            {gym.city}, {gym.state} {gym.zipCode}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Decription */}
-                                            <div className="bg-gray-50 rounded-lg p-3 mb-3">
-                                                <div className="flex items-start space-x-2">
-                                                    <Info className="w-4 h-4 text-blue-700 mt-0.5 flex-shrink-0" />
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="text-sm text-gray-500 mb-1">{gym.description}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Stats */}
-                                            <div className="grid grid-cols-2 gap-4 text-center">
-                                                <div className="bg-yellow-50 rounded-lg p-2">
-                                                    <p className="text-sm font-bold text-yellow-700">
-                                                        {gym.rating}/5
-                                                    </p>
-                                                    <p className="text-xs font-medium text-yellow-600">
-                                                        Rating
-                                                    </p>
-                                                </div>
-                                                <div className="bg-green-50 rounded-lg p-2">
-                                                    <p className="text-sm font-bold text-green-700">
-                                                        {gym.currentOccupancy}/{gym.capacity}
-                                                    </p>
-                                                    <p className="text-xs font-medium text-green-600">
-                                                        Members
-                                                    </p>
-                                                </div>
-                                                <div className="bg-green-50 rounded-lg p-2">
-                                                    <p className="text-sm font-bold text-green-700">
-                                                        {gym.openingTime.slice(0, 5)}
-                                                    </p>
-                                                    <p className="text-xs font-medium text-green-600">
-                                                        Opening Time
-                                                    </p>
-                                                </div>
-                                                <div className="bg-green-50 rounded-lg p-2">
-                                                    <p className="text-sm font-bold text-green-700">
-                                                        {gym.closingTime.slice(0, 5)}
-                                                    </p>
-                                                    <p className="text-xs font-medium text-green-600">
-                                                        Closing Time
-                                                    </p>
+                                                <div className="flex items-center space-x-2 ml-4 absolute top-0 right-0">
+                                                    <button
+                                                        onClick={() => openImageModal(gym)}
+                                                        className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                                                        title="Edit images"
+                                                    >
+                                                        <Image className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => openModal(gym)}
+                                                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                        title="Edit gym details"
+                                                    >
+                                                        <Edit className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => showDeleteConfirmation(gym)}
+                                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                        title="Delete gym"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
+                                    ))}
+                                </div>
+                            )}
 
-                                        <div className="flex items-center space-x-2 ml-4 absolute top-0 right-0">
-                                            <button
-                                                onClick={() => openImageModal(gym)}
-                                                className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                                                title="Edit images"
-                                            >
-                                                <Image className="w-4 h-4" />
-                                            </button>
-                                            <button
-                                                onClick={() => openModal(gym)}
-                                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                title="Edit gym details"
-                                            >
-                                                <Edit className="w-4 h-4" />
-                                            </button>
-                                            <button
-                                                onClick={() => showDeleteConfirmation(gym)}
-                                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                title="Delete gym"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
+                            {/* Table View */}
+                            {viewMode === 'table' && (
+                                <div className="bg-white rounded-lg shadow border overflow-hidden">
+                                    <div className="overflow-x-auto">
+                                        <table className="min-w-full divide-y divide-gray-200">
+                                            <thead className="bg-gray-50">
+                                                <tr>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gym</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Capacity</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hours</th>
+                                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="bg-white divide-y divide-gray-200">
+                                                {paginatedGyms.map((gym) => (
+                                                    <tr key={gym.id} className="hover:bg-gray-50">
+                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                            <div className="flex items-center">
+                                                                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                                                    {gym.name[0]}
+                                                                </div>
+                                                                <div className="ml-4">
+                                                                    <div className="text-sm font-medium text-gray-900">{gym.name}</div>
+                                                                    <div className="text-sm text-gray-500 max-w-xs truncate">{gym.description}</div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                            <div className="text-sm text-gray-900">{gym.owner.firstName} {gym.owner.lastName}</div>
+                                                            <div className="text-sm text-gray-500">{gym.owner.email}</div>
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                            <div className="text-sm text-gray-900">{gym.address}</div>
+                                                            <div className="text-sm text-gray-500">{gym.city}, {gym.state} {gym.zipCode}</div>
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                            <div className="flex items-center">
+                                                                <Star className="w-4 h-4 text-yellow-400 mr-1" />
+                                                                <span className="text-sm text-gray-900">{gym.rating}/5</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                            <div className="text-sm text-gray-900">
+                                                                {gym.currentOccupancy}/{gym.capacity}
+                                                            </div>
+                                                            <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                                                                <div 
+                                                                    className="bg-blue-600 h-2 rounded-full" 
+                                                                    style={{ width: `${Math.min((gym.currentOccupancy / gym.capacity) * 100, 100)}%` }}
+                                                                ></div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                            <div>{gym.openingTime.slice(0, 5)} - {gym.closingTime.slice(0, 5)}</div>
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                            <div className="flex items-center justify-end space-x-2">
+                                                                <button
+                                                                    onClick={() => openImageModal(gym)}
+                                                                    className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                                                                    title="Edit images"
+                                                                >
+                                                                    <Image className="w-4 h-4" />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => openModal(gym)}
+                                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                                    title="Edit gym details"
+                                                                >
+                                                                    <Edit className="w-4 h-4" />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => showDeleteConfirmation(gym)}
+                                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                                    title="Delete gym"
+                                                                >
+                                                                    <Trash2 className="w-4 h-4" />
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
-                            ))}
-                        </div>
+                            )}
+
+                            {/* Pagination */}
+                            {totalPages > 1 && (
+                                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white rounded-lg border p-4">
+                                    <div className="text-sm text-gray-700">
+                                        Showing <span className="font-medium">{startIndex + 1}</span> to <span className="font-medium">{Math.min(endIndex, filteredGyms.length)}</span> of <span className="font-medium">{filteredGyms.length}</span> results
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <button
+                                            onClick={() => handlePageChange(currentPage - 1)}
+                                            disabled={currentPage === 1}
+                                            className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            Previous
+                                        </button>
+                                        
+                                        {/* Page Numbers */}
+                                        <div className="flex items-center space-x-1">
+                                            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                                                let pageNumber;
+                                                if (totalPages <= 5) {
+                                                    pageNumber = i + 1;
+                                                } else if (currentPage <= 3) {
+                                                    pageNumber = i + 1;
+                                                } else if (currentPage >= totalPages - 2) {
+                                                    pageNumber = totalPages - 4 + i;
+                                                } else {
+                                                    pageNumber = currentPage - 2 + i;
+                                                }
+                                                
+                                                return (
+                                                    <button
+                                                        key={pageNumber}
+                                                        onClick={() => handlePageChange(pageNumber)}
+                                                        className={`px-3 py-2 text-sm font-medium rounded-md ${
+                                                            currentPage === pageNumber
+                                                                ? 'bg-blue-600 text-white'
+                                                                : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                                                        }`}
+                                                    >
+                                                        {pageNumber}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                        
+                                        <button
+                                            onClick={() => handlePageChange(currentPage + 1)}
+                                            disabled={currentPage === totalPages}
+                                            className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            Next
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
             )}

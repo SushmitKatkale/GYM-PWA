@@ -26,7 +26,7 @@ export function Sidebar({ activeView, onViewChange, isOpen }: SidebarProps) {
         return [
           { id: 'dashboard', label: 'Dashboard', icon: Home },
           { id: 'gym-management', label: 'Gym Management', icon: Building },
-          { id: 'subscription-management', label: 'Subscription Management', icon: Package },
+          // { id: 'subscription-management', label: 'Subscription Management', icon: Package },
           { id: 'users', label: 'User Management', icon: Users },
           { id: 'payment-management', label: 'Payment Management', icon: CreditCard },
           { id: 'analytics', label: 'Analytics', icon: BarChart3 },

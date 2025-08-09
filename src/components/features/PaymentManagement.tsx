@@ -19,7 +19,9 @@ import {
   ChevronRight,
   MoreHorizontal,
   X,
-  IndianRupee
+  IndianRupee,
+  Grid,
+  List
 } from 'lucide-react';
 import { adminPaymentService, VendorPaymentConfig, PaginatedVendorConfigs } from '../../services/adminPaymentService';
 import { CreateVendorConfigModal } from './payment/CreateVendorConfigModal';
@@ -51,6 +53,7 @@ export function PaymentManagement() {
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [selectedConfig, setSelectedConfig] = useState<VendorPaymentConfig | null>(null);
   const [viewConfigId, setViewConfigId] = useState<number | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
   const loadVendorConfigs = async (page = 1, resetPage = false) => {
     setLoading(true);
@@ -410,7 +413,7 @@ export function PaymentManagement() {
             </div>
               </div>
 
-              <div className="mt-4 flex justify-between items-center">
+              <div className="mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <p className="text-sm text-gray-600">
                   Showing {vendorConfigs.length} of {totalRecords} vendor configurations
                   {hasActiveFilters && (
@@ -420,6 +423,47 @@ export function PaymentManagement() {
                     </span>
                   )}
                 </p>
+                <div className="flex items-center gap-4">
+                  {/* Items per page selector */}
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm text-gray-600">Show:</label>
+                    <select
+                      value={itemsPerPage}
+                      onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                      className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value={5}>5</option>
+                      <option value={10}>10</option>
+                      <option value={25}>25</option>
+                      <option value={50}>50</option>
+                    </select>
+                  </div>
+                  {/* View mode toggle - Desktop only */}
+                  <div className="hidden md:flex bg-gray-100 rounded-lg p-1">
+                    <button
+                      onClick={() => setViewMode('grid')}
+                      className={`p-2 rounded transition-colors ${
+                        viewMode === 'grid'
+                          ? 'bg-white text-blue-600 shadow-sm'
+                          : 'text-gray-600 hover:text-gray-800'
+                      }`}
+                      title="Grid View"
+                    >
+                      <Grid className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setViewMode('table')}
+                      className={`p-2 rounded transition-colors ${
+                        viewMode === 'table'
+                          ? 'bg-white text-blue-600 shadow-sm'
+                          : 'text-gray-600 hover:text-gray-800'
+                      }`}
+                      title="Table View"
+                    >
+                      <List className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -560,9 +604,169 @@ export function PaymentManagement() {
             )}
           </div>
 
-          {/* Desktop Table View */}
-          <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="overflow-x-auto">
+          {/* Desktop Views */}
+          {viewMode === 'grid' && (
+            <React.Fragment>
+              {/* Grid View */}
+              <div className="hidden md:grid md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                {loading ? (
+                  <div className="col-span-full bg-white rounded-lg border border-gray-200 p-8 text-center">
+                    <RefreshCw className="w-8 h-8 animate-spin text-gray-400 mx-auto mb-3" />
+                    <p className="text-gray-500">Loading vendor configurations...</p>
+                  </div>
+                ) : filteredConfigs.length === 0 ? (
+                  <div className="col-span-full bg-white rounded-lg border border-gray-200 p-8 text-center">
+                    <Building className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                    <p className="text-gray-500">No vendor configurations found</p>
+                  </div>
+                ) : (
+                  filteredConfigs.map((config) => (
+                    <div key={config.id} className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow">
+                      {/* Header with gym name and status */}
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <div className="flex items-center mb-2">
+                            <Building className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+                            <h3 className="text-sm font-semibold text-gray-900 truncate">
+                              {config.gym?.name || 'N/A'}
+                            </h3>
+                          </div>
+                          <div className="flex items-center text-xs text-gray-500">
+                            <User className="w-3 h-3 mr-1 flex-shrink-0" />
+                            <span className="truncate">{config.ownerEmail}</span>
+                          </div>
+                        </div>
+                        
+                        {/* Quick Status Badge */}
+                        <div className="ml-3">
+                          <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadge(config.onboardingStatus)}`}>
+                            {getStatusIcon(config.onboardingStatus)}
+                            <span className="ml-1">
+                              {config.onboardingStatus.replace('_', ' ').toUpperCase()}
+                            </span>
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Key Information Grid */}
+                      <div className="grid grid-cols-2 gap-3 mb-4">
+                        {/* Commission */}
+                        <div className="bg-gray-50 rounded-lg p-3">
+                          <div className="text-xs text-gray-500 mb-1">Commission</div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {config.cutValue}{config.cutType === 'percentage' ? '%' : ' ₹'}
+                          </div>
+                          <div className="text-xs text-gray-500 capitalize">{config.cutType}</div>
+                        </div>
+
+                        {/* Razorpay Status */}
+                        <div className="bg-gray-50 rounded-lg p-3">
+                          <div className="text-xs text-gray-500 mb-1">Razorpay Status</div>
+                          <div className="flex items-center">
+                            {config.isRazorpayActive ? (
+                              <CheckCircle className="w-3 h-3 text-green-500 mr-1" />
+                            ) : (
+                              <XCircle className="w-3 h-3 text-red-500 mr-1" />
+                            )}
+                            <span className={`text-xs font-medium ${config.isRazorpayActive ? 'text-green-600' : 'text-red-600'}`}>
+                              {config.isRazorpayActive ? 'Active' : 'Inactive'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Additional Info */}
+                      <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
+                        <div className="flex items-center">
+                          <Calendar className="w-3 h-3 mr-1" />
+                          <span>Created: {new Date(config.createTimestamp).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex space-x-2 pt-3 border-t border-gray-100">
+                        <button
+                          onClick={() => handleViewConfig(config)}
+                          className="flex-1 flex items-center justify-center px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors text-sm"
+                        >
+                          <Eye className="w-4 h-4 mr-1" />
+                          View
+                        </button>
+                        <button
+                          onClick={() => handleEditConfig(config)}
+                          className="flex-1 flex items-center justify-center px-3 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors text-sm"
+                        >
+                          <Edit className="w-4 h-4 mr-1" />
+                          Edit
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+              
+              {/* Pagination for Grid View */}
+              {totalPages > 1 && (
+                <div className="bg-white rounded-lg border border-gray-200 px-4 py-3 mt-4">
+                  <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div className="text-sm text-gray-700">
+                      Showing <span className="font-medium">{((currentPage - 1) * itemsPerPage) + 1}</span> to{' '}
+                      <span className="font-medium">{Math.min(currentPage * itemsPerPage, totalRecords)}</span> of{' '}
+                      <span className="font-medium">{totalRecords}</span> results
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => loadVendorConfigs(Math.max(1, currentPage - 1))}
+                        disabled={currentPage === 1}
+                        className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Previous
+                      </button>
+                      
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let page;
+                        if (totalPages <= 5) {
+                          page = i + 1;
+                        } else if (currentPage <= 3) {
+                          page = i + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                          page = totalPages - 4 + i;
+                        } else {
+                          page = currentPage - 2 + i;
+                        }
+                        
+                        return (
+                          <button
+                            key={page}
+                            onClick={() => loadVendorConfigs(page)}
+                            className={`px-4 py-2 text-sm font-medium rounded-md ${
+                              page === currentPage
+                                ? 'bg-blue-600 text-white'
+                                : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        );
+                      })}
+                      
+                      <button
+                        onClick={() => loadVendorConfigs(Math.min(totalPages, currentPage + 1))}
+                        disabled={currentPage === totalPages}
+                        className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </React.Fragment>
+          )}
+
+          {viewMode === 'table' && (
+            <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
@@ -684,142 +888,143 @@ export function PaymentManagement() {
                   )}
                 </tbody>
               </table>
-            </div>
+              </div>
 
-            {/* Enhanced Pagination */}
-            {totalPages > 1 && (
-              <div className="bg-white px-4 py-3 border-t border-gray-200">
-                {/* Mobile pagination */}
-                <div className="flex-1 flex justify-between sm:hidden">
-                  <button
-                    onClick={() => loadVendorConfigs(Math.max(1, currentPage - 1))}
-                    disabled={currentPage === 1}
-                    className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ChevronLeft className="w-4 h-4 mr-1" />
-                    Previous
-                  </button>
-                  <span className="text-sm text-gray-700 px-4 py-2">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <button
-                    onClick={() => loadVendorConfigs(Math.min(totalPages, currentPage + 1))}
-                    disabled={currentPage === totalPages}
-                    className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Next
-                    <ChevronRight className="w-4 h-4 ml-1" />
-                  </button>
-                </div>
-
-                {/* Desktop pagination */}
-                <div className="hidden sm:flex sm:items-center sm:justify-between">
-                  <div className="flex items-center space-x-4">
-                    <p className="text-sm text-gray-700">
-                      Showing <span className="font-medium">{((currentPage - 1) * itemsPerPage) + 1}</span> to{' '}
-                      <span className="font-medium">{Math.min(currentPage * itemsPerPage, totalRecords)}</span> of{' '}
-                      <span className="font-medium">{totalRecords}</span> results
-                    </p>
-                    <div className="flex items-center space-x-2">
-                      <label className="text-sm text-gray-700">Show:</label>
-                      <select
-                        value={itemsPerPage}
-                        onChange={(e) => setItemsPerPage(Number(e.target.value))}
-                        className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        <option value={5}>5</option>
-                        <option value={10}>10</option>
-                        <option value={25}>25</option>
-                        <option value={50}>50</option>
-                        <option value={100}>100</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-1">
-                    {/* First page */}
-                    {currentPage > 3 && (
-                      <>
-                        <button
-                          onClick={() => loadVendorConfigs(1)}
-                          className="relative inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium text-gray-500 bg-white hover:bg-gray-50 rounded-l-md"
-                        >
-                          1
-                        </button>
-                        {currentPage > 4 && (
-                          <span className="relative inline-flex items-center px-3 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
-                            <MoreHorizontal className="w-4 h-4" />
-                          </span>
-                        )}
-                      </>
-                    )}
-
-                    {/* Previous page */}
+              {/* Enhanced Pagination */}
+              {totalPages > 1 && (
+                <div className="bg-white px-4 py-3 border-t border-gray-200">
+                  {/* Mobile pagination */}
+                  <div className="flex-1 flex justify-between sm:hidden">
                     <button
                       onClick={() => loadVendorConfigs(Math.max(1, currentPage - 1))}
                       disabled={currentPage === 1}
-                      className="relative inline-flex items-center px-2 py-2 border border-gray-300 text-sm font-medium text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <ChevronLeft className="w-4 h-4" />
+                      <ChevronLeft className="w-4 h-4 mr-1" />
+                      Previous
                     </button>
-
-                    {/* Page numbers around current page */}
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      let page;
-                      if (totalPages <= 5) {
-                        page = i + 1;
-                      } else if (currentPage <= 3) {
-                        page = i + 1;
-                      } else if (currentPage >= totalPages - 2) {
-                        page = totalPages - 4 + i;
-                      } else {
-                        page = currentPage - 2 + i;
-                      }
-
-                      return (
-                        <button
-                          key={page}
-                          onClick={() => loadVendorConfigs(page)}
-                          className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${page === currentPage
-                            ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                            : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                            }`}
-                        >
-                          {page}
-                        </button>
-                      );
-                    })}
-
-                    {/* Next page */}
+                    <span className="text-sm text-gray-700 px-4 py-2">
+                      Page {currentPage} of {totalPages}
+                    </span>
                     <button
                       onClick={() => loadVendorConfigs(Math.min(totalPages, currentPage + 1))}
                       disabled={currentPage === totalPages}
-                      className="relative inline-flex items-center px-2 py-2 border border-gray-300 text-sm font-medium text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <ChevronRight className="w-4 h-4" />
+                      Next
+                      <ChevronRight className="w-4 h-4 ml-1" />
                     </button>
+                  </div>
 
-                    {/* Last page */}
-                    {currentPage < totalPages - 2 && (
-                      <>
-                        {currentPage < totalPages - 3 && (
-                          <span className="relative inline-flex items-center px-3 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
-                            <MoreHorizontal className="w-4 h-4" />
-                          </span>
-                        )}
-                        <button
-                          onClick={() => loadVendorConfigs(totalPages)}
-                          className="relative inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium text-gray-500 bg-white hover:bg-gray-50 rounded-r-md"
+                  {/* Desktop pagination */}
+                  <div className="hidden sm:flex sm:items-center sm:justify-between">
+                    <div className="flex items-center space-x-4">
+                      <p className="text-sm text-gray-700">
+                        Showing <span className="font-medium">{((currentPage - 1) * itemsPerPage) + 1}</span> to{' '}
+                        <span className="font-medium">{Math.min(currentPage * itemsPerPage, totalRecords)}</span> of{' '}
+                        <span className="font-medium">{totalRecords}</span> results
+                      </p>
+                      <div className="flex items-center space-x-2">
+                        <label className="text-sm text-gray-700">Show:</label>
+                        <select
+                          value={itemsPerPage}
+                          onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                          className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         >
-                          {totalPages}
-                        </button>
-                      </>
-                    )}
+                          <option value={5}>5</option>
+                          <option value={10}>10</option>
+                          <option value={25}>25</option>
+                          <option value={50}>50</option>
+                          <option value={100}>100</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-1">
+                      {/* First page */}
+                      {currentPage > 3 && (
+                        <>
+                          <button
+                            onClick={() => loadVendorConfigs(1)}
+                            className="relative inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium text-gray-500 bg-white hover:bg-gray-50 rounded-l-md"
+                          >
+                            1
+                          </button>
+                          {currentPage > 4 && (
+                            <span className="relative inline-flex items-center px-3 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                              <MoreHorizontal className="w-4 h-4" />
+                            </span>
+                          )}
+                        </>
+                      )}
+
+                      {/* Previous page */}
+                      <button
+                        onClick={() => loadVendorConfigs(Math.max(1, currentPage - 1))}
+                        disabled={currentPage === 1}
+                        className="relative inline-flex items-center px-2 py-2 border border-gray-300 text-sm font-medium text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </button>
+
+                      {/* Page numbers around current page */}
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let page;
+                        if (totalPages <= 5) {
+                          page = i + 1;
+                        } else if (currentPage <= 3) {
+                          page = i + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                          page = totalPages - 4 + i;
+                        } else {
+                          page = currentPage - 2 + i;
+                        }
+
+                        return (
+                          <button
+                            key={page}
+                            onClick={() => loadVendorConfigs(page)}
+                            className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${page === currentPage
+                              ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                              : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                              }`}
+                          >
+                            {page}
+                          </button>
+                        );
+                      })}
+
+                      {/* Next page */}
+                      <button
+                        onClick={() => loadVendorConfigs(Math.min(totalPages, currentPage + 1))}
+                        disabled={currentPage === totalPages}
+                        className="relative inline-flex items-center px-2 py-2 border border-gray-300 text-sm font-medium text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+
+                      {/* Last page */}
+                      {currentPage < totalPages - 2 && (
+                        <>
+                          {currentPage < totalPages - 3 && (
+                            <span className="relative inline-flex items-center px-3 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                              <MoreHorizontal className="w-4 h-4" />
+                            </span>
+                          )}
+                          <button
+                            onClick={() => loadVendorConfigs(totalPages)}
+                            className="relative inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium text-gray-500 bg-white hover:bg-gray-50 rounded-r-md"
+                          >
+                            {totalPages}
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
