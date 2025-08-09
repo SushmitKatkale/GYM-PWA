@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Search, Plus, Edit, Trash2, DollarSign, Clock, X, MapPin, Star, Award } from 'lucide-react';
+import { Box, Search, Plus, Edit, Trash2, DollarSign, Clock, X, MapPin, Star, Award, IndianRupee } from 'lucide-react';
 import { buildApiUrl, API_CONFIG } from '../../config/api';
 import { useAuthStore } from '../../stores/authStore';
 import SuccessModal from '../ui/SuccessModal';
@@ -50,7 +50,7 @@ export function SubscriptionManagement() {
     actionLabel?: string;
     onAction?: () => void;
   }>({ isOpen: false, title: '', message: '' });
-  
+
   const [errorModal, setErrorModal] = useState<{
     isOpen: boolean;
     title: string;
@@ -59,14 +59,14 @@ export function SubscriptionManagement() {
     showRetry?: boolean;
     onRetry?: () => void;
   }>({ isOpen: false, title: '', message: '' });
-  
+
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     title: string;
     message: string;
     itemName?: string;
     onConfirm: () => void;
-  }>({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+  }>({ isOpen: false, title: '', message: '', onConfirm: () => { } });
 
   // Fetch subscriptions from API
   const fetchSubscriptions = async () => {
@@ -86,14 +86,14 @@ export function SubscriptionManagement() {
           isMostPopular: Boolean(sub.isMostPopular),
           isCheapest: Boolean(sub.isCheapest),
           activeStatus: Boolean(sub.activeStatus),
-          features: Array.isArray(sub.features) ? 
+          features: Array.isArray(sub.features) ?
             sub.features.map((f: any) => typeof f === 'string' ? f : f.title || f.name || 'Feature') : (
-            sub.features ? sub.features.split(',').map((f: string) => f.trim()) : [
-              'Access to gym equipment',
-              'Locker room access',
-              'Basic fitness consultation'
-            ]
-          )
+              sub.features ? sub.features.split(',').map((f: string) => f.trim()) : [
+                'Access to gym equipment',
+                'Locker room access',
+                'Basic fitness consultation'
+              ]
+            )
         }));
         setSubscriptions(processedSubscriptions);
         setFilteredSubscriptions(processedSubscriptions);
@@ -199,7 +199,7 @@ export function SubscriptionManagement() {
   // Update subscription
   const updateSubscription = async () => {
     if (!selectedSubscription) return;
-    
+
     setIsLoading(true);
     try {
       const token = getAccessToken();
@@ -411,126 +411,121 @@ export function SubscriptionManagement() {
             </p>
           </div>
         ) : (
-          filteredSubscriptions.map((subscription) => (
-            <div key={subscription.id} className="bg-white rounded-lg shadow border p-4 hover:shadow-md transition-shadow">
-              {/* Mobile Layout */}
-              <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center space-x-3 mb-3">
-                    <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                      {subscription.title[0]}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <h3 className="text-lg font-semibold text-gray-900 truncate">
-                          {subscription.title}
-                        </h3>
-                        {subscription.isMostPopular && (
-                          <span className="px-2 py-1 text-xs bg-orange-100 text-orange-800 rounded-full flex items-center">
-                            <Star className="w-3 h-3 mr-1" />
-                            Popular
-                          </span>
-                        )}
-                        {subscription.isCheapest && (
-                          <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full flex items-center">
-                            <Award className="w-3 h-3 mr-1" />
-                            Best Value
-                          </span>
-                        )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
+            {filteredSubscriptions.filter((subscription) => subscription.activeStatus).map((subscription) => (
+              <div key={subscription.id} className="bg-white rounded-lg shadow border p-4 hover:shadow-md transition-shadow">
+                {/* Mobile Layout */}
+                <div className="flex items-start justify-between relative">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+                        {subscription.title[0]}
                       </div>
-                      <div className="flex items-center text-sm text-gray-500 mb-1">
-                        <Clock className="w-4 h-4 mr-2" />
-                        <span>{subscription.validityDays} days</span>
-                      </div>
-                      {subscription.gymName && (
-                        <div className="flex items-center text-sm text-blue-600">
-                          <MapPin className="w-4 h-4 mr-2" />
-                          <span className="font-medium">{subscription.gymName}</span>
-                        </div>
-                      )}
-                    </div>
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      subscription.activeStatus
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {subscription.activeStatus ? 'Active' : 'Inactive'}
-                    </span>
-                  </div>
-
-                  {/* Pricing */}
-                  <div className="bg-gray-50 rounded-lg p-3 mb-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="flex items-center text-lg font-semibold text-gray-900">
-                          <DollarSign className="w-5 h-5 mr-1" />
-                          {subscription.discountedPrice ? (
-                            <>
-                              <span className="text-green-600">
-                                {Number(subscription.discountedPrice || 0).toFixed(2)}
-                              </span>
-                              <span className="text-sm text-gray-500 line-through ml-2">
-                                ${Number(subscription.price || 0).toFixed(2)}
-                              </span>
-                            </>
-                          ) : (
-                            <span>{Number(subscription.price || 0).toFixed(2)}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <h3 className="text-lg font-semibold text-gray-900 truncate">
+                            {subscription.title}
+                          </h3>
+                          {subscription.isMostPopular && (
+                            <span className="px-2 py-1 text-xs bg-orange-100 text-orange-800 rounded-full flex items-center">
+                              <Star className="w-3 h-3 mr-1" />
+                              Popular
+                            </span>
+                          )}
+                          {subscription.isCheapest && (
+                            <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full flex items-center">
+                              <Award className="w-3 h-3 mr-1" />
+                              Best Value
+                            </span>
                           )}
                         </div>
-                        {subscription.discountedPrice && (
-                          <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
-                            Save ${(Number(subscription.price || 0) - Number(subscription.discountedPrice || 0)).toFixed(2)}
-                          </span>
+                        <div className="flex items-center text-sm text-gray-500 mb-1">
+                          <Clock className="w-4 h-4 mr-2" />
+                          <span>{subscription.validityDays} days</span>
+                        </div>
+                        {subscription.gymName && (
+                          <div className="flex items-center text-sm text-blue-600">
+                            <MapPin className="w-4 h-4 mr-2" />
+                            <span className="font-medium">{subscription.gymName}</span>
+                          </div>
                         )}
                       </div>
                     </div>
+
+                    {/* Pricing */}
+                    <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="flex items-center text-lg font-semibold text-gray-900">
+                            <IndianRupee className="w-5 h-5 mr-1" />
+                            {subscription.discountedPrice ? (
+                              <>
+                                <span className="text-green-600">
+                                  {Number(subscription.discountedPrice || 0).toFixed(2)}
+                                </span>
+                                <span className="text-sm text-gray-500 line-through ml-2">
+                                  ₹{Number(subscription.price || 0).toFixed(2)}
+                                </span>
+                              </>
+                            ) : (
+                              <span>{Number(subscription.price || 0).toFixed(2)}</span>
+                            )}
+                          </div>
+                          {subscription.discountedPrice && (
+                            <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
+                              Save ₹{(Number(subscription.price || 0) - Number(subscription.discountedPrice || 0)).toFixed(2)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Features */}
+                    {subscription.features && subscription.features.length > 0 && (
+                      <div className="mb-3">
+                        <h4 className="text-sm font-medium text-gray-700 mb-2">Features:</h4>
+                        <div className="flex flex-wrap gap-1">
+                          {subscription.features.slice(0, 3).map((feature, index) => (
+                            <span
+                              key={index}
+                              className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full"
+                            >
+                              {feature}
+                            </span>
+                          ))}
+                          {subscription.features.length > 3 && (
+                            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                              +{subscription.features.length - 3} more
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    <p className="text-xs text-gray-400 text-end">
+                      Created: {new Date(subscription.createTimestamp).toLocaleDateString()}
+                    </p>
                   </div>
 
-                  {/* Features */}
-                  {subscription.features && subscription.features.length > 0 && (
-                    <div className="mb-3">
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">Features:</h4>
-                      <div className="flex flex-wrap gap-1">
-                        {subscription.features.slice(0, 3).map((feature, index) => (
-                          <span
-                            key={index}
-                            className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full"
-                          >
-                            {feature}
-                          </span>
-                        ))}
-                        {subscription.features.length > 3 && (
-                          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-                            +{subscription.features.length - 3} more
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  <p className="text-xs text-gray-400">
-                    Created: {new Date(subscription.createTimestamp).toLocaleDateString()}
-                  </p>
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center space-x-2 ml-4">
-                  <button
-                    onClick={() => openEditModal(subscription)}
-                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => showDeleteConfirmation(subscription)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {/* Actions */}
+                  <div className="flex items-center space-x-2 ml-4 absolute top-0 right-0">
+                    <button
+                      onClick={() => openEditModal(subscription)}
+                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => showDeleteConfirmation(subscription)}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
+            ))}
+          </div>
         )}
       </div>
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Edit, Trash2, Map, MapPin, Mail, X, Image } from 'lucide-react';
+import { Plus, Edit, Trash2, MapPin, X, Image, Info } from 'lucide-react';
 import StepBasicInfo from './gymSteps/StepBasicInfo';
 import StepLocation from './gymSteps/StepLocation';
 import StepOperatingHours from './gymSteps/StepOperatingHours';
@@ -10,10 +10,8 @@ import ErrorModal from '../ui/ErrorModal';
 import ImageUploadModal from '../ui/ImageUploadModal';
 import ConfirmationModal from '../ui/ConfirmationModal';
 import { gymService } from '../../services/gymService';
-import { imageService } from '../../services/imageService';
 import { useAuthStore } from '../../stores/authStore';
 import { buildApiUrl, API_CONFIG } from '../../config/api';
-import { ApiResponse } from '../../models/ApiResponse';
 
 // Import the Gym interface from the service
 import { Gym } from '../../services/gymService';
@@ -26,7 +24,7 @@ const GymManagement = () => {
     const [isImageUploadModalOpen, setIsImageUploadModalOpen] = useState(false);
     const [selectedGymForImages, setSelectedGymForImages] = useState<Gym | null>(null);
     const [error, setError] = useState<string | null>(null);
-    
+
     // Success/Error Modal States
     const [successModal, setSuccessModal] = useState<{
         isOpen: boolean;
@@ -35,7 +33,7 @@ const GymManagement = () => {
         actionLabel?: string;
         onAction?: () => void;
     }>({ isOpen: false, title: '', message: '' });
-    
+
     const [errorModal, setErrorModal] = useState<{
         isOpen: boolean;
         title: string;
@@ -44,17 +42,17 @@ const GymManagement = () => {
         showRetry?: boolean;
         onRetry?: () => void;
     }>({ isOpen: false, title: '', message: '' });
-    
+
     const [confirmModal, setConfirmModal] = useState<{
         isOpen: boolean;
         title: string;
         message: string;
         itemName?: string;
         onConfirm: () => void;
-    }>({ isOpen: false, title: '', message: '', onConfirm: () => {} });
-    
+    }>({ isOpen: false, title: '', message: '', onConfirm: () => { } });
+
     const { getAccessToken, user, hasRole } = useAuthStore();
-    
+
     // Check if current user is admin or owner
     const isAdmin = hasRole('admin');
     const isOwner = hasRole('owner');
@@ -106,7 +104,7 @@ const GymManagement = () => {
 
             const response = await gymService.getGyms(token);
             console.log('DEBUG: Raw API response:', response);
-            
+
             if (response.success && response.data) {
                 console.log('DEBUG: Successfully fetched gyms:', response.data.length);
                 console.log('DEBUG: Gym data structure:', response.data);
@@ -202,12 +200,12 @@ const GymManagement = () => {
                 images: [],
                 imageUrls: [],
             };
-            
+
             // For owners, set their own email as ownerId
             if (isOwner && user?.email) {
                 initialFormData.ownerId = user.email;
             }
-            
+
             setFormData(initialFormData);
         }
         setCurrentStep(0);
@@ -240,12 +238,12 @@ const GymManagement = () => {
             images: [],
             imageUrls: [],
         };
-        
+
         // For owners, set their own email as ownerId
         if (isOwner && user?.email) {
             initialFormData.ownerId = user.email;
         }
-        
+
         setFormData(initialFormData);
     };
 
@@ -288,8 +286,8 @@ const GymManagement = () => {
                 latitude: formData.location.coordinates.latitude,
                 longitude: formData.location.coordinates.longitude,
                 rating: formData.rating,
-                amenities: formData.amenities.map(amenity => 
-                    typeof amenity === 'string' 
+                amenities: formData.amenities.map(amenity =>
+                    typeof amenity === 'string'
                         ? { name: amenity, description: '' }
                         : amenity
                 ),
@@ -303,7 +301,7 @@ const GymManagement = () => {
 
             console.log('DEBUG: Sending JSON data to API:', gymData);
 
-            const url = formData.id 
+            const url = formData.id
                 ? buildApiUrl(`${API_CONFIG.ENDPOINTS.GYMS}/${formData.id}`)
                 : buildApiUrl(API_CONFIG.ENDPOINTS.GYMS);
 
@@ -345,7 +343,7 @@ const GymManagement = () => {
             setErrorModal({
                 isOpen: true,
                 title: 'Network Error',
-                message: 'Failed to save gym due to network error',
+                message: 'Failed to save gym DEBUGe to network error',
                 error: error instanceof Error ? error.message : 'Unknown error',
                 showRetry: true,
                 onRetry: handleSave
@@ -428,11 +426,11 @@ const GymManagement = () => {
     const handleNestedInputChange = (path: string, value: string | number) => {
         const keys = path.split('.');
         const updatedFormData = { ...formData };
-        
+
         if (keys.length === 2) {
             (updatedFormData as any)[keys[0]][keys[1]] = value;
         }
-        
+
         setFormData(updatedFormData);
     };
 
@@ -535,18 +533,18 @@ const GymManagement = () => {
                         className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                 </div>
-                
+
                 {/* Search Results Count */}
                 {searchTerm && (
                     <div className="text-sm text-gray-600">
-                        {searchGyms(searchTerm).length === 0 
+                        {searchGyms(searchTerm).length === 0
                             ? 'No gyms found'
                             : `Found ${searchGyms(searchTerm).length} gym${searchGyms(searchTerm).length !== 1 ? 's' : ''}`
                         }
                         {searchTerm && (
                             <span className="ml-2">
                                 for "{searchTerm}"
-                                <button 
+                                <button
                                     onClick={() => setSearchTerm('')}
                                     className="ml-2 text-blue-600 hover:text-blue-800 underline"
                                 >
@@ -588,11 +586,6 @@ const GymManagement = () => {
                 </div>
             )}
 
-            {/* Debug Info */}
-            <div className="text-xs text-gray-400 bg-gray-50 p-2 rounded">
-                DEBUG: gyms.length = {gyms.length}, searchTerm = "{searchTerm}", filtered = {searchGyms(searchTerm).length}
-            </div>
-
             {/* Gyms List - Mobile First Design */}
             {!loading && !error && (
                 <div className="space-y-4">
@@ -604,109 +597,132 @@ const GymManagement = () => {
                                 {searchTerm ? 'Try adjusting your search criteria' : 'Start by adding your first gym'}
                             </p>
                         </div>
-                ) : (
-                    searchGyms(searchTerm).map((gym) => (
-                        <div key={gym.id} className="bg-white rounded-lg shadow border p-4 hover:shadow-md transition-shadow">
-                            <div className="flex items-start justify-between">
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center space-x-3 mb-3">
-                                        <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                                            {gym.name[0]}
-                                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
+                            {searchGyms(searchTerm).map((gym) => (
+                                <div key={gym.id} className="bg-white rounded-lg shadow border p-4 hover:shadow-md transition-shadow -1/2">
+                                    <div className="flex items-start justify-between relative">
                                         <div className="flex-1 min-w-0">
-                                            <h3 className="text-lg font-semibold text-gray-900 truncate">
-                                                {gym.name}
-                                            </h3>
-                                            <p className="text-sm text-gray-500 mb-1">{gym.description}</p>
-                                        </div>
-                                    </div>
+                                            <div className="flex items-center space-x-3 mb-3">
+                                                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+                                                    {gym.name[0]}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <h3 className="text-lg font-semibold text-gray-900 truncate">
+                                                        {gym.name}
+                                                    </h3>
+                                                </div>
+                                            </div>
 
-                                    {/* Address Information */}
-                                    <div className="bg-gray-50 rounded-lg p-3 mb-3">
-                                        <div className="flex items-start space-x-2">
-                                            <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-medium text-gray-900">{gym.address}</p>
-                                                <p className="text-xs text-gray-500">
-                                                    {gym.city}, {gym.state} {gym.zipCode}
-                                                </p>
+                                            {/* Owner Information */}
+                                            <div className="bg-blue-50 rounded-lg p-3 mb-3">
+                                                <div className="flex items-center space-x-2">
+                                                    <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                                                        <span className="text-xs font-bold text-blue-600">
+                                                            {gym.owner.firstName[0]}{gym.owner.lastName[0]}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm font-medium text-gray-900">
+                                                            {gym.owner.firstName} {gym.owner.lastName}
+                                                        </p>
+                                                        <p className="text-xs text-gray-500 truncate">
+                                                            {gym.owner.email}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+
+                                            {/* Address Information */}
+                                            <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                                                <div className="flex items-start space-x-2">
+                                                    <MapPin className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm font-medium text-gray-900">{gym.address}</p>
+                                                        <p className="text-xs text-gray-500">
+                                                            {gym.city}, {gym.state} {gym.zipCode}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Decription */}
+                                            <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                                                <div className="flex items-start space-x-2">
+                                                    <Info className="w-4 h-4 text-blue-700 mt-0.5 flex-shrink-0" />
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm text-gray-500 mb-1">{gym.description}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Stats */}
+                                            <div className="grid grid-cols-2 gap-4 text-center">
+                                                <div className="bg-yellow-50 rounded-lg p-2">
+                                                    <p className="text-sm font-bold text-yellow-700">
+                                                        {gym.rating}/5
+                                                    </p>
+                                                    <p className="text-xs font-medium text-yellow-600">
+                                                        Rating
+                                                    </p>
+                                                </div>
+                                                <div className="bg-green-50 rounded-lg p-2">
+                                                    <p className="text-sm font-bold text-green-700">
+                                                        {gym.currentOccupancy}/{gym.capacity}
+                                                    </p>
+                                                    <p className="text-xs font-medium text-green-600">
+                                                        Members
+                                                    </p>
+                                                </div>
+                                                <div className="bg-green-50 rounded-lg p-2">
+                                                    <p className="text-sm font-bold text-green-700">
+                                                        {gym.openingTime.slice(0, 5)}
+                                                    </p>
+                                                    <p className="text-xs font-medium text-green-600">
+                                                        Opening Time
+                                                    </p>
+                                                </div>
+                                                <div className="bg-green-50 rounded-lg p-2">
+                                                    <p className="text-sm font-bold text-green-700">
+                                                        {gym.closingTime.slice(0, 5)}
+                                                    </p>
+                                                    <p className="text-xs font-medium text-green-600">
+                                                        Closing Time
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    {/* Owner Information */}
-                                    <div className="bg-blue-50 rounded-lg p-3 mb-3">
-                                        <div className="flex items-center space-x-2">
-                                            <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                                                <span className="text-xs font-bold text-blue-600">
-                                                    {gym.owner.firstName[0]}{gym.owner.lastName[0]}
-                                                </span>
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-medium text-gray-900">
-                                                    {gym.owner.firstName} {gym.owner.lastName}
-                                                </p>
-                                                <p className="text-xs text-gray-500 truncate">
-                                                    {gym.owner.email}
-                                                </p>
-                                            </div>
+                                        <div className="flex items-center space-x-2 ml-4 absolute top-0 right-0">
+                                            <button
+                                                onClick={() => openImageModal(gym)}
+                                                className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                                                title="Edit images"
+                                            >
+                                                <Image className="w-4 h-4" />
+                                            </button>
+                                            <button
+                                                onClick={() => openModal(gym)}
+                                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                title="Edit gym details"
+                                            >
+                                                <Edit className="w-4 h-4" />
+                                            </button>
+                                            <button
+                                                onClick={() => showDeleteConfirmation(gym)}
+                                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                title="Delete gym"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
                                         </div>
-                                    </div>
-
-                                    {/* Stats */}
-                                    <div className="grid grid-cols-2 gap-4 text-center">
-                                        <div className="bg-yellow-50 rounded-lg p-2">
-                                            <p className="text-sm font-bold text-yellow-700">
-                                                {gym.rating}/5
-                                            </p>
-                                            <p className="text-xs font-medium text-yellow-600">
-                                                Rating
-                                            </p>
-                                        </div>
-                                        <div className="bg-green-50 rounded-lg p-2">
-                                            <p className="text-sm font-bold text-green-700">
-                                                {gym.currentOccupancy}/{gym.capacity}
-                                            </p>
-                                            <p className="text-xs font-medium text-green-600">
-                                                Members
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    {/* Operating Hours */}
-                                    <div className="mt-3 text-xs text-gray-500">
-                                        <span className="font-medium">Hours:</span> {gym.openingTime} - {gym.closingTime}
                                     </div>
                                 </div>
-
-                                <div className="flex items-center space-x-2 ml-4">
-                                    <button
-                                        onClick={() => openImageModal(gym)}
-                                        className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                                        title="Edit images"
-                                    >
-                                        <Image className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                        onClick={() => openModal(gym)}
-                                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                        title="Edit gym details"
-                                    >
-                                        <Edit className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                        onClick={() => showDeleteConfirmation(gym)}
-                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                        title="Delete gym"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            </div>
+                            ))}
                         </div>
-                    ))
-                )}
-            </div>
+                    )}
+                </div>
             )}
 
             {/* Add/Edit Gym Modal */}
@@ -724,10 +740,10 @@ const GymManagement = () => {
                         </div>
 
                         <div className="p-6 space-y-4">
-                            {currentStep === 0 && <StepBasicInfo formData={formData} onChange={setFormData} />}
-                            {currentStep === 1 && <StepLocation formData={formData} onChange={setFormData} isEditing={!!formData.id} />}
-                            {currentStep === 2 && <StepOperatingHours formData={formData} onChange={setFormData} />}
-                            {currentStep === 3 && <StepAmenities formData={formData} onChange={setFormData} />}
+                            {currentStep === 0 && <StepBasicInfo setCurrentStep={setCurrentStep} formData={formData} onChange={setFormData} />}
+                            {currentStep === 1 && <StepLocation setCurrentStep={setCurrentStep} formData={formData} onChange={setFormData} isEditing={!!formData.id} />}
+                            {currentStep === 2 && <StepOperatingHours setCurrentStep={setCurrentStep} formData={formData} onChange={setFormData} />}
+                            {currentStep === 3 && <StepAmenities setCurrentStep={setCurrentStep} formData={formData} onChange={setFormData} />}
                         </div>
 
                         <div className="flex space-x-3 p-6 border-t">

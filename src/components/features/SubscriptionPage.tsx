@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CreditCard, Calendar, DollarSign, Star, Check } from 'lucide-react';
+import { CreditCard, Calendar, DollarSign, Star, Check, IndianRupee } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { useApp } from '../../contexts/AppContext';
 
@@ -389,7 +389,7 @@ export function SubscriptionPage() {
                     onChange={(e) => setPaymentMethod(e.target.value)}
                     className="mr-2"
                   />
-                  <DollarSign className="w-4 h-4 mr-2" />
+                  <IndianRupee className="w-4 h-4 mr-2" />
                   Wallet Balance
                 </label>
               </div>

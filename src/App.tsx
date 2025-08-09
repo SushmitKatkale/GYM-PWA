@@ -177,7 +177,7 @@ function App() {
       
       <div className="flex">
         {/* Desktop/Tablet Sidebar */}
-        <div className="hidden md:block">
+        <div className="hidden md:block h-[calc(100vh-4rem)]">
           <Sidebar 
             activeView={activeView}
             onViewChange={handleViewChange}
@@ -186,7 +186,7 @@ function App() {
         </div>
         
         {/* Main Content */}
-        <main className="flex-1 md:lg:ml-64 pb-24 md:pb-0">
+        <main className="flex-1 pb-24 md:pb-0">
           {/* Mobile Header */}
           <div className="md:hidden bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-40">
             <div className="flex items-center justify-between">

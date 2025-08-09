@@ -8,13 +8,17 @@ export interface VendorPaymentConfig {
   cutValue: number;
   cutType: 'percentage' | 'flat';
   isRazorpayActive: boolean;
-  onboardingStatus: 'pending' | 'in_progress' | 'completed' | 'rejected';
+  onboardingStatus: 'pending' | 'in_progress' | 'pending_verification' | 'completed' | 'rejected';
   onboardingDate?: string;
   bankAccountVerified: boolean;
   kycStatus: 'pending' | 'submitted' | 'verified' | 'rejected';
   activeStatus: boolean;
   createTimestamp: string;
+  createdBy?: string;
   updateTimestamp: string;
+  updatedBy?: string;
+  razorpayBankAccountId?: string;
+  razorpayStakeholderId?: string;
   gym?: {
     id: number;
     name: string;
@@ -31,8 +35,18 @@ export interface CreateVendorConfigRequest {
 }
 
 export interface UpdateVendorConfigRequest {
+  razorpayVendorId?: string;
   cutValue?: number;
   cutType?: 'percentage' | 'flat';
+  isRazorpayActive?: boolean;
+  onboardingStatus?: 'pending' | 'in_progress' | 'pending_verification' | 'completed' | 'rejected';
+  onboardingDate?: string;
+  bankAccountVerified?: boolean;
+  kycStatus?: 'pending' | 'submitted' | 'verified' | 'rejected';
+  activeStatus?: boolean;
+  razorpayBankAccountId?: string;
+  razorpayStakeholderId?: string;
+  updatedBy?: string;
 }
 
 export interface BankDetails {
@@ -93,11 +107,16 @@ class AdminPaymentService {
     return apiClient.get(`${this.baseEndpoint}/vendor-configs?${params.toString()}`);
   }
 
+  async getVendorConfig(id: number): Promise<ApiResponse<VendorPaymentConfig>> {
+    return apiClient.get(`${this.baseEndpoint}/vendor-configs/${id}`);
+  }
+
   async updateVendorConfig(
     id: number,
     data: UpdateVendorConfigRequest
   ): Promise<ApiResponse<VendorPaymentConfig>> {
-    return apiClient.put(`${this.baseEndpoint}/vendor-configs/${id}`, data);
+    // Use the new comprehensive update endpoint
+    return apiClient.put(`${this.baseEndpoint}/vendor-configs/${id}/complete`, data);
   }
 
   async onboardVendor(

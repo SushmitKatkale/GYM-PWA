@@ -62,22 +62,22 @@ export function CreateVendorConfigModal({ isOpen, onClose, onSuccess }: CreateVe
           )}
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">Cut Value</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Cut Value</label>
           <input
             type="number"
             name="cutValue"
             value={form.cutValue}
             onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">Cut Type</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Cut Type</label>
           <select
             name="cutType"
             value={form.cutType}
             onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="percentage">Percentage</option>
             <option value="flat">Flat</option>

@@ -19,17 +19,16 @@ interface StepBasicInfoProps {
   onChange: (data: FormData) => void;
 }
 
-const StepBasicInfo: React.FC<StepBasicInfoProps> = ({ formData, onChange }) => {
+const StepBasicInfo: React.FC<StepBasicInfoProps> = ({ formData, onChange, setCurrentStep }) => {
   const { hasRole } = useAuthStore();
-  
+
   // Check if current user is admin or owner
-  const isAdmin = hasRole('admin');
   const isOwner = hasRole('owner');
-  
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     const processedValue = type === 'number' ? parseFloat(value) || 0 : value;
-    
+
     onChange({
       ...formData,
       [name]: processedValue
@@ -50,13 +49,34 @@ const StepBasicInfo: React.FC<StepBasicInfoProps> = ({ formData, onChange }) => 
       {/* Progress Indicator */}
       <div className="flex justify-center">
         <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">1</div>
+          <div onClick={() => {setCurrentStep(0)}} className="cursor-pointer w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">1</div>
           <div className="w-16 h-1 bg-gray-200 rounded"></div>
-          <div className="w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-medium">2</div>
+          <div onClick={() => {setCurrentStep(1)}} className="cursor-pointer w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-medium">2</div>
           <div className="w-16 h-1 bg-gray-200 rounded"></div>
-          <div className="w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-medium">3</div>
+          <div onClick={() => {setCurrentStep(2)}} className="cursor-pointer w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-medium">3</div>
           <div className="w-16 h-1 bg-gray-200 rounded"></div>
-          <div className="w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-medium">4</div>
+          <div onClick={() => {setCurrentStep(3)}} className="cursor-pointer w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-medium">4</div>
+        </div>
+      </div>
+
+      {/* Validation Summary */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <h4 className="text-sm font-medium text-blue-900 mb-2">Required Fields:</h4>
+        <div className="text-xs text-blue-700 flex gap-4">
+          <div className="flex items-center">
+            <div className={`w-2 h-2 rounded-full mr-2 ${formData.name ? 'bg-green-500' : 'bg-red-500'}`}></div>
+            Gym Name
+          </div>
+          <div className="flex items-center">
+            <div className={`w-2 h-2 rounded-full mr-2 ${formData.capacity > 0 ? 'bg-green-500' : 'bg-red-500'}`}></div>
+            Total Capacity
+          </div>
+          {!isOwner &&
+            <div className="flex items-center">
+              <div className={`w-2 h-2 rounded-full mr-2 ${formData.ownerId ? 'bg-green-500' : 'bg-red-500'}`}></div>
+              Owner Selection
+            </div>
+          }
         </div>
       </div>
 
@@ -158,11 +178,10 @@ const StepBasicInfo: React.FC<StepBasicInfoProps> = ({ formData, onChange }) => 
               {[1, 2, 3, 4, 5].map((star) => (
                 <Star
                   key={star}
-                  className={`w-5 h-5 ${
-                    star <= formData.rating
+                  className={`w-5 h-5 ${star <= formData.rating
                       ? 'text-yellow-400 fill-current'
                       : 'text-gray-300'
-                  }`}
+                    }`}
                 />
               ))}
             </div>
@@ -190,24 +209,6 @@ const StepBasicInfo: React.FC<StepBasicInfoProps> = ({ formData, onChange }) => 
         </div>
       </div>
 
-      {/* Validation Summary */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h4 className="text-sm font-medium text-blue-900 mb-2">Required Fields:</h4>
-        <div className="space-y-1 text-xs text-blue-700">
-          <div className="flex items-center">
-            <div className={`w-2 h-2 rounded-full mr-2 ${formData.name ? 'bg-green-500' : 'bg-red-500'}`}></div>
-            Gym Name
-          </div>
-          <div className="flex items-center">
-            <div className={`w-2 h-2 rounded-full mr-2 ${formData.capacity > 0 ? 'bg-green-500' : 'bg-red-500'}`}></div>
-            Total Capacity
-          </div>
-          <div className="flex items-center">
-            <div className={`w-2 h-2 rounded-full mr-2 ${formData.ownerId ? 'bg-green-500' : 'bg-red-500'}`}></div>
-            Owner Selection
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

@@ -37,7 +37,7 @@ const OwnerAutocomplete: React.FC<OwnerAutocompleteProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedOwner, setSelectedOwner] = useState<Owner | null>(null);
-  
+
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -115,7 +115,7 @@ const OwnerAutocomplete: React.FC<OwnerAutocompleteProps> = ({
     const query = e.target.value;
     setSearchQuery(query);
     setIsOpen(true);
-    
+
     // Clear selection if user is typing
     if (selectedOwner && query !== `${selectedOwner.email} - ${selectedOwner.firstName} ${selectedOwner.lastName}`) {
       setSelectedOwner(null);
@@ -153,10 +153,9 @@ const OwnerAutocomplete: React.FC<OwnerAutocompleteProps> = ({
           required={required}
           className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
-        <ChevronDown 
-          className={`absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 transition-transform ${
-            isOpen ? 'rotate-180' : ''
-          }`}
+        <ChevronDown
+          className={`absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''
+            }`}
         />
         {selectedOwner && (
           <Check className="absolute right-8 top-1/2 transform -translate-y-1/2 text-green-500 w-4 h-4" />
@@ -180,9 +179,8 @@ const OwnerAutocomplete: React.FC<OwnerAutocompleteProps> = ({
               <div
                 key={owner.id}
                 onClick={() => handleOwnerSelect(owner)}
-                className={`px-4 py-3 cursor-pointer hover:bg-blue-50 border-b border-gray-100 last:border-b-0 ${
-                  selectedOwner?.id === owner.id ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
-                }`}
+                className={`px-4 py-3 cursor-pointer hover:bg-blue-50 border-b border-gray-100 last:border-b-0 ${selectedOwner?.id === owner.id ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                  }`}
               >
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
@@ -205,13 +203,13 @@ const OwnerAutocomplete: React.FC<OwnerAutocompleteProps> = ({
 
       {/* Helper text */}
       <div className="mt-1 text-xs text-gray-500">
-        {isLoading 
-          ? 'Loading available owners...' 
-          : `${owners.length} owners available`
+        {isLoading
+          ? 'Loading available owners...'
+          : disabled ? "" : `${owners.length} owners available`
         }
       </div>
-      
-      {owners.length === 0 && !isLoading && (
+
+      {!disabled && owners.length === 0 && !isLoading && (
         <div className="mt-1 text-xs text-red-500">
           No active owners found. Please ensure there are registered gym owners.
         </div>

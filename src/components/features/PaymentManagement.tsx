@@ -18,6 +18,8 @@ import {
 } from 'lucide-react';
 import { adminPaymentService, VendorPaymentConfig, PaginatedVendorConfigs } from '../../services/adminPaymentService';
 import { CreateVendorConfigModal } from './payment/CreateVendorConfigModal';
+import { EditVendorConfigModal } from './payment/EditVendorConfigModal';
+import { ViewVendorConfigModal } from './payment/ViewVendorConfigModal';
 import { OnboardVendorModal } from './payment/OnboardVendorModal';
 import { CommissionCalculator } from './payment/CommissionCalculator';
 import { CreateOrderModal } from './payment/CreateOrderModal';
@@ -31,9 +33,12 @@ export function PaymentManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
   const [showOnboardModal, setShowOnboardModal] = useState(false);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [selectedConfig, setSelectedConfig] = useState<VendorPaymentConfig | null>(null);
+  const [viewConfigId, setViewConfigId] = useState<number | null>(null);
 
   const loadVendorConfigs = async (page = 1) => {
     setLoading(true);
@@ -59,6 +64,16 @@ export function PaymentManagement() {
     setShowCreateModal(true);
   };
 
+  const handleViewConfig = (config: VendorPaymentConfig) => {
+    setViewConfigId(config.id);
+    setShowViewModal(true);
+  };
+
+  const handleEditConfig = (config: VendorPaymentConfig) => {
+    setSelectedConfig(config);
+    setShowEditModal(true);
+  };
+
   const handleOnboardVendor = (config: VendorPaymentConfig) => {
     setSelectedConfig(config);
     setShowOnboardModal(true);
@@ -72,6 +87,7 @@ export function PaymentManagement() {
     const badges = {
       pending: 'bg-yellow-100 text-yellow-800',
       in_progress: 'bg-blue-100 text-blue-800',
+      pending_verification: 'bg-purple-100 text-purple-800',
       completed: 'bg-green-100 text-green-800',
       rejected: 'bg-red-100 text-red-800',
     };
@@ -86,6 +102,8 @@ export function PaymentManagement() {
         return <XCircle className="w-4 h-4 text-red-600" />;
       case 'in_progress':
         return <RefreshCw className="w-4 h-4 text-blue-600" />;
+      case 'pending_verification':
+        return <AlertCircle className="w-4 h-4 text-purple-600" />;
       default:
         return <AlertCircle className="w-4 h-4 text-yellow-600" />;
     }
@@ -174,8 +192,8 @@ export function PaymentManagement() {
         <nav className="-mb-px flex space-x-8">
           {[
             { id: 'configs', label: 'Vendor Configurations', icon: Building },
-            { id: 'orders', label: 'Order Management', icon: CreditCard },
-            { id: 'calculator', label: 'Commission Calculator', icon: TrendingUp }
+            // { id: 'orders', label: 'Order Management', icon: CreditCard },
+            // { id: 'calculator', label: 'Commission Calculator', icon: TrendingUp }
           ].map((tab) => {
             const Icon = tab.icon;
             return (
@@ -221,6 +239,7 @@ export function PaymentManagement() {
                 <option value="">All Status</option>
                 <option value="pending">Pending</option>
                 <option value="in_progress">In Progress</option>
+                <option value="pending_verification">Pending Verification</option>
                 <option value="completed">Completed</option>
                 <option value="rejected">Rejected</option>
               </select>
@@ -321,10 +340,18 @@ export function PaymentManagement() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex justify-end space-x-2">
-                            <button className="text-blue-600 hover:text-blue-900">
+                            <button 
+                              onClick={() => handleViewConfig(config)}
+                              className="text-blue-600 hover:text-blue-900" 
+                              title="View Details"
+                            >
                               <Eye className="w-4 h-4" />
                             </button>
-                            <button className="text-green-600 hover:text-green-900">
+                            <button 
+                              onClick={() => handleEditConfig(config)}
+                              className="text-green-600 hover:text-green-900"
+                              title="Edit Configuration"
+                            >
                               <Edit className="w-4 h-4" />
                             </button>
                             {config.onboardingStatus === 'pending' && (
@@ -404,6 +431,33 @@ export function PaymentManagement() {
           onClose={() => setShowCreateModal(false)}
           onSuccess={() => {
             setShowCreateModal(false);
+            loadVendorConfigs();
+          }}
+        />
+      )}
+
+      {showViewModal && viewConfigId && (
+        <ViewVendorConfigModal
+          isOpen={showViewModal}
+          onClose={() => {
+            setShowViewModal(false);
+            setViewConfigId(null);
+          }}
+          configId={viewConfigId}
+        />
+      )}
+
+      {showEditModal && selectedConfig && (
+        <EditVendorConfigModal
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false);
+            setSelectedConfig(null);
+          }}
+          config={selectedConfig}
+          onSuccess={() => {
+            setShowEditModal(false);
+            setSelectedConfig(null);
             loadVendorConfigs();
           }}
         />

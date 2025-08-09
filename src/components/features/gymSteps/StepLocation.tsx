@@ -27,7 +27,7 @@ interface StepLocationProps {
   isEditing?: boolean;
 }
 
-const StepLocation: React.FC<StepLocationProps> = ({ formData, onChange, isEditing }) => {
+const StepLocation: React.FC<StepLocationProps> = ({ formData, onChange, isEditing, setCurrentStep }) => {
   const [mapCenter, setMapCenter] = useState({
     lat: formData.location.coordinates.latitude || 40.7128,
     lng: formData.location.coordinates.longitude || -74.0060
@@ -218,13 +218,16 @@ const StepLocation: React.FC<StepLocationProps> = ({ formData, onChange, isEditi
       {/* Progress Indicator */}
       <div className="flex justify-center">
         <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-medium">2</div>
+          <div onClick={() => {setCurrentStep(0)}} className="cursor-pointer w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-medium">1</div>
           <div className="w-16 h-1 bg-gray-200 rounded"></div>
-          <div className="w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-medium">3</div>
+          <div onClick={() => {setCurrentStep(1)}} className="cursor-pointer w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">2</div>
           <div className="w-16 h-1 bg-gray-200 rounded"></div>
-          <div className="w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-medium">4</div>
+          <div onClick={() => {setCurrentStep(2)}} className="cursor-pointer w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-medium">3</div>
+          <div className="w-16 h-1 bg-gray-200 rounded"></div>
+          <div onClick={() => {setCurrentStep(3)}} className="cursor-pointer w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-medium">4</div>
         </div>
       </div>
+
 
       {/* Address Search */}
       <div className="space-y-4">

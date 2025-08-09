@@ -104,7 +104,7 @@ export function OwnerManagement() {
   // Update owner
   const updateOwner = async () => {
     if (!selectedOwner) return;
-    
+
     try {
       const updateData = {
         firstName: formData.firstName,
@@ -169,12 +169,12 @@ export function OwnerManagement() {
       phoneNumber: '',
       password: ''
     };
-    
+
     // For owners, set their own email as username and disable it
     if (isOwner && user?.email) {
       initialFormData.username = user.email;
     }
-    
+
     setFormData(initialFormData);
   };
 
@@ -227,19 +227,7 @@ export function OwnerManagement() {
         </button>
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-        <input
-          type="text"
-          placeholder="Search owners..."
-          value={searchTerm}
-          onChange={handleSearch}
-          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
-      </div>
-
-      {/* Stats */}
+            {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white p-6 rounded-lg shadow border">
           <div className="flex items-center">
@@ -274,6 +262,18 @@ export function OwnerManagement() {
         </div>
       </div>
 
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+        <input
+          type="text"
+          placeholder="Search owners..."
+          value={searchTerm}
+          onChange={handleSearch}
+          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        />
+      </div>
+
       {/* Owners List - Mobile First Design */}
       <div className="space-y-4">
         {filteredOwners.length === 0 ? (
@@ -285,66 +285,61 @@ export function OwnerManagement() {
             </p>
           </div>
         ) : (
-          filteredOwners.map((owner) => (
-            <div key={owner.id} className="bg-white rounded-lg shadow border p-4 hover:shadow-md transition-shadow">
-              {/* Mobile Layout */}
-              <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                      {owner.firstName[0]}{owner.lastName[0]}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-semibold text-gray-900 truncate">
-                        {owner.firstName} {owner.lastName}
-                      </h3>
-                      <p className="text-sm text-gray-500">@{owner.username}</p>
-                    </div>
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      owner.activeStatus === '1' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {owner.activeStatus === '1' ? 'Active' : 'Inactive'}
-                    </span>
-                  </div>
-                  
-                  <div className="space-y-1 mb-3">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Mail className="w-4 h-4 mr-2" />
-                      <span className="truncate">{owner.email}</span>
-                    </div>
-                    {owner.phoneNumber && (
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Phone className="w-4 h-4 mr-2" />
-                        <span>{owner.phoneNumber}</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
+            {filteredOwners.filter(owner => owner.activeStatus === '1').map((owner) => (
+              <div key={owner.id} className="bg-white rounded-lg shadow border p-4 hover:shadow-md transition-shadow">
+                {/* Mobile Layout */}
+                <div className="flex items-start justify-between relative">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+                        {owner.firstName[0]}{owner.lastName[0]}
                       </div>
-                    )}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg font-semibold text-gray-900 truncate">
+                          {owner.firstName} {owner.lastName}
+                        </h3>
+                        <p className="text-sm text-gray-500">@{owner.username}</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 my-4">
+                      <div className="flex items-center text-sm text-gray-600">
+                        <Mail className="w-4 h-4 mr-2" />
+                        <span className="truncate">{owner.email}</span>
+                      </div>
+                      {owner.phoneNumber && (
+                        <div className="flex items-center text-sm text-gray-600">
+                          <Phone className="w-4 h-4 mr-2" />
+                          <span>{owner.phoneNumber}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <p className="text-xs text-gray-400 text-end">
+                      Created: {new Date(owner.createTimestamp).toLocaleDateString()}
+                    </p>
                   </div>
-                  
-                  <p className="text-xs text-gray-400">
-                    Created: {new Date(owner.createTimestamp).toLocaleDateString()}
-                  </p>
-                </div>
-                
-                {/* Actions */}
-                <div className="flex items-center space-x-2 ml-4">
-                  <button
-                    onClick={() => openEditModal(owner)}
-                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => showDeleteConfirmation(owner)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+
+                  {/* Actions */}
+                  <div className="flex items-center space-x-2 ml-4 absolute top-0 right-0">
+                    <button
+                      onClick={() => openEditModal(owner)}
+                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => showDeleteConfirmation(owner)}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
+            ))}
+          </div>
         )}
       </div>
 
@@ -364,7 +359,7 @@ export function OwnerManagement() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
@@ -376,7 +371,7 @@ export function OwnerManagement() {
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
                 <input
@@ -387,16 +382,15 @@ export function OwnerManagement() {
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
                 <input
                   type="text"
                   value={formData.username}
                   onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    isOwner ? 'bg-gray-100 cursor-not-allowed' : ''
-                  }`}
+                  className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${isOwner ? 'bg-gray-100 cursor-not-allowed' : ''
+                    }`}
                   disabled={isOwner}
                   required
                 />
@@ -404,7 +398,7 @@ export function OwnerManagement() {
                   <p className="text-xs text-gray-500 mt-1">As an owner, your username is set to your email address</p>
                 )}
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
                 <input
@@ -415,7 +409,7 @@ export function OwnerManagement() {
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
                 <input
@@ -425,7 +419,7 @@ export function OwnerManagement() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
                 <input
@@ -437,7 +431,7 @@ export function OwnerManagement() {
                 />
               </div>
             </div>
-            
+
             <div className="flex space-x-3 p-6 border-t">
               <button
                 onClick={() => {
@@ -476,7 +470,7 @@ export function OwnerManagement() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
@@ -488,7 +482,7 @@ export function OwnerManagement() {
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
                 <input
@@ -499,16 +493,15 @@ export function OwnerManagement() {
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
                 <input
                   type="text"
                   value={formData.username}
                   onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    isOwner ? 'bg-gray-100 cursor-not-allowed' : ''
-                  }`}
+                  className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${isOwner ? 'bg-gray-100 cursor-not-allowed' : ''
+                    }`}
                   disabled={isOwner}
                   required
                 />
@@ -516,7 +509,7 @@ export function OwnerManagement() {
                   <p className="text-xs text-gray-500 mt-1">As an owner, username cannot be changed</p>
                 )}
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
                 <input
@@ -527,7 +520,7 @@ export function OwnerManagement() {
                 />
               </div>
             </div>
-            
+
             <div className="flex space-x-3 p-6 border-t">
               <button
                 onClick={() => {

@@ -18,6 +18,7 @@ export interface User {
   isVerified: boolean;
   activeStatus: '0' | '1';
   createTimestamp: string;
+  gender: string;
 }
 
 export interface Subscription {

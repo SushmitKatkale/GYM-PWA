@@ -74,57 +74,57 @@ export function OnboardVendorModal({ isOpen, onClose, config, onSuccess }: Onboa
           
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Account Holder Name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Account Holder Name</label>
               <input
                 type="text"
                 name="accountHolderName"
                 value={bankDetails.accountHolderName}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Account Number</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Account Number</label>
               <input
                 type="text"
                 name="accountNumber"
                 value={bankDetails.accountNumber}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">IFSC Code</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">IFSC Code</label>
               <input
                 type="text"
                 name="ifsc"
                 value={bankDetails.ifsc}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">PAN Number</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">PAN Number</label>
               <input
                 type="text"
                 name="pan"
                 value={bankDetails.pan}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
             </div>
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700">GST Number (Optional)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">GST Number (Optional)</label>
               <input
                 type="text"
                 name="gst"
                 value={bankDetails.gst}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
           </div>
