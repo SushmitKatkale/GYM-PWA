@@ -8,6 +8,7 @@ import { useGeolocation } from '../../hooks/useGeolocation';
 import { subscriptionService } from '../../services/subscriptionService';
 import { paymentService } from '../../services/paymentService';
 import SubscriptionPurchaseModal from '../ui/SubscriptionPurchaseModal';
+import { PaymentGatewayModal } from '../payments/PaymentGatewayModal';
 import SuccessModal from '../ui/SuccessModal';
 import ErrorModal from '../ui/ErrorModal';
 
@@ -32,6 +33,11 @@ export function GymDiscovery() {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  
+  // Payment gateway states
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [currentGym, setCurrentGym] = useState<any>(null);
+  const [selectedPlan, setSelectedPlan] = useState<any>(null);
 
   const getCurrentLocation = async () => {
     setIsLoadingLocation(true);
@@ -148,6 +154,21 @@ export function GymDiscovery() {
     }
   };
 
+  // Payment handlers
+  const handlePaymentSuccess = (paymentId: string) => {
+    setShowPaymentModal(false);
+    setSuccessMessage(`Payment successful! Your subscription has been activated.`);
+    setShowSuccessModal(true);
+    setSelectedPlan(null);
+    setCurrentGym(null);
+  };
+
+  const handlePaymentError = (error: string) => {
+    setShowPaymentModal(false);
+    setErrorMessage(error);
+    setShowErrorModal(true);
+  };
+
   // Handle showing all gym subscriptions
   const handleShowSubscriptions = async (gym: any) => {
     if (!user) {
@@ -155,6 +176,8 @@ export function GymDiscovery() {
       setShowErrorModal(true);
       return;
     }
+
+    setCurrentGym(gym); // Set current gym for payment processing
 
     // Check for active subscriptions first
     const hasActive = await checkActiveSubscriptions();
@@ -693,10 +716,18 @@ export function GymDiscovery() {
           subscriptions={selectedSubscriptions}
           onClose={() => setIsPurchaseModalOpen(false)}
           onSelectPlan={(subscriptionId) => {
-            // For now, just close the modal and show success
-            setIsPurchaseModalOpen(false);
-            setSuccessMessage('Plan selection implemented! Proceeding to payment...');
-            setShowSuccessModal(true);
+            // Find the selected subscription
+            const selectedSub = selectedSubscriptions.find(sub => sub.id === subscriptionId);
+            if (selectedSub && currentGym) {
+              setSelectedPlan({
+                subscriptionId: selectedSub.subscriptionId,
+                planType: selectedSub.planType,
+                amount: selectedSub.discountedPrice || selectedSub.price,
+                gymName: selectedSub.gymName
+              });
+              setIsPurchaseModalOpen(false);
+              setShowPaymentModal(true);
+            }
           }}
         />
       )}
@@ -710,6 +741,26 @@ export function GymDiscovery() {
         <ErrorModal
           message={errorMessage}
           onClose={() => setShowErrorModal(false)}
+        />
+      )}
+      {showPaymentModal && selectedPlan && currentGym && (
+        <PaymentGatewayModal
+          isOpen={showPaymentModal}
+          onClose={() => {
+            setShowPaymentModal(false);
+            setSelectedPlan(null);
+            setCurrentGym(null);
+          }}
+          gymId={currentGym.id}
+          subscriptionId={selectedPlan.subscriptionId}
+          amount={selectedPlan.amount}
+          planDetails={{
+            planType: selectedPlan.planType,
+            gymName: selectedPlan.gymName,
+            amount: selectedPlan.amount
+          }}
+          onSuccess={handlePaymentSuccess}
+          onError={handlePaymentError}
         />
       )}
       {filteredAndSortedGyms.length === 0 && (

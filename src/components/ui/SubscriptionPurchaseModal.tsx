@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, CreditCard, IndianRupee, AlertCircle, Check, Star, Zap, Crown } from 'lucide-react';
+import { PaymentGatewayModal } from '../payments/PaymentGatewayModal';
 
 interface SubscriptionDetails {
   planType: string;
