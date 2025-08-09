@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { googleMapsLoader } from '../../services/googleMapsLoader';
 import { Gym } from '../../services/gymService';
-import { MapPin, Star, DollarSign } from 'lucide-react';
+import { MapPin, Star } from 'lucide-react';
 
 interface GymDiscoveryMapProps {
   gyms: Gym[];

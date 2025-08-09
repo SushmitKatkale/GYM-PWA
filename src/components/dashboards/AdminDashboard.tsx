@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { 
-  Users, Building, TrendingUp, DollarSign, Activity, 
+  Users, Building, TrendingUp, Activity, 
   Server, Database, CreditCard, ArrowUp, ArrowDown,
   RefreshCw, AlertCircle, CheckCircle, Clock,
   UserPlus, Home, Target, BarChart3

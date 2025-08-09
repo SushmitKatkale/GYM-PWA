@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Search, Plus, Edit, Trash2, DollarSign, Clock, X, MapPin, Star, Award, IndianRupee } from 'lucide-react';
+import { Box, Search, Plus, Edit, Trash2, Clock, X, MapPin, Star, Award, IndianRupee } from 'lucide-react';
 import { buildApiUrl, API_CONFIG } from '../../config/api';
 import { useAuthStore } from '../../stores/authStore';
 import SuccessModal from '../ui/SuccessModal';

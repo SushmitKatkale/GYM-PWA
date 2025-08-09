@@ -9,7 +9,6 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
-  DollarSign,
   Building,
   User,
   Calendar,
@@ -21,18 +20,25 @@ import {
   X,
   IndianRupee,
   Grid,
-  List
+  List,
+  Users,
+  Receipt,
+  FileText
 } from 'lucide-react';
-import { adminPaymentService, VendorPaymentConfig, PaginatedVendorConfigs } from '../../services/adminPaymentService';
+import { adminPaymentService, VendorPaymentConfig, PaginatedVendorConfigs, Payment, UserSubscription } from '../../services/adminPaymentService';
 import { CreateVendorConfigModal } from './payment/CreateVendorConfigModal';
 import { EditVendorConfigModal } from './payment/EditVendorConfigModal';
 import { ViewVendorConfigModal } from './payment/ViewVendorConfigModal';
 import { OnboardVendorModal } from './payment/OnboardVendorModal';
 import { CommissionCalculator } from './payment/CommissionCalculator';
 import { CreateOrderModal } from './payment/CreateOrderModal';
+import { PaymentDetailsModal } from './payment/PaymentDetailsModal';
+import { UserSubscriptionDetailsModal } from './payment/UserSubscriptionDetailsModal';
 
 export function PaymentManagement() {
-  const [activeTab, setActiveTab] = useState<'configs' | 'orders' | 'calculator'>('configs');
+  const [activeTab, setActiveTab] = useState<'configs' | 'payments' | 'subscriptions' | 'calculator'>('configs');
+  
+  // Vendor Configs State
   const [vendorConfigs, setVendorConfigs] = useState<VendorPaymentConfig[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -54,6 +60,31 @@ export function PaymentManagement() {
   const [selectedConfig, setSelectedConfig] = useState<VendorPaymentConfig | null>(null);
   const [viewConfigId, setViewConfigId] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+
+  // Payments State
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [paymentSearchTerm, setPaymentSearchTerm] = useState('');
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState('');
+  const [paymentGatewayFilter, setPaymentGatewayFilter] = useState('');
+  const [paymentCurrentPage, setPaymentCurrentPage] = useState(1);
+  const [paymentTotalPages, setPaymentTotalPages] = useState(1);
+  const [paymentTotalRecords, setPaymentTotalRecords] = useState(0);
+  const [paymentItemsPerPage, setPaymentItemsPerPage] = useState(10);
+  const [showPaymentDetailsModal, setShowPaymentDetailsModal] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+
+  // User Subscriptions State
+  const [userSubscriptions, setUserSubscriptions] = useState<UserSubscription[]>([]);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(false);
+  const [subscriptionSearchTerm, setSubscriptionSearchTerm] = useState('');
+  const [subscriptionStatusFilter, setSubscriptionStatusFilter] = useState('');
+  const [subscriptionCurrentPage, setSubscriptionCurrentPage] = useState(1);
+  const [subscriptionTotalPages, setSubscriptionTotalPages] = useState(1);
+  const [subscriptionTotalRecords, setSubscriptionTotalRecords] = useState(0);
+  const [subscriptionItemsPerPage, setSubscriptionItemsPerPage] = useState(10);
+  const [showSubscriptionDetailsModal, setShowSubscriptionDetailsModal] = useState(false);
+  const [selectedSubscription, setSelectedSubscription] = useState<UserSubscription | null>(null);
 
   const loadVendorConfigs = async (page = 1, resetPage = false) => {
     setLoading(true);
@@ -171,6 +202,157 @@ export function PaymentManagement() {
     setShowOrderModal(true);
   };
 
+  // Payment Management Functions
+  const loadPayments = async (page = 1, resetPage = false) => {
+    setPaymentLoading(true);
+    try {
+      const filters: any = {};
+      if (paymentSearchTerm) {
+        if (paymentSearchTerm.includes('@')) {
+          filters.userEmail = paymentSearchTerm;
+        } else {
+          filters.transactionId = paymentSearchTerm;
+        }
+      }
+      if (paymentStatusFilter) filters.status = paymentStatusFilter;
+      if (paymentGatewayFilter) filters.gateway = paymentGatewayFilter;
+
+      const response = await adminPaymentService.getAllPayments(
+        resetPage ? 1 : page,
+        paymentItemsPerPage,
+        Object.keys(filters).length > 0 ? filters : undefined
+      );
+
+      if (response.success && response.data) {
+        setPayments(response.data.payments);
+        setPaymentTotalPages(response.data.pagination.totalPages);
+        setPaymentTotalRecords(response.data.pagination.total);
+        setPaymentCurrentPage(resetPage ? 1 : page);
+      }
+    } catch (error) {
+      console.error('Failed to load payments:', error);
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
+  const loadUserSubscriptions = async (page = 1, resetPage = false) => {
+    setSubscriptionLoading(true);
+    try {
+      const filters: any = {};
+      if (subscriptionSearchTerm) {
+        if (subscriptionSearchTerm.includes('@')) {
+          filters.userEmail = subscriptionSearchTerm;
+        } else {
+          filters.title = subscriptionSearchTerm;
+        }
+      }
+      if (subscriptionStatusFilter) filters.status = subscriptionStatusFilter;
+
+      const response = await adminPaymentService.getAllUserSubscriptions(
+        resetPage ? 1 : page,
+        subscriptionItemsPerPage,
+        Object.keys(filters).length > 0 ? filters : undefined
+      );
+
+      if (response.success && response.data) {
+        setUserSubscriptions(response.data.subscriptions);
+        setSubscriptionTotalPages(response.data.pagination.totalPages);
+        setSubscriptionTotalRecords(response.data.pagination.total);
+        setSubscriptionCurrentPage(resetPage ? 1 : page);
+      }
+    } catch (error) {
+      console.error('Failed to load user subscriptions:', error);
+    } finally {
+      setSubscriptionLoading(false);
+    }
+  };
+
+  // Payment handlers
+  const handlePaymentSearch = () => {
+    loadPayments(1, true);
+  };
+
+  const handlePaymentKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handlePaymentSearch();
+    }
+  };
+
+  const clearPaymentFilters = () => {
+    setPaymentSearchTerm('');
+    setPaymentStatusFilter('');
+    setPaymentGatewayFilter('');
+    setPaymentCurrentPage(1);
+    loadPayments(1, true);
+  };
+
+  const handleViewPaymentDetails = (payment: Payment) => {
+    setSelectedPayment(payment);
+    setShowPaymentDetailsModal(true);
+  };
+
+  // Subscription handlers
+  const handleSubscriptionSearch = () => {
+    loadUserSubscriptions(1, true);
+  };
+
+  const handleSubscriptionKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSubscriptionSearch();
+    }
+  };
+
+  const clearSubscriptionFilters = () => {
+    setSubscriptionSearchTerm('');
+    setSubscriptionStatusFilter('');
+    setSubscriptionCurrentPage(1);
+    loadUserSubscriptions(1, true);
+  };
+
+  const handleViewSubscriptionDetails = (subscription: UserSubscription) => {
+    setSelectedSubscription(subscription);
+    setShowSubscriptionDetailsModal(true);
+  };
+
+  // Load data when tab changes
+  useEffect(() => {
+    if (activeTab === 'payments' && payments.length === 0) {
+      loadPayments(1, true);
+    } else if (activeTab === 'subscriptions' && userSubscriptions.length === 0) {
+      loadUserSubscriptions(1, true);
+    }
+  }, [activeTab]);
+
+  // Payment status badge function
+  const getPaymentStatusBadge = (status: string) => {
+    const badges = {
+      completed: 'bg-green-100 text-green-800 border-green-200',
+      pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      failed: 'bg-red-100 text-red-800 border-red-200',
+    };
+    return badges[status as keyof typeof badges] || 'bg-gray-100 text-gray-800 border-gray-200';
+  };
+
+  // Subscription status badge function
+  const getSubscriptionStatusBadge = (status: string) => {
+    const badges = {
+      active: 'bg-green-100 text-green-800 border-green-200',
+      expired: 'bg-red-100 text-red-800 border-red-200',
+      cancelled: 'bg-gray-100 text-gray-800 border-gray-200',
+    };
+    return badges[status as keyof typeof badges] || 'bg-gray-100 text-gray-800 border-gray-200';
+  };
+
+  // Currency formatter
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
+
   const getStatusBadge = (status: string) => {
     const badges = {
       pending: 'bg-yellow-100 text-yellow-800',
@@ -278,7 +460,8 @@ export function PaymentManagement() {
         <nav className="-mb-px flex space-x-8">
           {[
             { id: 'configs', label: 'Vendor Configurations', icon: Building },
-            // { id: 'orders', label: 'Order Management', icon: CreditCard },
+            { id: 'payments', label: 'All Payments', icon: Receipt },
+            { id: 'subscriptions', label: 'User Subscriptions', icon: Users },
             // { id: 'calculator', label: 'Commission Calculator', icon: TrendingUp }
           ].map((tab) => {
             const Icon = tab.icon;
@@ -1028,6 +1211,348 @@ export function PaymentManagement() {
         </div>
       )}
 
+      {activeTab === 'payments' && (
+        <div className="space-y-6">
+          {/* Payment Filters */}
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                <input
+                  type="text"
+                  placeholder="Transaction ID or user email..."
+                  value={paymentSearchTerm}
+                  onChange={(e) => setPaymentSearchTerm(e.target.value)}
+                  onKeyPress={handlePaymentKeyPress}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select
+                  value={paymentStatusFilter}
+                  onChange={(e) => setPaymentStatusFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-sm"
+                >
+                  <option value="">All Status</option>
+                  <option value="completed">Completed</option>
+                  <option value="pending">Pending</option>
+                  <option value="failed">Failed</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Gateway</label>
+                <select
+                  value={paymentGatewayFilter}
+                  onChange={(e) => setPaymentGatewayFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-sm"
+                >
+                  <option value="">All Gateways</option>
+                  <option value="razorpay">Razorpay</option>
+                  <option value="phonepe">PhonePe</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={handlePaymentSearch}
+                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Search className="w-4 h-4 mr-2" />
+                Search
+              </button>
+              {(paymentSearchTerm || paymentStatusFilter || paymentGatewayFilter) && (
+                <button
+                  onClick={clearPaymentFilters}
+                  className="flex items-center px-4 py-2 text-red-600 hover:text-red-700 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Payments Table */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gateway</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {paymentLoading ? (
+                    <tr>
+                      <td colSpan={7} className="px-6 py-12 text-center">
+                        <RefreshCw className="w-6 h-6 animate-spin text-gray-400 mx-auto mb-2" />
+                        <p className="text-gray-500">Loading payments...</p>
+                      </td>
+                    </tr>
+                  ) : payments.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                        No payments found
+                      </td>
+                    </tr>
+                  ) : (
+                    payments.map((payment) => (
+                      <tr key={payment.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">#{payment.id}</div>
+                          {payment.transactionId && (
+                            <div className="text-sm text-gray-500">{payment.transactionId}</div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{payment.userEmail}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">{formatCurrency(payment.paymentAmount)}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getPaymentStatusBadge(payment.status)}`}>
+                            {payment.status.toUpperCase()}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900 capitalize">{payment.gateway}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(payment.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <button
+                            onClick={() => handleViewPaymentDetails(payment)}
+                            className="text-blue-600 hover:text-blue-900"
+                            title="View Details"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Payment Pagination */}
+            {paymentTotalPages > 1 && (
+              <div className="bg-white px-4 py-3 border-t border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-700">
+                    Showing {((paymentCurrentPage - 1) * paymentItemsPerPage) + 1} to {Math.min(paymentCurrentPage * paymentItemsPerPage, paymentTotalRecords)} of {paymentTotalRecords} results
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => loadPayments(Math.max(1, paymentCurrentPage - 1))}
+                      disabled={paymentCurrentPage === 1}
+                      className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Previous
+                    </button>
+                    <span className="text-sm text-gray-700">
+                      Page {paymentCurrentPage} of {paymentTotalPages}
+                    </span>
+                    <button
+                      onClick={() => loadPayments(Math.min(paymentTotalPages, paymentCurrentPage + 1))}
+                      disabled={paymentCurrentPage === paymentTotalPages}
+                      className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'subscriptions' && (
+        <div className="space-y-6">
+          {/* Subscription Filters */}
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                <input
+                  type="text"
+                  placeholder="User email or subscription title..."
+                  value={subscriptionSearchTerm}
+                  onChange={(e) => setSubscriptionSearchTerm(e.target.value)}
+                  onKeyPress={handleSubscriptionKeyPress}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select
+                  value={subscriptionStatusFilter}
+                  onChange={(e) => setSubscriptionStatusFilter(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-sm"
+                >
+                  <option value="">All Status</option>
+                  <option value="active">Active</option>
+                  <option value="expired">Expired</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={handleSubscriptionSearch}
+                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Search className="w-4 h-4 mr-2" />
+                Search
+              </button>
+              {(subscriptionSearchTerm || subscriptionStatusFilter) && (
+                <button
+                  onClick={clearSubscriptionFilters}
+                  className="flex items-center px-4 py-2 text-red-600 hover:text-red-700 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Subscriptions Table */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subscription</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gym</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paid Amount</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valid Until</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {subscriptionLoading ? (
+                    <tr>
+                      <td colSpan={7} className="px-6 py-12 text-center">
+                        <RefreshCw className="w-6 h-6 animate-spin text-gray-400 mx-auto mb-2" />
+                        <p className="text-gray-500">Loading subscriptions...</p>
+                      </td>
+                    </tr>
+                  ) : userSubscriptions.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                        No subscriptions found
+                      </td>
+                    </tr>
+                  ) : (
+                    userSubscriptions.map((subscription) => (
+                      <tr key={subscription.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <User className="w-4 h-4 text-gray-400 mr-2" />
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">
+                                {subscription.user?.name || subscription.user?.firstName || subscription.userEmail}
+                              </div>
+                              <div className="text-sm text-gray-500">{subscription.userEmail}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">
+                            {subscription.subscription?.title || subscription.title || 'N/A'}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {subscription.subscription?.validityDays || subscription.validityDays || 0} days
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {subscription.gym ? (
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">{subscription.gym.name}</div>
+                              <div className="text-sm text-gray-500">{subscription.gym.city}</div>
+                            </div>
+                          ) : (
+                            <span className="text-sm text-gray-400">N/A</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">
+                            {formatCurrency(subscription.paidAmount || subscription.payment?.paymentAmount || subscription.price || 0)}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {subscription.paymentGateway || subscription.payment?.gateway || 'N/A'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getSubscriptionStatusBadge(subscription.status)}`}>
+                            {subscription.status?.toUpperCase() || 'UNKNOWN'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {subscription.endDate ? new Date(subscription.endDate).toLocaleDateString() : 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <button
+                            onClick={() => handleViewSubscriptionDetails(subscription)}
+                            className="text-blue-600 hover:text-blue-900"
+                            title="View Details"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Subscription Pagination */}
+            {subscriptionTotalPages > 1 && (
+              <div className="bg-white px-4 py-3 border-t border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-700">
+                    Showing {((subscriptionCurrentPage - 1) * subscriptionItemsPerPage) + 1} to {Math.min(subscriptionCurrentPage * subscriptionItemsPerPage, subscriptionTotalRecords)} of {subscriptionTotalRecords} results
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => loadUserSubscriptions(Math.max(1, subscriptionCurrentPage - 1))}
+                      disabled={subscriptionCurrentPage === 1}
+                      className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Previous
+                    </button>
+                    <span className="text-sm text-gray-700">
+                      Page {subscriptionCurrentPage} of {subscriptionTotalPages}
+                    </span>
+                    <button
+                      onClick={() => loadUserSubscriptions(Math.min(subscriptionTotalPages, subscriptionCurrentPage + 1))}
+                      disabled={subscriptionCurrentPage === subscriptionTotalPages}
+                      className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {activeTab === 'calculator' && <CommissionCalculator />}
 
       {/* Modals */}
@@ -1092,6 +1617,30 @@ export function PaymentManagement() {
           onSuccess={() => {
             setShowOrderModal(false);
           }}
+        />
+      )}
+
+      {/* Payment Details Modal */}
+      {showPaymentDetailsModal && selectedPayment && (
+        <PaymentDetailsModal
+          isOpen={showPaymentDetailsModal}
+          onClose={() => {
+            setShowPaymentDetailsModal(false);
+            setSelectedPayment(null);
+          }}
+          payment={selectedPayment}
+        />
+      )}
+
+      {/* Subscription Details Modal */}
+      {showSubscriptionDetailsModal && selectedSubscription && (
+        <UserSubscriptionDetailsModal
+          isOpen={showSubscriptionDetailsModal}
+          onClose={() => {
+            setShowSubscriptionDetailsModal(false);
+            setSelectedSubscription(null);
+          }}
+          subscription={selectedSubscription}
         />
       )}
     </div>

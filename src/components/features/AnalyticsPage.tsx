@@ -12,7 +12,7 @@ import {
   Legend,
   ArcElement,
 } from 'chart.js';
-import { TrendingUp, Users, CreditCard, Calendar, Download, Filter, ChevronDown, BarChart3, DollarSign, UserCheck } from 'lucide-react';
+import { TrendingUp, Users, CreditCard, Calendar, Download, Filter, ChevronDown, BarChart3, UserCheck } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { useAuthStore } from '../../stores/authStore';
 import { useAttendanceStore } from '../../stores/attendanceStore';

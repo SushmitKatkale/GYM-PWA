@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Star, Filter, Navigation, Clock, DollarSign, Map as MapIcon, Users, Zap, IndianRupee } from 'lucide-react';
+import { MapPin, Star, Filter, Navigation, Clock, Map as MapIcon, Users, Zap, IndianRupee } from 'lucide-react';
 import { useGymStore } from '../../stores/gymStore';
 import { useAuthStore } from '../../stores/authStore';
 import { GymDiscoveryMap } from '../common/GymDiscoveryMap';

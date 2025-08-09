@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Upload, X, Plus, Calendar, DollarSign, Target, Eye } from 'lucide-react';
+import { ArrowLeft, Upload, X, Plus, Calendar, Target, Eye } from 'lucide-react';
 import { useAdvertisementStore } from '../../../stores/advertisementStore';
 import { Advertisement, AdType, TargetAudience, CreateAdvertisementRequest } from '../../../models/Advertisement';
 

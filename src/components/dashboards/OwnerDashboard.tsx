@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { 
-  Building, Users, Calendar, TrendingUp, Clock, DollarSign, 
+  Building, Users, Calendar, TrendingUp, Clock, 
   ArrowUp, ArrowDown, RefreshCw, AlertCircle, Star,
   MapPin, Phone, Mail, Plus, BarChart3, PieChart,
-  Activity, Target, Zap
+  Activity, Target, Zap,
+  IndianRupee
 } from 'lucide-react';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import {
@@ -93,7 +94,7 @@ export function OwnerDashboard() {
       label: 'Monthly Revenue', 
       value: `$${ownerDashboard?.totalMonthlyRevenue?.toLocaleString() || '0'}`, 
       change: `+${ownerDashboard?.revenueGrowthRate || 0}%`, 
-      icon: DollarSign, 
+      icon: IndianRupee, 
       color: 'bg-yellow-500',
       trend: 'up'
     },

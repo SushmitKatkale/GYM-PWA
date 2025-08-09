@@ -82,6 +82,139 @@ export interface PaginatedVendorConfigs {
   };
 }
 
+export interface Payment {
+  id: number;
+  userEmail: string;
+  subscriptionId: number;
+  paymentAmount: number;
+  status: 'pending' | 'completed' | 'failed';
+  gateway: 'razorpay' | 'phonepe';
+  transactionId?: string;
+  completedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  subscription?: {
+    id: number;
+    title: string;
+    price: number;
+    validityDays: number;
+    gym?: {
+      id: number;
+      name: string;
+      address: string;
+      city: string;
+    };
+  };
+}
+
+export interface PaymentStats {
+  totalPayments: number;
+  totalRevenue: number;
+  completedPayments: number;
+  pendingPayments: number;
+  failedPayments: number;
+  razorpayPayments: number;
+  phonePePayments: number;
+  todayPayments: number;
+  todayRevenue: number;
+}
+
+export interface PaginatedPayments {
+  payments: Payment[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
+export interface UserSubscription {
+  id: number;
+  userEmail: string;
+  subscriptionId: number;
+  paymentId?: number;
+  validFrom: string;
+  validTo: string;
+  activeStatus: boolean;
+  createdAt: string;
+  updatedAt: string;
+  // Added backend-calculated fields
+  status: 'active' | 'expired' | 'cancelled';
+  endDate: string;
+  startDate: string;
+  price: number;
+  paidAmount?: number;
+  paymentStatus?: string;
+  paymentGateway?: string;
+  transactionId?: string;
+  // User information
+  user?: {
+    id: number;
+    name: string;
+    firstName?: string;
+    lastName?: string;
+    email: string;
+    phoneNumber?: string;
+  };
+  // Subscription plan information
+  subscription?: {
+    id: number;
+    title: string;
+    price: number;
+    validityDays: number;
+    description?: string;
+    gym?: {
+      id: number;
+      name: string;
+      address: string;
+      city: string;
+      phoneNumber?: string;
+      email?: string;
+    };
+  };
+  // Gym information (can be separate from subscription.gym)
+  gym?: {
+    id: number;
+    name: string;
+    address: string;
+    city: string;
+    phoneNumber?: string;
+    email?: string;
+  };
+  // Payment information
+  payment?: {
+    id: number;
+    paymentAmount: number;
+    status: string;
+    gateway: string;
+    completedAt?: string;
+    transactionId?: string;
+    createdAt?: string;
+  };
+  // Additional computed fields for display
+  title?: string;
+  validityDays?: number;
+}
+
+export interface UserSubscriptionStats {
+  totalSubscriptions: number;
+  activeSubscriptions: number;
+  expiredSubscriptions: number;
+  expiringSubscriptions: number;
+  todaySubscriptions: number;
+}
+
+export interface PaginatedUserSubscriptions {
+  subscriptions: UserSubscription[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
 class AdminPaymentService {
   private baseEndpoint = '/admin';
 
@@ -200,6 +333,76 @@ class AdminPaymentService {
         error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
+  }
+
+  // All Payments Management
+  async getAllPayments(
+    page = 1,
+    limit = 10,
+    filters?: {
+      status?: string;
+      gateway?: string;
+      userEmail?: string;
+      gymName?: string;
+      dateFrom?: string;
+      dateTo?: string;
+    }
+  ): Promise<ApiResponse<PaginatedPayments>> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+    
+    if (filters) {
+      if (filters.status) params.append('status', filters.status);
+      if (filters.gateway) params.append('gateway', filters.gateway);
+      if (filters.userEmail) params.append('userEmail', filters.userEmail);
+      if (filters.gymName) params.append('gymName', filters.gymName);
+      if (filters.dateFrom) params.append('dateFrom', filters.dateFrom);
+      if (filters.dateTo) params.append('dateTo', filters.dateTo);
+    }
+
+    return apiClient.get(`${this.baseEndpoint}/payments?${params.toString()}`);
+  }
+
+  async getPaymentById(id: number): Promise<ApiResponse<Payment>> {
+    return apiClient.get(`${this.baseEndpoint}/payments/${id}`);
+  }
+
+  async getPaymentStats(): Promise<ApiResponse<PaymentStats>> {
+    return apiClient.get(`${this.baseEndpoint}/payments/stats`);
+  }
+
+  // User Subscriptions Management
+  async getAllUserSubscriptions(
+    page = 1,
+    limit = 10,
+    filters?: {
+      status?: 'active' | 'expired' | 'expiring';
+      userEmail?: string;
+      gymName?: string;
+    }
+  ): Promise<ApiResponse<PaginatedUserSubscriptions>> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+    
+    if (filters) {
+      if (filters.status) params.append('status', filters.status);
+      if (filters.userEmail) params.append('userEmail', filters.userEmail);
+      if (filters.gymName) params.append('gymName', filters.gymName);
+    }
+
+    return apiClient.get(`${this.baseEndpoint}/user-subscriptions?${params.toString()}`);
+  }
+
+  async getUserSubscriptionById(id: number): Promise<ApiResponse<UserSubscription>> {
+    return apiClient.get(`${this.baseEndpoint}/user-subscriptions/${id}`);
+  }
+
+  async getUserSubscriptionStats(): Promise<ApiResponse<UserSubscriptionStats>> {
+    return apiClient.get(`${this.baseEndpoint}/user-subscriptions/stats`);
   }
 
   // Commission calculation helper

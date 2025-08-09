@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CreditCard, Calendar, DollarSign, Star, Check, IndianRupee } from 'lucide-react';
+import { CreditCard, Calendar, Star, Check, IndianRupee } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { useApp } from '../../contexts/AppContext';
 
