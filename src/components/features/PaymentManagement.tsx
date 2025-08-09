@@ -14,7 +14,12 @@ import {
   User,
   Calendar,
   TrendingUp,
-  RefreshCw
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight,
+  MoreHorizontal,
+  X,
+  IndianRupee
 } from 'lucide-react';
 import { adminPaymentService, VendorPaymentConfig, PaginatedVendorConfigs } from '../../services/adminPaymentService';
 import { CreateVendorConfigModal } from './payment/CreateVendorConfigModal';
@@ -30,8 +35,15 @@ export function PaymentManagement() {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [razorpayActiveFilter, setRazorpayActiveFilter] = useState('');
+  const [kycStatusFilter, setKycStatusFilter] = useState('');
+  const [razorpayVendorIdFilter, setRazorpayVendorIdFilter] = useState('');
+  const [activeStatusFilter, setActiveStatusFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [showFilters, setShowFilters] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -40,14 +52,35 @@ export function PaymentManagement() {
   const [selectedConfig, setSelectedConfig] = useState<VendorPaymentConfig | null>(null);
   const [viewConfigId, setViewConfigId] = useState<number | null>(null);
 
-  const loadVendorConfigs = async (page = 1) => {
+  const loadVendorConfigs = async (page = 1, resetPage = false) => {
     setLoading(true);
     try {
-      const response = await adminPaymentService.getVendorConfigs(page, 10, statusFilter);
+      const filters = {
+        status: statusFilter,
+        razorpayActive: razorpayActiveFilter ? razorpayActiveFilter === 'true' : undefined,
+        kycStatus: kycStatusFilter,
+        razorpayVendorId: razorpayVendorIdFilter,
+        activeStatus: activeStatusFilter ? activeStatusFilter === 'true' : undefined,
+        ownerEmail: searchTerm.includes('@') ? searchTerm : undefined,
+        gymName: !searchTerm.includes('@') ? searchTerm : undefined,
+      };
+
+      // Remove undefined values from filters
+      const cleanFilters = Object.fromEntries(
+        Object.entries(filters).filter(([_, value]) => value !== undefined && value !== '')
+      );
+
+      const response = await adminPaymentService.getVendorConfigs(
+        resetPage ? 1 : page,
+        itemsPerPage,
+        Object.keys(cleanFilters).length > 0 ? cleanFilters : undefined
+      );
+
       if (response.success && response.data) {
         setVendorConfigs(response.data.configs);
         setTotalPages(response.data.pagination.totalPages);
-        setCurrentPage(page);
+        setTotalRecords(response.data.pagination.total);
+        setCurrentPage(resetPage ? 1 : page);
       }
     } catch (error) {
       console.error('Failed to load vendor configs:', error);
@@ -56,9 +89,61 @@ export function PaymentManagement() {
     }
   };
 
+  // Only trigger API call when itemsPerPage changes (for pagination)
   useEffect(() => {
-    loadVendorConfigs();
-  }, [statusFilter]);
+    if (itemsPerPage !== 5) { // Only reload if user changed from default
+      loadVendorConfigs(1, true);
+    }
+  }, [itemsPerPage]);
+
+  // Load initial data
+  useEffect(() => {
+    loadVendorConfigs(1, true);
+  }, []);
+
+  const handleSearch = () => {
+    loadVendorConfigs(1, true);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  const clearAllFilters = async () => {
+    // Clear all filter states
+    setSearchTerm('');
+    setStatusFilter('');
+    setRazorpayActiveFilter('');
+    setKycStatusFilter('');
+    setRazorpayVendorIdFilter('');
+    setActiveStatusFilter('');
+    setCurrentPage(1);
+    
+    // Immediately call API with no filters
+    setLoading(true);
+    try {
+      const response = await adminPaymentService.getVendorConfigs(
+        1,
+        itemsPerPage,
+        undefined // No filters
+      );
+
+      if (response.success && response.data) {
+        setVendorConfigs(response.data.configs);
+        setTotalPages(response.data.pagination.totalPages);
+        setTotalRecords(response.data.pagination.total);
+        setCurrentPage(1);
+      }
+    } catch (error) {
+      console.error('Failed to load vendor configs after clearing filters:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const hasActiveFilters = statusFilter || razorpayActiveFilter || kycStatusFilter || razorpayVendorIdFilter || activeStatusFilter || searchTerm;
 
   const handleCreateConfig = () => {
     setShowCreateModal(true);
@@ -109,10 +194,8 @@ export function PaymentManagement() {
     }
   };
 
-  const filteredConfigs = vendorConfigs.filter(config =>
-    config.gym?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    config.ownerEmail.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Since we're now filtering on the server side, we don't need client-side filtering
+  const filteredConfigs = vendorConfigs;
 
   const stats = [
     {
@@ -136,7 +219,7 @@ export function PaymentManagement() {
     {
       label: 'Total Revenue Share',
       value: '₹45,678',
-      icon: DollarSign,
+      icon: IndianRupee,
       color: 'bg-purple-500'
     }
   ];
@@ -150,13 +233,13 @@ export function PaymentManagement() {
           <p className="text-gray-600">Manage vendor configurations and payment processing</p>
         </div>
         <div className="flex space-x-3">
-          <button
+          {/* <button
             onClick={handleCreateOrder}
             className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
           >
             <CreditCard className="w-4 h-4 mr-2" />
             Create Order
-          </button>
+          </button> */}
           <button
             onClick={handleCreateConfig}
             className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -200,11 +283,10 @@ export function PaymentManagement() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm ${activeTab === tab.id
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
               >
                 <Icon className="w-4 h-4 mr-2" />
                 {tab.label}
@@ -217,34 +299,131 @@ export function PaymentManagement() {
       {/* Tab Content */}
       {activeTab === 'configs' && (
         <div className="space-y-6">
-          {/* Search and Filter */}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search by gym name or owner email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+          {/* Search and Filters - Always Visible */}
+          <div className="space-y-4">
+            {/* Filter Controls - Always Visible */}
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Gym Name / Owner Email</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search by gym name, owner email, or Razorpay ID..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    />
+                  </div>
+                </div>
+
+                                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Razorpay Account ID</label>
+                  <input
+                    type="text"
+                    placeholder="Enter acc_xxx or partial ID"
+                    value={razorpayVendorIdFilter}
+                    onChange={(e) => setRazorpayVendorIdFilter(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Onboarding Status</label>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-sm"
+                  >
+                    <option value="">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="pending_verification">Pending Verification</option>
+                    <option value="completed">Completed</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Razorpay Status</label>
+                  <select
+                    value={razorpayActiveFilter}
+                    onChange={(e) => setRazorpayActiveFilter(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-sm"
+                  >
+                    <option value="">All</option>
+                    <option value="true">Active</option>
+                    <option value="false">Inactive</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">KYC Status</label>
+                  <select
+                    value={kycStatusFilter}
+                    onChange={(e) => setKycStatusFilter(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-sm"
+                  >
+                    <option value="">All KYC Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="submitted">Submitted</option>
+                    <option value="verified">Verified</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Configuration Status</label>
+                  <select
+                    value={activeStatusFilter}
+                    onChange={(e) => setActiveStatusFilter(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-sm"
+                  >
+                    <option value="">All Configurations</option>
+                    <option value="true">Active</option>
+                    <option value="false">Inactive</option>
+                  </select>
+                </div>
+
+
+                            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center mt-6">
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSearch}
+                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <Search className="w-4 h-4 mr-2" />
+                  Search
+                </button>
+              </div>
+              {hasActiveFilters && (
+                <button
+                  onClick={clearAllFilters}
+                  className="flex items-center px-4 py-2 text-red-600 hover:text-red-700 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  Clear All
+                </button>
+              )}
             </div>
-            <div className="relative">
-              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
-              >
-                <option value="">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="in_progress">In Progress</option>
-                <option value="pending_verification">Pending Verification</option>
-                <option value="completed">Completed</option>
-                <option value="rejected">Rejected</option>
-              </select>
+              </div>
+
+              <div className="mt-4 flex justify-between items-center">
+                <p className="text-sm text-gray-600">
+                  Showing {vendorConfigs.length} of {totalRecords} vendor configurations
+                  {hasActiveFilters && (
+                    <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                      <Filter className="w-3 h-3 mr-1" />
+                      {[statusFilter, razorpayActiveFilter, kycStatusFilter, razorpayVendorIdFilter, activeStatusFilter].filter(Boolean).length} filter{[statusFilter, razorpayActiveFilter, kycStatusFilter, razorpayVendorIdFilter, activeStatusFilter].filter(Boolean).length !== 1 ? 's' : ''} active
+                    </span>
+                  )}
+                </p>
+              </div>
             </div>
           </div>
+          
 
           {/* Vendor Configs Table */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -340,21 +519,21 @@ export function PaymentManagement() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex justify-end space-x-2">
-                            <button 
+                            <button
                               onClick={() => handleViewConfig(config)}
-                              className="text-blue-600 hover:text-blue-900" 
+                              className="text-blue-600 hover:text-blue-900"
                               title="View Details"
                             >
                               <Eye className="w-4 h-4" />
                             </button>
-                            <button 
+                            <button
                               onClick={() => handleEditConfig(config)}
                               className="text-green-600 hover:text-green-900"
                               title="Edit Configuration"
                             >
                               <Edit className="w-4 h-4" />
                             </button>
-                            {config.onboardingStatus === 'pending' && (
+                            {/* {config.onboardingStatus === 'pending' && (
                               <button
                                 onClick={() => handleOnboardVendor(config)}
                                 className="text-purple-600 hover:text-purple-900"
@@ -362,7 +541,7 @@ export function PaymentManagement() {
                               >
                                 <CreditCard className="w-4 h-4" />
                               </button>
-                            )}
+                            )} */}
                           </div>
                         </td>
                       </tr>
@@ -372,48 +551,135 @@ export function PaymentManagement() {
               </table>
             </div>
 
-            {/* Pagination */}
+            {/* Enhanced Pagination */}
             {totalPages > 1 && (
-              <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+              <div className="bg-white px-4 py-3 border-t border-gray-200">
+                {/* Mobile pagination */}
                 <div className="flex-1 flex justify-between sm:hidden">
                   <button
                     onClick={() => loadVendorConfigs(Math.max(1, currentPage - 1))}
                     disabled={currentPage === 1}
-                    className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                    className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
+                    <ChevronLeft className="w-4 h-4 mr-1" />
                     Previous
                   </button>
+                  <span className="text-sm text-gray-700 px-4 py-2">
+                    Page {currentPage} of {totalPages}
+                  </span>
                   <button
                     onClick={() => loadVendorConfigs(Math.min(totalPages, currentPage + 1))}
                     disabled={currentPage === totalPages}
-                    className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                    className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Next
+                    <ChevronRight className="w-4 h-4 ml-1" />
                   </button>
                 </div>
-                <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                  <div>
+
+                {/* Desktop pagination */}
+                <div className="hidden sm:flex sm:items-center sm:justify-between">
+                  <div className="flex items-center space-x-4">
                     <p className="text-sm text-gray-700">
-                      Showing page <span className="font-medium">{currentPage}</span> of{' '}
-                      <span className="font-medium">{totalPages}</span>
+                      Showing <span className="font-medium">{((currentPage - 1) * itemsPerPage) + 1}</span> to{' '}
+                      <span className="font-medium">{Math.min(currentPage * itemsPerPage, totalRecords)}</span> of{' '}
+                      <span className="font-medium">{totalRecords}</span> results
                     </p>
+                    <div className="flex items-center space-x-2">
+                      <label className="text-sm text-gray-700">Show:</label>
+                      <select
+                        value={itemsPerPage}
+                        onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                        className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value={5}>5</option>
+                        <option value={10}>10</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
+                        <option value={100}>100</option>
+                      </select>
+                    </div>
                   </div>
-                  <div>
-                    <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+
+                  <div className="flex items-center space-x-1">
+                    {/* First page */}
+                    {currentPage > 3 && (
+                      <>
+                        <button
+                          onClick={() => loadVendorConfigs(1)}
+                          className="relative inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium text-gray-500 bg-white hover:bg-gray-50 rounded-l-md"
+                        >
+                          1
+                        </button>
+                        {currentPage > 4 && (
+                          <span className="relative inline-flex items-center px-3 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                            <MoreHorizontal className="w-4 h-4" />
+                          </span>
+                        )}
+                      </>
+                    )}
+
+                    {/* Previous page */}
+                    <button
+                      onClick={() => loadVendorConfigs(Math.max(1, currentPage - 1))}
+                      disabled={currentPage === 1}
+                      className="relative inline-flex items-center px-2 py-2 border border-gray-300 text-sm font-medium text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+
+                    {/* Page numbers around current page */}
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let page;
+                      if (totalPages <= 5) {
+                        page = i + 1;
+                      } else if (currentPage <= 3) {
+                        page = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        page = totalPages - 4 + i;
+                      } else {
+                        page = currentPage - 2 + i;
+                      }
+
+                      return (
                         <button
                           key={page}
                           onClick={() => loadVendorConfigs(page)}
-                          className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                            page === currentPage
-                              ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                              : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                          }`}
+                          className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${page === currentPage
+                            ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                            : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                            }`}
                         >
                           {page}
                         </button>
-                      ))}
-                    </nav>
+                      );
+                    })}
+
+                    {/* Next page */}
+                    <button
+                      onClick={() => loadVendorConfigs(Math.min(totalPages, currentPage + 1))}
+                      disabled={currentPage === totalPages}
+                      className="relative inline-flex items-center px-2 py-2 border border-gray-300 text-sm font-medium text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+
+                    {/* Last page */}
+                    {currentPage < totalPages - 2 && (
+                      <>
+                        {currentPage < totalPages - 3 && (
+                          <span className="relative inline-flex items-center px-3 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                            <MoreHorizontal className="w-4 h-4" />
+                          </span>
+                        )}
+                        <button
+                          onClick={() => loadVendorConfigs(totalPages)}
+                          className="relative inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium text-gray-500 bg-white hover:bg-gray-50 rounded-r-md"
+                        >
+                          {totalPages}
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

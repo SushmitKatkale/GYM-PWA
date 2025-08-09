@@ -93,15 +93,29 @@ class AdminPaymentService {
   async getVendorConfigs(
     page = 1,
     limit = 10,
-    status?: string
+    filters?: {
+      status?: string;
+      razorpayActive?: boolean;
+      kycStatus?: string;
+      razorpayVendorId?: string;
+      ownerEmail?: string;
+      gymName?: string;
+      activeStatus?: boolean;
+    }
   ): Promise<ApiResponse<PaginatedVendorConfigs>> {
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
     });
     
-    if (status) {
-      params.append('status', status);
+    if (filters) {
+      if (filters.status) params.append('status', filters.status);
+      if (filters.razorpayActive !== undefined) params.append('razorpayActive', filters.razorpayActive.toString());
+      if (filters.kycStatus) params.append('kycStatus', filters.kycStatus);
+      if (filters.razorpayVendorId) params.append('razorpayVendorId', filters.razorpayVendorId);
+      if (filters.ownerEmail) params.append('ownerEmail', filters.ownerEmail);
+      if (filters.gymName) params.append('gymName', filters.gymName);
+      if (filters.activeStatus !== undefined) params.append('activeStatus', filters.activeStatus.toString());
     }
 
     return apiClient.get(`${this.baseEndpoint}/vendor-configs?${params.toString()}`);
@@ -146,6 +160,46 @@ class AdminPaymentService {
 
   async searchSubscriptions(query: string): Promise<ApiResponse<{ id: number; title: string; price: string; gymName: string; gymId: number }[]>> {
     return apiClient.get(`${this.baseEndpoint}/search/subscriptions?q=${encodeURIComponent(query)}`);
+  }
+
+  // Check if vendor config exists for a gym
+  async checkVendorConfigExists(gymId: number, ownerEmail: string): Promise<ApiResponse<{ exists: boolean; config?: VendorPaymentConfig }>> {
+    try {
+      const response = await this.getVendorConfigs(1, 1, {
+        gymName: undefined, // Don't filter by gym name
+        ownerEmail: ownerEmail
+      });
+      
+      if (response.success && response.data && response.data.configs.length > 0) {
+        // Check if any config matches the exact gymId and ownerEmail
+        const existingConfig = response.data.configs.find(config => 
+          config.gymId === gymId && config.ownerEmail === ownerEmail
+        );
+        
+        return {
+          success: true,
+          message: existingConfig ? 'Configuration exists' : 'Configuration not found',
+          data: {
+            exists: !!existingConfig,
+            config: existingConfig
+          }
+        };
+      }
+      
+      return {
+        success: true,
+        message: 'Configuration not found',
+        data: {
+          exists: false
+        }
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Failed to check configuration',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
   }
 
   // Commission calculation helper

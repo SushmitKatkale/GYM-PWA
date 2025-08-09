@@ -69,9 +69,14 @@ const GymAutocomplete: React.FC<GymAutocompleteProps> = ({
       if (gym) {
         setSearchQuery(gym.name);
       }
+      // Don't clear searchQuery if gym not found - preserve user input
     } else {
       setSelectedGym(null);
-      setSearchQuery('');
+      // Only clear search query if value is explicitly set to empty/null
+      // This prevents clearing when component first mounts
+      if (searchQuery && !isOpen) {
+        setSearchQuery('');
+      }
     }
   }, [value, filteredGyms]);
 
@@ -80,12 +85,12 @@ const GymAutocomplete: React.FC<GymAutocompleteProps> = ({
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
-        // Reset search query to selected gym display if no selection made
+        // Only reset to selected gym name if we have a valid selection
+        // Otherwise preserve the user's input
         if (selectedGym) {
           setSearchQuery(selectedGym.name);
-        } else {
-          setSearchQuery('');
         }
+        // Don't clear searchQuery if no gym is selected - preserve user input
       }
     };
 
