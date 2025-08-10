@@ -3,7 +3,7 @@ import {
   Calendar, Clock, MapPin, CreditCard, AlertCircle,
   CheckCircle, XCircle, RefreshCw, Bell, Star,
   IndianRupee, Zap, Award, TrendingUp, Activity,
-  Download, FileText, X, Eye
+  Download, FileText, X, Eye, Navigation
 } from 'lucide-react';
 import { buildApiUrl, API_CONFIG } from '../../config/api';
 import { useAuthStore } from '../../stores/authStore';
@@ -271,6 +271,24 @@ export function MySubscriptions() {
   const closeDetailsModal = () => {
     setSelectedSubscription(null);
     setShowDetailsModal(false);
+  };
+
+  const handleOpenGoogleMaps = (gym: UserSubscription['subscription']['gym']) => {
+    const address = encodeURIComponent(`${gym.address}, ${gym.city}`);
+    const gymName = encodeURIComponent(gym.name);
+    
+    // Detect if user is on mobile
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+      // For mobile: Try to open native maps app, fallback to Google Maps web
+      const mapsUrl = `https://maps.google.com/maps?q=${gymName + address}&t=m`;
+      window.open(mapsUrl, '_blank');
+    } else {
+      // For desktop: Open Google Maps in new tab with search query
+      const mapsUrl = `https://www.google.com/maps/search/${gymName}+${address}`;
+      window.open(mapsUrl, '_blank');
+    }
   };
 
   if (isLoading) {
@@ -579,12 +597,19 @@ export function MySubscriptions() {
                       </div>
                       <span className="text-sm leading-tight">{selectedSubscription.subscription.gym.address}, {selectedSubscription.subscription.gym.city}</span>
                     </div>
-                    <div className="flex items-center">
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-full">
                         <Star className="w-4 h-4 text-yellow-500 mr-1 fill-current" />
                         <span className="text-sm font-medium text-yellow-700">{selectedSubscription.subscription.gym.rating}</span>
                         <span className="text-xs text-yellow-600 ml-1">/ 5.0</span>
                       </div>
+                      <button
+                        onClick={() => handleOpenGoogleMaps(selectedSubscription.subscription.gym)}
+                        className="flex items-center px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs font-medium rounded-full transition-all duration-200 hover:scale-105 shadow-md hover:shadow-lg"
+                      >
+                        <Navigation className="w-3 h-3 mr-1" />
+                        Google Maps
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -879,6 +904,13 @@ export function MySubscriptions() {
                   ← Close
                 </button>
                 <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:order-2">
+                  <button
+                    onClick={() => handleOpenGoogleMaps(selectedSubscription.subscription.gym)}
+                    className="flex items-center justify-center px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:scale-105"
+                  >
+                    <Navigation className="w-4 h-4 mr-2" />
+                    <span className="text-sm sm:text-base">🗺️ Open in Maps</span>
+                  </button>
                   {selectedSubscription.payment.status === 'completed' && (
                     <button 
                       onClick={() => {

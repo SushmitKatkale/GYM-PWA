@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">FItEsperro - Fitness Management</string>
-    <string name="title_activity_main">FItEsperro - Fitness Management</string>
-    <string name="package_name">com.gympro.app</string>
-    <string name="custom_url_scheme">com.gympro.app</string>
+    <string name="app_name">FItEspero - Fitness Management</string>
+    <string name="title_activity_main">FItEspero - Fitness Management</string>
+    <string name="package_name">com.fitespero.app</string>
+    <string name="custom_url_scheme">com.fitespero.app</string>
 </resources>

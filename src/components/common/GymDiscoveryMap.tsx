@@ -132,6 +132,50 @@ export const GymDiscoveryMap: React.FC<GymDiscoveryMapProps> = ({
 
       // Create info window
       infoWindowRef.current = new google.maps.InfoWindow();
+      
+      // Add click listener to show coordinates
+      newMap.addListener('click', (event: google.maps.MapMouseEvent) => {
+        if (event.latLng) {
+          const lat = event.latLng.lat();
+          const lng = event.latLng.lng();
+          
+          // Create coordinate info window
+          const coordinateInfoWindow = new google.maps.InfoWindow({
+            content: `
+              <div style="padding: 12px; font-family: system-ui, -apple-system, sans-serif; text-align: center; min-width: 200px;">
+                <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">
+                  <svg style="width: 16px; height: 16px; margin-right: 6px; color: #059669;" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+                  </svg>
+                  <h4 style="margin: 0; font-size: 14px; font-weight: 600; color: #111827;">Location Coordinates</h4>
+                </div>
+                <div style="background: #f0f9ff; padding: 8px; border-radius: 6px; margin-bottom: 10px;">
+                  <div style="font-family: monospace; font-size: 13px; color: #0369a1; font-weight: 600;">
+                    ${lat.toFixed(6)}, ${lng.toFixed(6)}
+                  </div>
+                </div>
+                <button 
+                  onclick="navigator.clipboard.writeText('${lat.toFixed(6)}, ${lng.toFixed(6)}').then(() => { this.textContent = 'Copied!'; this.style.background = '#059669'; setTimeout(() => { this.textContent = 'Copy Coordinates'; this.style.background = '#3b82f6'; }, 1500); }).catch(() => { this.textContent = 'Copy Failed'; })"
+                  style="background: #3b82f6; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: 500; transition: background 0.2s;"
+                  onmouseover="this.style.background='#2563eb'"
+                  onmouseout="this.style.background='#3b82f6'"
+                >
+                  Copy Coordinates
+                </button>
+              </div>
+            `,
+            position: { lat, lng },
+            disableAutoPan: false
+          });
+          
+          coordinateInfoWindow.open(newMap);
+          
+          // Close the coordinate info window after 5 seconds
+          setTimeout(() => {
+            coordinateInfoWindow.close();
+          }, 5000);
+        }
+      });
     }
   }, [isLoaded, center, map, userLocation]);
 

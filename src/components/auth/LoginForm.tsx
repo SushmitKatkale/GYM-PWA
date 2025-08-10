@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { LogIn, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { authService } from '../../services/authService';
+import { BrandLogo } from '../common/BrandLogo';
+import { BRAND } from '../../constants/branding';
 
 interface LoginFormProps {
   onToggleMode: () => void;
@@ -51,11 +53,11 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
     <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-full mb-4">
-            <LogIn className="w-8 h-8 text-indigo-600" />
+          <div className="flex justify-center mb-6">
+            <BrandLogo size="xl" variant="full" showTagline={true} />
           </div>
           <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
-          <p className="text-gray-600 mt-2">Sign in to your gym account</p>
+          <p className="text-gray-600 mt-2">{BRAND.tagline}</p>
         </div>
 
 

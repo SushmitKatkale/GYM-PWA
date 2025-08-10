@@ -70,7 +70,7 @@ export function MobileBottomNav({ activeMenu, setActiveMenu }: MobileBottomNavPr
       { id: 'dashboard', label: 'Home', icon: Home },
       { id: 'calendar', label: 'Classes', icon: Calendar },
       { id: 'qr-code', label: 'Check-in', icon: QrCode },
-      { id: 'wallet', label: 'Wallet', icon: Wallet }
+      { id: 'discover', label: 'Discover', icon: MapPin }
     ];
     
     // If only one item in more menu, show it directly
@@ -99,7 +99,7 @@ export function MobileBottomNav({ activeMenu, setActiveMenu }: MobileBottomNavPr
 
     // Regular User
     return [
-      { id: 'discover', label: 'Discover', icon: MapPin },
+      { id: 'wallet', label: 'Wallet', icon: Wallet },
       { id: 'my-subscriptions', label: 'Subscriptions', icon: Subscription },
       { id: 'attendance', label: 'My Attendance', icon: BarChart3 },
       { id: 'help', label: 'Support', icon: HelpCircle }

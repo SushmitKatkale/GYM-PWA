@@ -1,7 +1,7 @@
 {
-  "name": "FItEsperro - Fitness Management",
-  "short_name": "FItEsperro",
-  "description": "Complete gym management and fitness tracking application",
+  "name": "FItEspero - Fitness Management",
+  "short_name": "FItEspero",
+  "description": "FItEspero is a modern fitness management app that helps users discover gyms, track workouts, manage memberships, and stay motivated with tailored fitness plans.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -16,13 +16,25 @@
   ],
   "icons": [
     {
-      "src": "https://www.pwabuilder.com/assets/icons/icon_192.png",
+      "src": "/icons/android-chrome-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://www.pwabuilder.com/assets/icons/icon_512.png",
+      "src": "/icons/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/manifest-icon-192.maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/manifest-icon-512.maskable2.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

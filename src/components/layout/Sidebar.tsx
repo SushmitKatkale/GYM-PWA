@@ -4,6 +4,7 @@ import {
   BarChart3, Settings, MapPin, Bell, Clock, Wallet, UserCheck, Package, Megaphone
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
+import { BrandLogoLight } from '../common/BrandLogo';
 
 interface SidebarProps {
   activeView: string;
@@ -89,6 +90,11 @@ export function Sidebar({ activeView, onViewChange, isOpen }: SidebarProps) {
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         <div className="flex flex-col h-full">
+          {/* Brand Header */}
+          <div className="px-4 py-6 border-b border-white/10">
+            <BrandLogoLight size="lg" variant="full" showTagline={true} />
+          </div>
+          
           <nav className="flex-1 px-4 py-6 space-y-2">
             {menuItems.map((item) => {
               const Icon = item.icon;

@@ -185,7 +185,7 @@ export function OwnerDashboard() {
         <div className="px-4 py-4">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Owner Dashboard</h1>
+              <h1 className="text-xl font-bold text-gray-900">FItEspero Business</h1>
               <p className="text-sm text-gray-600">Welcome back, {user?.firstName || 'Owner'}!</p>
             </div>
             <button
@@ -238,7 +238,7 @@ export function OwnerDashboard() {
         {isLoading && !ownerDashboard ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading your dashboard...</p>
+            <p className="text-gray-600">Loading your FItEspero business dashboard...</p>
           </div>
         ) : (
           <>

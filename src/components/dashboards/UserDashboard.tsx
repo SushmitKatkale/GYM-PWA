@@ -181,7 +181,7 @@ export function UserDashboard() {
         <div className="px-4 py-4">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-xl font-bold text-gray-900">My Fitness</h1>
+              <h1 className="text-xl font-bold text-gray-900">FItEspero Dashboard</h1>
               <p className="text-sm text-gray-600">Keep up the great work, {user?.firstName || 'User'}!</p>
             </div>
             <div className="flex items-center space-x-2">
@@ -239,7 +239,7 @@ export function UserDashboard() {
         {isLoading && !userDashboard ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading your fitness data...</p>
+            <p className="text-gray-600">Loading your FItEspero dashboard...</p>
           </div>
         ) : (
           <>

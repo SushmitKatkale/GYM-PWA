@@ -151,7 +151,7 @@ export const PaymentStatus: React.FC = () => {
     <div className={`min-h-screen ${getBackgroundColor()} flex items-center justify-center p-4`}>
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6">
         {/* Status Icon */}
-        <div className="text-center mb-6">
+        <div className="text-center mb-6 flex justify-center">
           {renderIcon()}
         </div>
 

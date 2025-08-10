@@ -159,7 +159,7 @@ export function AdminDashboard() {
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+              <h1 className="text-2xl font-bold text-gray-900">FItEspero Admin</h1>
               <p className="text-gray-600 mt-1">Platform analytics and system overview</p>
             </div>
             <div className="flex items-center space-x-4">

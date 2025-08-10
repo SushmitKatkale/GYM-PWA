@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Star, Filter, Navigation, Clock, Map as MapIcon, Users, Zap, IndianRupee } from 'lucide-react';
+import { MapPin, Star, Filter, Navigation, Clock, Map as MapIcon, Users, Zap, IndianRupee, Copy, Eye, EyeOff } from 'lucide-react';
 import { useGymStore } from '../../stores/gymStore';
 import { useAuthStore } from '../../stores/authStore';
 import { GymDiscoveryMap } from '../common/GymDiscoveryMap';
@@ -11,6 +11,7 @@ import SubscriptionPurchaseModal from '../ui/SubscriptionPurchaseModal';
 import { PaymentGatewayModal } from '../payments/PaymentGatewayModal';
 import SuccessModal from '../ui/SuccessModal';
 import ErrorModal from '../ui/ErrorModal';
+import { BRAND } from '../../constants/branding';
 
 export function GymDiscovery() {
   const { gyms, selectedGym, setSelectedGym, fetchGymsWithFilters, isLoading, error, clearError } = useGymStore();
@@ -22,6 +23,8 @@ export function GymDiscovery() {
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
   const [mapRefreshTrigger, setMapRefreshTrigger] = useState(0);
+  const [showCoordinates, setShowCoordinates] = useState(false);
+  const [copiedCoordinates, setCopiedCoordinates] = useState(false);
   
   // Subscription purchase states
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
@@ -80,6 +83,33 @@ export function GymDiscovery() {
       setMapRefreshTrigger(prev => prev + 1);
     } finally {
       setIsLoadingLocation(false);
+    }
+  };
+
+  // Copy coordinates to clipboard
+  const copyCoordinates = async () => {
+    if (currentLocation) {
+      const coordinates = `${currentLocation.lat.toFixed(6)}, ${currentLocation.lng.toFixed(6)}`;
+      try {
+        await navigator.clipboard.writeText(coordinates);
+        setCopiedCoordinates(true);
+        setTimeout(() => setCopiedCoordinates(false), 2000);
+      } catch (error) {
+        // Fallback for browsers that don't support clipboard API
+        const textArea = document.createElement('textarea');
+        textArea.value = coordinates;
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+          document.execCommand('copy');
+          setCopiedCoordinates(true);
+          setTimeout(() => setCopiedCoordinates(false), 2000);
+        } catch (fallbackError) {
+          console.error('Failed to copy coordinates:', fallbackError);
+        }
+        document.body.removeChild(textArea);
+      }
     }
   };
 
@@ -143,7 +173,7 @@ export function GymDiscovery() {
     try {
       const response = await subscriptionService.getUserSubscriptions();
       if (response.success && response.data) {
-        const activeSubscriptions = response.data.filter(sub => sub.status === 'active');
+        const activeSubscriptions = response.data?.subscriptions.filter(sub => sub.status === 'active');
         setHasActiveSubscription(activeSubscriptions.length > 0);
         return activeSubscriptions.length > 0;
       }
@@ -376,10 +406,10 @@ export function GymDiscovery() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        {/* <div>
-          <h1 className="text-3xl font-bold text-gray-900">Discover Gyms</h1>
-          <p className="text-gray-600 mt-1">Find the perfect gym near you</p>
-        </div> */}
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Discover with {BRAND.name}</h1>
+          <p className="text-gray-600 mt-1">{BRAND.tagline}</p>
+        </div>
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-3 justify-between w-full">
           <div className="flex bg-gray-100 rounded-lg p-1">
             <button
@@ -447,6 +477,59 @@ export function GymDiscovery() {
           </div>
         </div>
       </div>
+
+      {/* Current Location Coordinates Display */}
+      {currentLocation && showCoordinates && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2">
+                <MapPin className="w-5 h-5 text-blue-600" />
+                <span className="text-sm font-medium text-gray-700">Current Location:</span>
+              </div>
+              <div className="bg-blue-50 px-3 py-2 rounded-lg">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-mono text-blue-900">
+                    {currentLocation.lat.toFixed(6)}, {currentLocation.lng.toFixed(6)}
+                  </span>
+                  <button
+                    onClick={copyCoordinates}
+                    className="flex items-center justify-center w-6 h-6 rounded hover:bg-blue-200 transition-colors"
+                    title="Copy coordinates"
+                  >
+                    <Copy className="w-3 h-3 text-blue-600" />
+                  </button>
+                </div>
+              </div>
+              {copiedCoordinates && (
+                <span className="text-xs text-green-600 font-medium animate-pulse">
+                  Copied!
+                </span>
+              )}
+            </div>
+            <button
+              onClick={() => setShowCoordinates(false)}
+              className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 transition-colors"
+              title="Hide coordinates"
+            >
+              <EyeOff className="w-4 h-4 text-gray-500" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Show Coordinates Button */}
+      {/* {currentLocation && !showCoordinates && (
+        <div className="flex justify-center">
+          <button
+            onClick={() => setShowCoordinates(true)}
+            className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm"
+          >
+            <Eye className="w-4 h-4" />
+            <span>Show Location Coordinates</span>
+          </button>
+        </div>
+      )} */}
 
       {/* Content */}
       {viewMode === 'map' ? (

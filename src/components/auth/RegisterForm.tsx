@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { UserPlus, Mail, Lock, User } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
+import { BrandLogo } from '../common/BrandLogo';
+import { BRAND } from '../../constants/branding';
 
 interface RegisterFormProps {
   onToggleMode: () => void;
@@ -84,11 +86,11 @@ export function RegisterForm({ onToggleMode, onRegistrationSuccess }: RegisterFo
     <div className="min-h-screen bg-gradient-to-br from-green-500 via-teal-500 to-blue-500 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-            <UserPlus className="w-8 h-8 text-green-600" />
+          <div className="flex justify-center mb-6">
+            <BrandLogo size="xl" variant="full" showTagline={true} />
           </div>
-          <h2 className="text-3xl font-bold text-gray-900">Create Account</h2>
-          <p className="text-gray-600 mt-2">Join the gym community today</p>
+          <h2 className="text-3xl font-bold text-gray-900">Join {BRAND.name}</h2>
+          <p className="text-gray-600 mt-2">Start your fitness journey with us today</p>
         </div>
 
         {error && (

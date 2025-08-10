@@ -27,6 +27,7 @@ import { AdvertisementManagement } from '../features/advertisements/Advertisemen
 import { Bell, User, Shield, Settings, Lock, LogOut, X } from 'lucide-react';
 import { getAvatarImage } from '../../constants/images';
 import { userService } from '../../services/userService';
+import { BrandLogo } from '../common/BrandLogo';
 
 export const MainDashboard: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -188,8 +189,8 @@ export const MainDashboard: React.FC = () => {
                 </div>
               </button>
               
-              {/* Notifications - Top Right */}
-              <div className="flex items-center">
+              {/* Brand Logo + Notifications */}
+              <div className="flex items-center space-x-4">
                 {/* Notifications Button */}
                 <button
                   onClick={() => handleViewChange('notifications')}
