@@ -54,21 +54,94 @@ self.addEventListener('activate', (event) => {
 
 // Push notification event
 self.addEventListener('push', (event) => {
-  const options = {
-    body: event.data ? event.data.text() : 'New notification from Fit Espero',
+  console.log('Push notification received:', event);
+  
+  let notificationData = {
+    title: 'FitEspero',
+    body: 'New notification from FitEspero',
     icon: '/icons/manifest-icon-192.maskable.png',
     badge: '/icons/manifest-icon-192.maskable.png',
+    data: { url: '/' },
+    tag: 'default',
+    requireInteraction: false,
+    vibrate: [100, 50, 100]
   };
 
+  if (event.data) {
+    try {
+      const payload = event.data.json();
+      notificationData = {
+        title: payload.title || notificationData.title,
+        body: payload.body || notificationData.body,
+        icon: payload.icon || notificationData.icon,
+        badge: payload.badge || notificationData.badge,
+        image: payload.image,
+        data: payload.data || notificationData.data,
+        tag: payload.tag || notificationData.tag,
+        requireInteraction: payload.requireInteraction || false,
+        vibrate: payload.vibrate || notificationData.vibrate,
+        actions: payload.actions || [],
+        silent: payload.silent || false
+      };
+    } catch (error) {
+      console.error('Error parsing push notification data:', error);
+      notificationData.body = event.data.text();
+    }
+  }
+
   event.waitUntil(
-    self.registration.showNotification('Fit Espero', options)
+    self.registration.showNotification(notificationData.title, notificationData)
   );
 });
 
 // Notification click event
 self.addEventListener('notificationclick', (event) => {
+  console.log('Notification clicked:', event);
   event.notification.close();
+
+  const clickedNotification = event.notification;
+  const notificationData = clickedNotification.data || {};
+  const urlToOpen = notificationData.url || '/';
+
+  // Handle action clicks
+  if (event.action) {
+    console.log('Action clicked:', event.action);
+    
+    switch (event.action) {
+      case 'check-in':
+        urlToOpen = '/qr-code';
+        break;
+      case 'view':
+        // Use the URL from notification data
+        break;
+      case 'dismiss':
+        return; // Don't open any window
+      default:
+        break;
+    }
+  }
+
   event.waitUntil(
-    clients.openWindow('/')
+    clients.matchAll({
+      type: 'window',
+      includeUncontrolled: true
+    }).then((clientList) => {
+      // Try to focus existing window/tab
+      for (let i = 0; i < clientList.length; i++) {
+        const client = clientList[i];
+        if (client.url.includes(self.location.origin)) {
+          return client.focus().then(() => {
+            // Navigate to the desired URL
+            if (urlToOpen !== '/') {
+              return client.navigate(urlToOpen);
+            }
+            return client;
+          });
+        }
+      }
+      
+      // No existing window, open new one
+      return clients.openWindow(urlToOpen);
+    })
   );
 });

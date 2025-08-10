@@ -25,6 +25,7 @@ import { UserManagement } from '../features/UserManagement';
 import { HelpFaq } from '../features/HelpFaq';
 import { AdvertisementManagement } from '../features/advertisements/AdvertisementManagement';
 import { AdminNotifications } from '../features/AdminNotifications';
+import { PushNotificationBanner } from '../features/PushNotificationBanner';
 import { Bell, User, Shield, Settings, Lock, LogOut, X } from 'lucide-react';
 import { getAvatarImage } from '../../constants/images';
 import { userService } from '../../services/userService';
@@ -72,6 +73,13 @@ export const MainDashboard: React.FC = () => {
     setIsMobileMenuOpen(false);
   };
 
+  // Navigate to notification settings
+  const handleNavigateToNotificationSettings = () => {
+    setActiveSettingsTab('notifications');
+    setActiveView('settings');
+    setIsMobileMenuOpen(false);
+  };
+
   // Render appropriate dashboard based on user role
   const renderMainContent = () => {
     if (!user) return null;
@@ -81,7 +89,7 @@ export const MainDashboard: React.FC = () => {
         switch (user.role) {
           case 'admin': return <AdminDashboard onNavigate={handleViewChange} />;
           case 'owner': return <OwnerDashboard />;
-          case 'user': return <UserDashboard />;
+          case 'user': return <UserDashboard onNavigateToSettings={handleNavigateToNotificationSettings} />;
           default: return <div>Invalid role</div>;
         }
         case 'discover':
@@ -89,7 +97,7 @@ export const MainDashboard: React.FC = () => {
         case 'qr-code':
           return <QRCodePage />;
         case 'notifications':
-          return <NotificationsPage />;
+          return <NotificationsPage onNavigateToSettings={handleNavigateToNotificationSettings} />;
         case 'calendar':
           return <CalendarBooking />;
         case 'my-subscriptions':
@@ -142,6 +150,9 @@ export const MainDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Push Notification Banner */}
+      <PushNotificationBanner onNavigateToSettings={handleNavigateToNotificationSettings} />
+      
       {/* Desktop/Tablet Navbar */}
       <div className="hidden md:block">
         <Navbar 
@@ -212,7 +223,7 @@ export const MainDashboard: React.FC = () => {
             </div>
           </div>
           
-          <div className="p-4 md:p-6">
+          <div className="">
             {renderMainContent()}
           </div>
         </main>
@@ -222,6 +233,7 @@ export const MainDashboard: React.FC = () => {
       <MobileBottomNav 
         activeMenu={activeView}
         setActiveMenu={handleViewChange}
+        activeSettingsTab={activeSettingsTab}
       />
       
       {/* Profile Settings Sidebar */}

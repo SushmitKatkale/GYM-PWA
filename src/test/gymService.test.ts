@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { gymService } from '../services/gymService';
 import type { Gym } from '../services/gymService';
+import { API_BASE_URL } from '../config/api';
 
 // Mock fetch
 const mockFetch = vi.fn();
@@ -54,7 +55,7 @@ describe('gymService', () => {
 
       expect(result).toEqual(mockResponse);
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:8080/api/gyms',
+        `${API_BASE_URL}/gyms`,
         {
           method: 'GET',
           headers: {

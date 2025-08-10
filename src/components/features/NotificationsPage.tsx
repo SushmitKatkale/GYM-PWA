@@ -3,8 +3,13 @@ import { Bell, Check, X, Clock, AlertCircle, CheckCircle, Info, RefreshCw } from
 import { notificationService, Notification } from '../../services/notificationService';
 import { useAuthStore } from '../../stores/authStore';
 import { useNotificationCount } from '../../hooks/useNotificationCount';
+import { InlinePushNotificationPrompt } from './PushNotificationBanner';
 
-export function NotificationsPage() {
+interface NotificationsPageProps {
+  onNavigateToSettings?: () => void;
+}
+
+export function NotificationsPage({ onNavigateToSettings }: NotificationsPageProps = {}) {
   const { user } = useAuthStore();
   const { unreadCount, refresh: refreshCount, decrement, reset } = useNotificationCount();
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -129,6 +134,9 @@ export function NotificationsPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6 px-4 sm:px-6 py-4 sm:py-6">
+      {/* Push Notification Prompt */}
+      <InlinePushNotificationPrompt onNavigateToSettings={onNavigateToSettings} />
+      
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Notifications</h1>

@@ -1,5 +1,6 @@
 // PWA Service for handling service worker registration and push notifications
 import { registerSW } from 'virtual:pwa-register';
+import { API_BASE_URL } from '../config/api';
 
 declare global {
   interface Window {
@@ -74,14 +75,26 @@ class PWAService {
 
   // Subscribe to push notifications
   async subscribeToPushNotifications(): Promise<PushSubscription | null> {
-    if (!this.swRegistration) {
-      console.error('Service Worker not registered');
-      return null;
-    }
-
     try {
+      // Ensure service worker is registered
+      if (!this.swRegistration) {
+        if ('serviceWorker' in navigator) {
+          this.swRegistration = await navigator.serviceWorker.ready;
+        } else {
+          console.error('Service Worker not supported');
+          return null;
+        }
+      }
+
+      // Check if already subscribed
+      const existingSubscription = await this.swRegistration.pushManager.getSubscription();
+      if (existingSubscription) {
+        console.log('Already subscribed to push notifications');
+        return existingSubscription;
+      }
+
       const applicationServerKey = this.urlBase64ToUint8Array(
-        'BN4jOQ1FqF5gHJwkYjW_VXqG8B8N2K4lQ7-mXYVm7bPJN8L9FHQ2R5mP0Xs8GHW_VYqF8L9N2K4lQ7-mXYVm7bP'
+        'BBAtF5cCXdW-1o3IFkn_uPr8-tqqfKg7g4GwB40PyhoTFJ5BB55HCtQjsH8vEQ2wRdwcaA0j1XyIRsGZbKqCQIs'
       );
 
       const subscription = await this.swRegistration.pushManager.subscribe({
@@ -100,10 +113,19 @@ class PWAService {
   // Send subscription to server
   async sendSubscriptionToServer(subscription: PushSubscription): Promise<void> {
     try {
-      // Get the token from localStorage or wherever it's stored
-      const token = localStorage.getItem('token');
+      // Get the token from auth storage (same format as apiClient)
+      let token = null;
+      try {
+        const authStorage = localStorage.getItem('auth-storage');
+        if (authStorage) {
+          const parsed = JSON.parse(authStorage);
+          token = parsed.state?.tokens?.accessToken;
+        }
+      } catch (error) {
+        console.warn('Failed to get token from auth storage:', error);
+      }
       
-      const response = await fetch('http://localhost:8080/api/users/push-subscription', {
+      const response = await fetch(`${API_BASE_URL}/api/notifications/push/subscribe`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -111,7 +133,9 @@ class PWAService {
         },
         body: JSON.stringify({
           subscription: subscription,
-          userId: this.getCurrentUserId()
+          deviceInfo: {
+            userAgent: navigator.userAgent
+          }
         })
       });
 
@@ -268,10 +292,18 @@ class PWAService {
     return outputArray;
   }
 
-  // Get current user ID (implement based on your auth system)
-  private getCurrentUserId(): string {
-    // This should be implemented based on your authentication system
-    return 'user-123';
+  // Get current user email from auth store
+  private getCurrentUserEmail(): string | null {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return null;
+      
+      // Decode JWT token to get user info
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.email || null;
+    } catch {
+      return null;
+    }
   }
 
   // Initialize PWA features
@@ -279,16 +311,30 @@ class PWAService {
     await this.registerServiceWorker();
     this.handleAppInstall();
     
-    // Request notification permission after user interaction
-    setTimeout(async () => {
-      const hasPermission = await this.requestNotificationPermission();
-      if (hasPermission) {
-        const subscription = await this.subscribeToPushNotifications();
-        if (subscription) {
-          await this.sendSubscriptionToServer(subscription);
-        }
+    // Don't auto-request permission, let user explicitly enable through UI
+    console.log('PWA service initialized');
+  }
+
+  // Method to check if push notifications are supported
+  isPushNotificationSupported(): boolean {
+    return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+  }
+
+  // Get current subscription status
+  async getCurrentSubscription(): Promise<PushSubscription | null> {
+    if (!this.isPushNotificationSupported()) {
+      return null;
+    }
+
+    try {
+      if (!this.swRegistration) {
+        this.swRegistration = await navigator.serviceWorker.ready;
       }
-    }, 5000); // Wait 5 seconds before requesting permission
+      return await this.swRegistration.pushManager.getSubscription();
+    } catch (error) {
+      console.error('Error getting current subscription:', error);
+      return null;
+    }
   }
 }
 

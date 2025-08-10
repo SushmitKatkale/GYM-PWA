@@ -22,6 +22,11 @@ import {
 import { useDashboardStore } from '../../stores/dashboardStore';
 import { useAuthStore } from '../../stores/authStore';
 import { paymentService } from '../../services/paymentService';
+import { InlinePushNotificationPrompt } from '../features/PushNotificationBanner';
+
+interface UserDashboardProps {
+  onNavigateToSettings?: () => void;
+}
 
 ChartJS.register(
   CategoryScale,
@@ -36,7 +41,7 @@ ChartJS.register(
   Filler
 );
 
-export function UserDashboard() {
+export function UserDashboard({ onNavigateToSettings }: UserDashboardProps = {}) {
   const { user } = useAuthStore();
   const {
     userDashboard,
@@ -236,6 +241,9 @@ export function UserDashboard() {
 
       {/* Content */}
       <div className="p-4 space-y-6">
+        {/* Push Notification Prompt */}
+        <InlinePushNotificationPrompt onNavigateToSettings={onNavigateToSettings} />
+        
         {isLoading && !userDashboard ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>

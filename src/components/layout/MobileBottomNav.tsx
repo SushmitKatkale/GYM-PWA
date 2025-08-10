@@ -23,6 +23,7 @@ import { useNotificationCount } from '../../hooks/useNotificationCount';
 interface MobileBottomNavProps {
   activeMenu: string;
   setActiveMenu: (menu: string) => void;
+  activeSettingsTab?: string;
 }
 
 export function MobileBottomNav({ activeMenu, setActiveMenu }: MobileBottomNavProps) {
@@ -101,7 +102,7 @@ export function MobileBottomNav({ activeMenu, setActiveMenu }: MobileBottomNavPr
 
     // Regular User
     return [
-      { id: 'notifications', label: 'Notifications', icon: Bell },
+      { id: 'settings', label: 'Settings', icon: Settings },
       { id: 'wallet', label: 'Wallet', icon: Wallet },
       { id: 'my-subscriptions', label: 'Subscriptions', icon: Subscription },
       { id: 'attendance', label: 'My Attendance', icon: BarChart3 },
