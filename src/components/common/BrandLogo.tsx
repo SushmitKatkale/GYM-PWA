@@ -85,7 +85,7 @@ export function BrandLogoLight({
         <img 
           src={BRAND.logo.icon} 
           alt={BRAND.name}
-          className={`${iconSize} object-contain filter brightness-0 invert`}
+          className={`${iconSize} object-contain`}
           onError={(e) => {
             // Fallback to PNG if SVG fails
             const target = e.target as HTMLImageElement;
@@ -117,7 +117,7 @@ export function BrandLogoLight({
       <img 
         src={BRAND.logo.icon} 
         alt={BRAND.name}
-        className={`${iconSize} object-contain flex-shrink-0 filter brightness-0 invert`}
+        className={`${iconSize} object-contain flex-shrink-0`}
         onError={(e) => {
           // Fallback to PNG if SVG fails  
           const target = e.target as HTMLImageElement;

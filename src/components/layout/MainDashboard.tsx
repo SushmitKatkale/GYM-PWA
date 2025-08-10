@@ -24,13 +24,15 @@ import { PaymentManagement } from '../features/PaymentManagement';
 import { UserManagement } from '../features/UserManagement';
 import { HelpFaq } from '../features/HelpFaq';
 import { AdvertisementManagement } from '../features/advertisements/AdvertisementManagement';
+import { AdminNotifications } from '../features/AdminNotifications';
 import { Bell, User, Shield, Settings, Lock, LogOut, X } from 'lucide-react';
 import { getAvatarImage } from '../../constants/images';
 import { userService } from '../../services/userService';
-import { BrandLogo } from '../common/BrandLogo';
+import { useNotificationCount } from '../../hooks/useNotificationCount';
 
 export const MainDashboard: React.FC = () => {
   const { user, logout } = useAuthStore();
+  const { unreadCount } = useNotificationCount();
   const navigate = useNavigate();
   const [activeView, setActiveView] = useState('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -77,7 +79,7 @@ export const MainDashboard: React.FC = () => {
     switch (activeView) {
       case 'dashboard':
         switch (user.role) {
-          case 'admin': return <AdminDashboard />;
+          case 'admin': return <AdminDashboard onNavigate={handleViewChange} />;
           case 'owner': return <OwnerDashboard />;
           case 'user': return <UserDashboard />;
           default: return <div>Invalid role</div>;
@@ -122,6 +124,8 @@ export const MainDashboard: React.FC = () => {
           return <AdvertisementManagement />;
         case 'help':
           return <HelpFaq />;
+        case 'admin-notifications':
+          return <AdminNotifications isOpen={true} onClose={() => setActiveView('dashboard')} />;
     default:
       return (
         <div className="text-center py-12">
@@ -143,6 +147,7 @@ export const MainDashboard: React.FC = () => {
         <Navbar 
           onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           isMobileMenuOpen={isMobileMenuOpen}
+          onNotificationClick={() => handleViewChange('notifications')}
         />
       </div>
       
@@ -197,9 +202,11 @@ export const MainDashboard: React.FC = () => {
                   className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors relative"
                 >
                   <Bell className="w-6 h-6" />
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
-                    2
-                  </span>
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
                 </button>
               </div>
             </div>

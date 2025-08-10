@@ -18,6 +18,7 @@ import {
   CreditCard as Subscription
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
+import { useNotificationCount } from '../../hooks/useNotificationCount';
 
 interface MobileBottomNavProps {
   activeMenu: string;
@@ -26,6 +27,7 @@ interface MobileBottomNavProps {
 
 export function MobileBottomNav({ activeMenu, setActiveMenu }: MobileBottomNavProps) {
   const { user } = useAuthStore();
+  const { unreadCount } = useNotificationCount();
   const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   // Define main navigation items (max 5 for mobile)
@@ -99,6 +101,7 @@ export function MobileBottomNav({ activeMenu, setActiveMenu }: MobileBottomNavPr
 
     // Regular User
     return [
+      { id: 'notifications', label: 'Notifications', icon: Bell },
       { id: 'wallet', label: 'Wallet', icon: Wallet },
       { id: 'my-subscriptions', label: 'Subscriptions', icon: Subscription },
       { id: 'attendance', label: 'My Attendance', icon: BarChart3 },
@@ -150,15 +153,22 @@ export function MobileBottomNav({ activeMenu, setActiveMenu }: MobileBottomNavPr
                   <button
                     key={item.id}
                     onClick={() => handleNavClick(item)}
-                    className={`flex flex-col items-center justify-center p-4 rounded-xl transition-all duration-200 ${
+                    className={`flex flex-col items-center justify-center p-4 rounded-xl transition-all duration-200 relative ${
                       isActive
                         ? 'bg-blue-50 text-blue-600 border-2 border-blue-200'
                         : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-2 border-transparent'
                     }`}
                   >
-                    <Icon className={`w-6 h-6 mb-2 ${
-                      isActive ? 'text-blue-600' : 'text-gray-600'
-                    }`} />
+                    <div className="relative">
+                      <Icon className={`w-6 h-6 mb-2 ${
+                        isActive ? 'text-blue-600' : 'text-gray-600'
+                      }`} />
+                      {item.id === 'notifications' && unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                          {unreadCount > 99 ? '99+' : unreadCount}
+                        </span>
+                      )}
+                    </div>
                     <span className={`text-sm font-medium text-center ${
                       isActive ? 'text-blue-600' : 'text-gray-700'
                     }`}>
@@ -184,15 +194,22 @@ export function MobileBottomNav({ activeMenu, setActiveMenu }: MobileBottomNavPr
               <button
                 key={item.id}
                 onClick={() => handleNavClick(item)}
-                className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 min-w-0 flex-1 touch-target ${
+                className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 min-w-0 flex-1 touch-target relative ${
                   isActive || isMoreActive
                     ? 'text-blue-600 bg-blue-50'
                     : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50 active:bg-gray-100'
                 }`}
               >
-                <Icon className={`w-5 h-5 mb-1 ${
-                  isActive || isMoreActive ? 'text-blue-600' : 'text-gray-500'
-                }`} />
+                <div className="relative">
+                  <Icon className={`w-5 h-5 mb-1 ${
+                    isActive || isMoreActive ? 'text-blue-600' : 'text-gray-500'
+                  }`} />
+                  {item.id === 'notifications' && unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </div>
                 <span className={`text-xs font-medium truncate max-w-full ${
                   isActive || isMoreActive ? 'text-blue-600' : 'text-gray-500'
                 }`}>

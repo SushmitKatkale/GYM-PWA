@@ -1,9 +1,10 @@
 import React from 'react';
 import { 
   Home, Users, Building, Calendar, QrCode, CreditCard, 
-  BarChart3, Settings, MapPin, Bell, Clock, Wallet, UserCheck, Package, Megaphone
+  BarChart3, Settings, MapPin, Bell, Clock, Wallet, UserCheck, Package, Megaphone, MessageCircle
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
+import { useNotificationCount } from '../../hooks/useNotificationCount';
 import { BrandLogoLight } from '../common/BrandLogo';
 
 interface SidebarProps {
@@ -14,6 +15,7 @@ interface SidebarProps {
 
 export function Sidebar({ activeView, onViewChange, isOpen }: SidebarProps) {
   const { user } = useAuthStore();
+  const { unreadCount } = useNotificationCount();
 
   const getMenuItems = () => {
     const commonItems = [
@@ -26,6 +28,7 @@ export function Sidebar({ activeView, onViewChange, isOpen }: SidebarProps) {
       case 'admin':
         return [
           { id: 'dashboard', label: 'Dashboard', icon: Home },
+          { id: 'admin-notifications', label: 'Notification Management', icon: MessageCircle },
           { id: 'gym-management', label: 'Gym Management', icon: Building },
           // { id: 'subscription-management', label: 'Subscription Management', icon: Package },
           { id: 'users', label: 'User Management', icon: Users },
@@ -105,15 +108,22 @@ export function Sidebar({ activeView, onViewChange, isOpen }: SidebarProps) {
                   key={item.id}
                   onClick={() => onViewChange(item.id)}
                   className={`
-                    w-full flex items-center px-4 py-3 text-left rounded-lg transition-colors
+                    w-full flex items-center justify-between px-4 py-3 text-left rounded-lg transition-colors
                     ${isActive 
                       ? 'bg-white/20 text-white font-medium' 
                       : 'text-white/80 hover:bg-white/10 hover:text-white'
                     }
                   `}
                 >
-                  <Icon className="w-5 h-5 mr-3" />
-                  {item.label}
+                  <div className="flex items-center">
+                    <Icon className="w-5 h-5 mr-3" />
+                    {item.label}
+                  </div>
+                  {item.id === 'notifications' && unreadCount > 0 && (
+                    <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
                 </button>
               );
             })}

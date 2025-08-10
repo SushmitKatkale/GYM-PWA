@@ -1,5 +1,42 @@
 // Mock API responses for development when backend is not available
 import { Advertisement, AdvertisementStats, PaginatedAdvertisements } from '../models/Advertisement';
+import { Notification, CreateNotificationRequest, NotificationResponse } from '../services/notificationService';
+
+// Mock notifications data
+export const mockNotifications: Notification[] = [
+  {
+    id: 'notif-1',
+    title: 'Welcome to Gym Management System',
+    message: 'Your account has been created successfully. Start exploring the features!',
+    type: 'success',
+    category: 'system',
+    priority: 'normal',
+    isRead: false,
+    isGlobal: true,
+    deliveryChannels: ['push'],
+    createTimestamp: '2025-01-01T10:00:00.000Z',
+    updateTimestamp: '2025-01-01T10:00:00.000Z',
+    tags: ['welcome', 'onboarding']
+  },
+  {
+    id: 'notif-2',
+    title: 'Payment Due Reminder',
+    message: 'Your membership payment is due in 3 days. Please complete your payment to continue enjoying our services.',
+    type: 'reminder',
+    category: 'payment',
+    priority: 'high',
+    isRead: false,
+    isGlobal: false,
+    recipientEmail: 'user@example.com',
+    actionUrl: '/payments',
+    actionText: 'Pay Now',
+    deliveryChannels: ['push', 'email'],
+    expiresAt: '2025-01-20T00:00:00.000Z',
+    createTimestamp: '2025-01-05T09:00:00.000Z',
+    updateTimestamp: '2025-01-05T09:00:00.000Z',
+    tags: ['payment', 'reminder']
+  }
+];
 
 // Mock data for development
 export const mockAdvertisements: Advertisement[] = [

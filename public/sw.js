@@ -55,13 +55,13 @@ self.addEventListener('activate', (event) => {
 // Push notification event
 self.addEventListener('push', (event) => {
   const options = {
-    body: event.data ? event.data.text() : 'New notification from Gym PWA',
+    body: event.data ? event.data.text() : 'New notification from Fit Espero',
     icon: '/icons/manifest-icon-192.maskable.png',
     badge: '/icons/manifest-icon-192.maskable.png',
   };
 
   event.waitUntil(
-    self.registration.showNotification('Gym PWA', options)
+    self.registration.showNotification('Fit Espero', options)
   );
 });
 

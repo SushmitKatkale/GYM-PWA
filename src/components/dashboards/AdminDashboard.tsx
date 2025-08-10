@@ -3,7 +3,8 @@ import {
   Users, Building, TrendingUp, Activity, 
   Server, Database, CreditCard, ArrowUp, ArrowDown,
   RefreshCw, AlertCircle, CheckCircle, Clock,
-  UserPlus, Home, Target, BarChart3
+  UserPlus, Home, Target, BarChart3, Bell,
+  MessageSquare, Zap, Shield, Settings
 } from 'lucide-react';
 import { Line } from 'react-chartjs-2';
 import {
@@ -31,7 +32,11 @@ ChartJS.register(
   Filler
 );
 
-export function AdminDashboard() {
+interface AdminDashboardProps {
+  onNavigate?: (view: string) => void;
+}
+
+export function AdminDashboard({ onNavigate }: AdminDashboardProps = {}) {
   const { user } = useAuthStore();
   const { 
     adminOverview,
@@ -190,6 +195,62 @@ export function AdminDashboard() {
       </div>
 
       <div className="p-6 space-y-8">
+        {/* Quick Actions */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <Zap className="w-5 h-5 mr-2 text-blue-600" />
+            Quick Actions
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <button
+              onClick={() => onNavigate?.('admin-notifications')}
+              className="flex items-center p-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105"
+            >
+              <Bell className="w-5 h-5 mr-3" />
+              <div className="text-left">
+                <div className="font-medium">Notifications</div>
+                <div className="text-xs opacity-90">Manage system alerts</div>
+              </div>
+            </button>
+            
+            <button 
+              onClick={() => onNavigate?.('help')}
+              className="flex items-center p-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all transform hover:scale-105"
+            >
+              <MessageSquare className="w-5 h-5 mr-3" />
+              <div className="text-left">
+                <div className="font-medium">User Support</div>
+                <div className="text-xs opacity-90">Handle user queries</div>
+              </div>
+            </button>
+            
+            <button 
+              onClick={() => {
+                // For now, redirect to analytics which shows system health
+                onNavigate?.('analytics');
+              }}
+              className="flex items-center p-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all transform hover:scale-105"
+            >
+              <Shield className="w-5 h-5 mr-3" />
+              <div className="text-left">
+                <div className="font-medium">Security</div>
+                <div className="text-xs opacity-90">Monitor platform</div>
+              </div>
+            </button>
+            
+            <button 
+              onClick={() => onNavigate?.('settings')}
+              className="flex items-center p-4 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg hover:from-gray-600 hover:to-gray-700 transition-all transform hover:scale-105"
+            >
+              <Settings className="w-5 h-5 mr-3" />
+              <div className="text-left">
+                <div className="font-medium">Settings</div>
+                <div className="text-xs opacity-90">System configuration</div>
+              </div>
+            </button>
+          </div>
+        </div>
+
         {/* Overview Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Total Users */}

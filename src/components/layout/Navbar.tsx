@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, Menu, X, User, AlertTriangle } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
-import { useNotificationStore } from '../../stores/notificationStore';
+import { useNotificationCount } from '../../hooks/useNotificationCount';
 import { getAvatarImage } from '../../constants/images';
 import { userService } from '../../services/userService';
 import { BrandLogoLight } from '../common/BrandLogo';
@@ -9,14 +9,13 @@ import { BrandLogoLight } from '../common/BrandLogo';
 interface NavbarProps {
   onMenuToggle: () => void;
   isMobileMenuOpen: boolean;
+  onNotificationClick?: () => void;
 }
 
-export function Navbar({ onMenuToggle, isMobileMenuOpen }: NavbarProps) {
+export function Navbar({ onMenuToggle, isMobileMenuOpen, onNotificationClick }: NavbarProps) {
   const { user } = useAuthStore();
-  const { getUnreadCount } = useNotificationStore();
+  const { unreadCount } = useNotificationCount();
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
-
-  const unreadCount = user ? getUnreadCount(user.id, user.role) : 0;
 
   // Load profile image
   useEffect(() => {
@@ -59,9 +58,9 @@ export function Navbar({ onMenuToggle, isMobileMenuOpen }: NavbarProps) {
             </button>
 
             {/* Brand Logo */}
-            <div className="hidden lg:block">
+            {/* <div className="hidden lg:block">
               <BrandLogoLight size="sm" variant="full" />
-            </div>
+            </div> */}
 
             {/* Profile */}
             <div className="flex items-center space-x-3 text-white">
@@ -84,14 +83,17 @@ export function Navbar({ onMenuToggle, isMobileMenuOpen }: NavbarProps) {
 
           <div className="flex items-center space-x-4">
             {/* Notifications */}
-            {/* <button className="text-white hover:bg-white/10 p-2 rounded-full transition-colors relative">
+            <button 
+              onClick={onNotificationClick}
+              className="text-white hover:bg-white/10 p-2 rounded-full transition-colors relative"
+            >
               <Bell className="w-6 h-6" />
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {unreadCount}
+                  {unreadCount > 99 ? '99+' : unreadCount}
                 </span>
               )}
-            </button> */}
+            </button>
           </div>
 
         </div>
