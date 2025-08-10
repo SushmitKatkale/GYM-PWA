@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin, Star, Filter, Navigation, Clock, Map as MapIcon, Users, Zap, IndianRupee, Copy, Eye, EyeOff, ChevronLeft, ChevronRight } from 'lucide-react';
 import { GymImageCarousel } from '../ui/GymImageCarousel';
+import { GymDetails } from '../gym/GymDetails';
 import { useGymStore } from '../../stores/gymStore';
 import { useAuthStore } from '../../stores/authStore';
 import { GymDiscoveryMap } from '../common/GymDiscoveryMap';
@@ -13,6 +14,7 @@ import { PaymentGatewayModal } from '../payments/PaymentGatewayModal';
 import SuccessModal from '../ui/SuccessModal';
 import ErrorModal from '../ui/ErrorModal';
 import { BRAND } from '../../constants/branding';
+import { formatOperatingHours } from '../../utils/timeFormat';
 
 export function GymDiscovery() {
   const { gyms, selectedGym, setSelectedGym, fetchGymsWithFilters, isLoading, error, clearError } = useGymStore();
@@ -42,6 +44,10 @@ export function GymDiscovery() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [currentGym, setCurrentGym] = useState<any>(null);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
+  
+  // Detailed view state
+  const [showDetailedView, setShowDetailedView] = useState(false);
+  const [detailedGym, setDetailedGym] = useState<any>(null);
 
   const getCurrentLocation = async () => {
     setIsLoadingLocation(true);
@@ -278,6 +284,68 @@ export function GymDiscovery() {
     setIsPurchaseModalOpen(true);
   };
 
+  // Handle direct payment (for Join Now buttons in GymDetails)
+  const handleDirectPayment = async (gym: any, plan: any) => {
+    // First, close the gym details modal
+    setShowDetailedView(false);
+    setDetailedGym(null);
+
+    if (!user) {
+      setErrorMessage('Please login to purchase a subscription');
+      setShowErrorModal(true);
+      return;
+    }
+
+    // Check for active subscriptions first
+    const hasActive = await checkActiveSubscriptions();
+    if (hasActive) {
+      setErrorMessage('You already have an active subscription. Please cancel it first to purchase a new one.');
+      setShowErrorModal(true);
+      return;
+    }
+
+    // Find the subscription based on the plan
+    let subscription;
+    if (plan.period === 'day') {
+      subscription = gym.subscriptions?.find((sub: any) => sub.validityDays === 1);
+    } else if (plan.period === 'week') {
+      subscription = gym.subscriptions?.find((sub: any) => sub.validityDays === 7);
+    } else if (plan.period === 'month') {
+      subscription = gym.subscriptions?.find((sub: any) => sub.validityDays === 30);
+    } else if (plan.period === 'year') {
+      subscription = gym.subscriptions?.find((sub: any) => sub.validityDays === 365);
+    }
+
+    if (!subscription) {
+      setErrorMessage('Subscription plan not found');
+      setShowErrorModal(true);
+      return;
+    }
+
+    // Set up payment modal directly
+    setCurrentGym(gym);
+    setSelectedPlan({
+      subscriptionId: subscription.id.toString(),
+      planType: plan.period === 'day' ? 'Daily' : 
+                plan.period === 'week' ? 'Weekly' : 
+                plan.period === 'month' ? 'Monthly' : 'Yearly',
+      amount: plan.price,
+      gymName: gym.name
+    });
+    setShowPaymentModal(true);
+  };
+
+  // Handle detailed view
+  const handleViewDetails = (gym: any) => {
+    setDetailedGym(gym);
+    setShowDetailedView(true);
+  };
+
+  const handleBackFromDetails = () => {
+    setShowDetailedView(false);
+    setDetailedGym(null);
+  };
+
   // Handle payment confirmation
   const handleConfirmPurchase = async (paymentMethod: string, subscriptionId: string) => {
     if (!selectedSubscriptions.length || !user) return;
@@ -356,11 +424,11 @@ export function GymDiscovery() {
       const gymWithDistance = {
         ...gym,
         distance: calculateDistance(gym.latitude, gym.longitude),
-        // Ensure we have operatingHours for display
-        operatingHours: gym.operatingHours || {
+        // Ensure we have operatingHours for display with formatted times
+        operatingHours: formatOperatingHours(gym.operatingHours || {
           open: gym.openingTime || '06:00',
           close: gym.closingTime || '22:00'
-        },
+        }),
         // Get the cheapest subscription price for sorting
         lowestPrice: gym.subscriptions && gym.subscriptions.length > 0
           ? Math.min(...gym.subscriptions.map(sub => parseFloat(sub.price) || 0))
@@ -403,6 +471,19 @@ export function GymDiscovery() {
         default: return 0;
       }
     });
+
+  // Show detailed gym view if a gym is selected for details
+  if (showDetailedView && detailedGym) {
+    return (
+      <GymDetails
+        gym={detailedGym}
+        onBack={handleBackFromDetails}
+        onSubscribe={handleShowSubscriptions}
+        onDirectPayment={handleDirectPayment}
+        currentLocation={currentLocation}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -633,10 +714,10 @@ export function GymDiscovery() {
                 {/* Actions */}
                 <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                   <button
-                    onClick={() => setSelectedGym(selectedGym?.id === gym.id ? null : gym)}
+                    onClick={() => handleViewDetails(gym)}
                     className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors text-sm sm:text-base"
                   >
-                    {selectedGym?.id === gym.id ? 'Hide Details' : 'View Details'}
+                    View Details
                   </button>
                   <button 
                     onClick={() => handleShowSubscriptions(gym)}
@@ -840,11 +921,8 @@ export function GymDiscovery() {
           gymId={currentGym.id}
           subscriptionId={selectedPlan.subscriptionId}
           amount={selectedPlan.amount}
-          planDetails={{
-            planType: selectedPlan.planType,
-            gymName: selectedPlan.gymName,
-            amount: selectedPlan.amount
-          }}
+          gymName={selectedPlan.gymName}
+          planType={selectedPlan.planType}
           onSuccess={handlePaymentSuccess}
           onError={handlePaymentError}
         />
