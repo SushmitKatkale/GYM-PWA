@@ -140,6 +140,40 @@ class GymService {
   async deleteGym(id: string): Promise<ApiResponse> {
     return apiClient.delete(`${API_CONFIG.ENDPOINTS.GYMS}/${id}`);
   }
+
+  // Gym Image Management Methods
+  async getGymImages(gymId: string | number): Promise<ApiResponse<any[]>> {
+    try {
+      // Use direct fetch for public endpoint (no authentication required)
+      const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.GYM_IMAGES}/gym/${gymId}`));
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        return {
+          success: true,
+          message: result.message,
+          data: result.data
+        };
+      }
+      
+      return {
+        success: false,
+        message: result.message || 'Failed to fetch gym images',
+        data: null
+      };
+    } catch (error) {
+      console.error('Error fetching gym images:', error);
+      return {
+        success: false,
+        message: 'Failed to fetch gym images. Please try again.',
+        data: null
+      };
+    }
+  }
+
+  async deleteGymImage(imageId: string | number): Promise<ApiResponse> {
+    return apiClient.delete(`${API_CONFIG.ENDPOINTS.GYM_IMAGES}/${imageId}`);
+  }
 }
 
 export const gymService = new GymService();

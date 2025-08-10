@@ -8,6 +8,7 @@ export const API_CONFIG = {
     USERS: '/users',
     GYMS: '/gyms',
     GYMS_PUBLIC: '/gyms/public/discover',
+    GYM_IMAGES: '/gym-images',
     SUBSCRIPTIONS: '/subscriptions',
     SUBSCRIPTION_FEATURES: '/subscription-features',
     AUTH: '/auth',

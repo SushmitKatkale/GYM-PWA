@@ -59,23 +59,7 @@ class ImageService {
         
         const dimensions = { width: img.width, height: img.height };
 
-        if (config.maxWidth && img.width > config.maxWidth) {
-          resolve({
-            valid: false,
-            error: `Image width too large. Maximum width: ${config.maxWidth}px`,
-            dimensions
-          });
-          return;
-        }
-
-        if (config.maxHeight && img.height > config.maxHeight) {
-          resolve({
-            valid: false,
-            error: `Image height too large. Maximum height: ${config.maxHeight}px`,
-            dimensions
-          });
-          return;
-        }
+        // Width and height validation removed - allow any dimensions
 
         resolve({ valid: true, dimensions });
       };
@@ -132,7 +116,7 @@ class ImageService {
     }
 
     return apiClient.post<{ url: string; filename: string; size: number; mimetype: string }>(
-      `/gym-images/gym/${gymId}/upload`,
+      `${API_CONFIG.ENDPOINTS.GYM_IMAGES}/gym/${gymId}/upload`,
       formData
     );
   }
@@ -153,6 +137,14 @@ class ImageService {
     }
     
     return results;
+  }
+
+  async getGymImages(gymId: string | number): Promise<ApiResponse<any[]>> {
+    return apiClient.get<any[]>(`${API_CONFIG.ENDPOINTS.GYM_IMAGES}/gym/${gymId}`);
+  }
+
+  async deleteGymImageById(imageId: string | number): Promise<ApiResponse> {
+    return apiClient.delete(`${API_CONFIG.ENDPOINTS.GYM_IMAGES}/${imageId}`);
   }
 
   async deleteGymImage(imageUrl: string): Promise<ImageUploadResponse> {

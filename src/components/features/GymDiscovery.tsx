@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Star, Filter, Navigation, Clock, Map as MapIcon, Users, Zap, IndianRupee, Copy, Eye, EyeOff } from 'lucide-react';
+import { MapPin, Star, Filter, Navigation, Clock, Map as MapIcon, Users, Zap, IndianRupee, Copy, Eye, EyeOff, ChevronLeft, ChevronRight } from 'lucide-react';
+import { GymImageCarousel } from '../ui/GymImageCarousel';
 import { useGymStore } from '../../stores/gymStore';
 import { useAuthStore } from '../../stores/authStore';
 import { GymDiscoveryMap } from '../common/GymDiscoveryMap';
@@ -551,10 +552,12 @@ export function GymDiscovery() {
           {filteredAndSortedGyms.map((gym) => (
             <div key={gym.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
               <div className="relative h-48">
-                <img
-                  src={gym.image}
-                  alt={gym.name}
-                  className="w-full h-full object-cover"
+                {/* Use GymImageCarousel component to display all images */}
+                <GymImageCarousel 
+                  images={gym.images || []}
+                  gymName={gym.name}
+                  className="w-full h-full"
+                  fallbackImage={gym.image || '/images/gyms/placeholder-gym.jpg'}
                 />
                 <div className="absolute top-4 right-4 bg-white rounded-full px-3 py-1 flex items-center space-x-1">
                   <Star className="w-4 h-4 text-yellow-400 fill-current" />

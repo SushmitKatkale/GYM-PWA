@@ -524,56 +524,28 @@ const GymManagement = () => {
     const handleImageSave = async (gymId: number, images: string[]) => {
         setLoading(true);
         try {
-            const token = getAccessToken();
-            if (!token) {
-                setErrorModal({
-                    isOpen: true,
-                    title: 'Authentication Required',
-                    message: 'Please log in to update gym images.',
-                    error: 'No authentication token found'
-                });
-                return;
-            }
-
-            // Update gym with new images
-            const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.GYMS}/${gymId}/images`), {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ images })
+            // Note: The GymImageEditModal handles individual image uploads/deletions
+            // This function is called after the modal has already handled the image management
+            // We just need to refresh the gym data to get the updated images
+            
+            setSuccessModal({
+                isOpen: true,
+                title: 'Images Updated!',
+                message: 'Gym images have been successfully updated.',
+                actionLabel: 'Refresh List',
+                onAction: fetchGyms
             });
-
-            const data = await response.json();
-            if (data.success) {
-                setSuccessModal({
-                    isOpen: true,
-                    title: 'Images Updated!',
-                    message: 'Gym images have been successfully updated.',
-                    actionLabel: 'Refresh List',
-                    onAction: fetchGyms
-                });
-                closeImageModal();
-            } else {
-                setErrorModal({
-                    isOpen: true,
-                    title: 'Update Failed',
-                    message: 'Failed to update gym images.',
-                    error: data.message,
-                    showRetry: true,
-                    onRetry: () => handleImageSave(gymId, images)
-                });
-            }
+            closeImageModal();
+            
+            // Refresh the gym list to get updated image data
+            await fetchGyms();
         } catch (error) {
             console.error('Error updating images:', error);
             setErrorModal({
                 isOpen: true,
-                title: 'Network Error',
-                message: 'Failed to update images due to network error.',
-                error: error instanceof Error ? error.message : 'Unknown error',
-                showRetry: true,
-                onRetry: () => handleImageSave(gymId, images)
+                title: 'Update Error',
+                message: 'An error occurred while updating images.',
+                error: error instanceof Error ? error.message : 'Unknown error'
             });
         } finally {
             setLoading(false);

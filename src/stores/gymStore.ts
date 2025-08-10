@@ -153,15 +153,10 @@ export const useGymStore = create<GymState>((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      const token = useAuthStore.getState().getAccessToken();
-      if (!token) {
-        set({ error: 'No authentication token found', isLoading: false });
-        return false;
-      }
-
-      const response = await gymService.getGyms(token);
+      const response = await gymService.getGyms();
       
       if (response.success && response.data) {
+        console.log('Fetched gyms from API:', response.data); // Debug log
         set({
           gyms: response.data,
           isLoading: false
@@ -191,8 +186,35 @@ fetchGymsWithFilters: async (filters?: GymFilters) => {
       const response = await gymService.getGyms(filters);
 
       if (response.success && response.data) {
+        // Fetch images for each gym
+        const gymsWithImages = await Promise.all(
+          response.data.map(async (gym) => {
+            try {
+              const imageResponse = await gymService.getGymImages(gym.id);
+              const images = imageResponse.success && imageResponse.data ? imageResponse.data : [];
+              
+              return {
+                ...gym,
+                images: images.map(img => ({
+                  id: img.id,
+                  url: img.fullUrl,
+                  filePath: img.path,
+                  title: img.title
+                }))
+              };
+            } catch (error) {
+              console.error(`Failed to fetch images for gym ${gym.id}:`, error);
+              return {
+                ...gym,
+                images: []
+              };
+            }
+          })
+        );
+
+        console.log('Fetched gyms with images:', gymsWithImages);
         set({
-          gyms: response.data,
+          gyms: gymsWithImages,
           isLoading: false
         });
         return true;
