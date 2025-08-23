@@ -18,7 +18,13 @@ export const API_CONFIG = {
     SLOTS: '/slots',
     USER_SUBSCRIPTIONS: '/user-subscriptions',
     ADMIN: '/admin',
-    ADVERTISEMENTS: '/advertisements'
+    ADVERTISEMENTS: '/advertisements',
+    // Attendance system endpoints
+    ATTENDANCE: '/attendance',
+    QR_CODES: '/qr-codes',
+    UNIQUE_CODES: '/unique-codes',
+    CHECKIN_METHODS: '/checkin-methods',
+    ATTENDANCE_ANALYTICS: '/attendance-analytics'
   }
 };
 

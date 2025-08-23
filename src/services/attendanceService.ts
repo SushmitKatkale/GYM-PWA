@@ -1,32 +1,86 @@
 import { buildApiUrl, API_CONFIG } from '../config/api';
 import { apiClient, ApiResponse } from './apiClient';
 
-export interface Attendance {
-  id: string;
-  userId: string;
+export interface CheckInData {
   gymId: string;
-  checkIn: string;
-  checkOut?: string;
-  date: string;
-  method: 'qr' | 'code' | 'manual';
+  method: 'quick_checkin' | 'gym_qr_scan' | 'gym_code' | 'owner_scan_user' | 'fingerprint' | 'face_scan';
+  location?: {
+    latitude: number;
+    longitude: number;
+  };
+  qrCode?: string;
+  uniqueCode?: string;
+  deviceInfo?: any;
 }
 
+export interface Attendance {
+  id: string;
+  userEmail: string;
+  gymId: string;
+  checkInTime: string;
+  checkOutTime?: string;
+  checkInMethod: string;
+  userLocationLat?: number;
+  userLocationLng?: number;
+  distanceFromGym?: number;
+  durationMinutes?: number;
+  qrCodeUsed?: string;
+  sessionNotes?: string;
+  sessionRating?: number;
+  isValidSession: boolean;
+  isActive: boolean;
+  deviceInfo?: any;
+  gym?: {
+    id: string;
+    name: string;
+    address: string;
+  };
+}
+
+export interface AttendanceResponse {
+  success: boolean;
+  data: {
+    attendance: Attendance[];
+    total: Number;
+  };
+  message: string;
+}
 
 class AttendanceService {
-  async getUserAttendance(userId: string): Promise<ApiResponse<Attendance[]>> {
-    return apiClient.get<Attendance[]>(`${API_CONFIG.ENDPOINTS.OWNERS}/${userId}/attendance`);
+  async getUserAttendance(userEmail: string): Promise<ApiResponse<Attendance[]>> {
+    return apiClient.get<Attendance[]>(`${API_CONFIG.ENDPOINTS.ATTENDANCE}/user/${userEmail}`);
   }
 
-  async createAttendance(attendanceData: Partial<Attendance>): Promise<ApiResponse<Attendance>> {
-    return apiClient.post<Attendance>('/attendance', attendanceData);
+  async getActiveSession(userEmail: string): Promise<ApiResponse<Attendance | null>> {
+    // return apiClient.get<Attendance | null>(`${API_CONFIG.ENDPOINTS.ATTENDANCE}/user/${userEmail}/active`);
+    return apiClient.get<Attendance | null>(`/attendance/active-session/${userEmail}`);
   }
 
-  async updateAttendance(id: string, attendanceData: Partial<Attendance>): Promise<ApiResponse<Attendance>> {
-    return apiClient.put<Attendance>(`/attendance/${id}`, attendanceData);
+  async checkIn(checkInData: CheckInData): Promise<ApiResponse<AttendanceResponse>> {
+    return apiClient.post<AttendanceResponse>(`${API_CONFIG.ENDPOINTS.ATTENDANCE}/checkin`, checkInData);
   }
 
-  async deleteAttendance(id: string): Promise<ApiResponse> {
-    return apiClient.delete(`/attendance/${id}`);
+  async checkOut(attendanceId: string): Promise<ApiResponse<AttendanceResponse>> {
+    return apiClient.post<AttendanceResponse>(`${API_CONFIG.ENDPOINTS.ATTENDANCE}/checkout/${attendanceId}`);
+  }
+
+  async quickCheckIn(gymId: string, location?: { latitude: number; longitude: number }): Promise<ApiResponse<AttendanceResponse>> {
+    return apiClient.post<AttendanceResponse>(`${API_CONFIG.ENDPOINTS.ATTENDANCE}/quick-checkin`, {
+      gymId,
+      location
+    });
+  }
+
+  async getGymCheckInMethods(gymId: string): Promise<ApiResponse<any[]>> {
+    return apiClient.get<any[]>(`${API_CONFIG.ENDPOINTS.CHECKIN_METHODS}/gym/${gymId}`);
+  }
+
+  async validateQRCode(qrCode: string): Promise<ApiResponse<any>> {
+    return apiClient.post<any>(`${API_CONFIG.ENDPOINTS.QR_CODES}/validate`, { qrCode });
+  }
+
+  async validateUniqueCode(code: string): Promise<ApiResponse<any>> {
+    return apiClient.post<any>(`${API_CONFIG.ENDPOINTS.UNIQUE_CODES}/validate`, { uniqueCode: code });
   }
 }
 

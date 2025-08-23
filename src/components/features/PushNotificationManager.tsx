@@ -301,7 +301,7 @@ export function PushNotificationManager() {
       </div>
 
       {/* Browser Support Info */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+      {/* <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
         <div className="flex">
           <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 mt-0.5 mr-2 sm:mr-3 flex-shrink-0" />
           <div>
@@ -311,7 +311,7 @@ export function PushNotificationManager() {
             </p>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }

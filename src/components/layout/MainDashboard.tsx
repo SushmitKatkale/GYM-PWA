@@ -223,7 +223,7 @@ export const MainDashboard: React.FC = () => {
             </div>
           </div>
           
-          <div className="">
+          <div className="md:p-6">
             {renderMainContent()}
           </div>
         </main>

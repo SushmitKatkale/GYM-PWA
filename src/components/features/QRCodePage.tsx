@@ -8,15 +8,15 @@ import { QrScanner } from './QrScanner';
 
 export function QRCodePage() {
   const { user } = useAuthStore();
-  const { checkIn, checkOut, getUserAttendance, getActiveSession, isLoading, error } = useAttendanceStore();
+  const { checkIn, checkOut, quickCheckIn, getUserAttendance, getActiveSession, loadUserAttendance, loadActiveSession, isLoading, error } = useAttendanceStore();
   const { gyms, updateGymOccupancy } = useGymStore();
   const [qrCode, setQrCode] = useState('');
   const [manualCode, setManualCode] = useState('');
   const [showScanner, setShowScanner] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
 
-  const activeSession = user ? getActiveSession(user.id) : null;
-  const userAttendance = user ? getUserAttendance(user.id) : [];
+  const activeSession = user ? getActiveSession(user.email || user.id) : null;
+  const userAttendance = user ? getUserAttendance(user.email || user.id) : [];
 
   // Get current location
   useEffect(() => {
@@ -35,12 +35,20 @@ export function QRCodePage() {
     }
   }, []);
 
+  // Load user data on mount
+  useEffect(() => {
+    if (user?.email) {
+      loadUserAttendance(user.email);
+      loadActiveSession(user.email);
+    }
+  }, [user?.email, loadUserAttendance, loadActiveSession]);
+
   // Generate dynamic QR code
   useEffect(() => {
     const generateQR = () => {
       const timestamp = Date.now();
-      const userId = user?.id || '';
-      const code = `${userId}-${timestamp}`;
+      const userId = user?.email || user?.id || '';
+      const code = `USER_${userId}_${timestamp}`;
       setQrCode(code);
     };
 
@@ -48,13 +56,32 @@ export function QRCodePage() {
     const interval = setInterval(generateQR, 30000); // Refresh every 30 seconds
 
     return () => clearInterval(interval);
-  }, [user?.id]);
+  }, [user?.email, user?.id]);
 
-  const handleCheckIn = async (gymId: string = 'gym1') => {
+  const handleQuickCheckIn = async () => {
+    if (user && !activeSession && gyms.length > 0) {
+      // Use the first gym for quick check-in, or you can implement gym selection
+      const defaultGymId = gyms[0]?.id || '1';
+      const success = await quickCheckIn(defaultGymId, currentLocation || undefined);
+      if (success) {
+        updateGymOccupancy(defaultGymId, 1);
+        // Reload data to show updated state
+        if (user.email) {
+          loadActiveSession(user.email);
+        }
+      }
+    }
+  };
+
+  const handleCheckIn = async (gymId: string = '1') => {
     if (user && !activeSession) {
-      const success = await checkIn(user.id, gymId, 'manual', currentLocation || undefined, qrCode);
+      const success = await checkIn(user.email || user.id, gymId, 'manual', currentLocation || undefined, qrCode);
       if (success) {
         updateGymOccupancy(gymId, 1);
+        // Reload data to show updated state
+        if (user.email) {
+          loadActiveSession(user.email);
+        }
       }
     }
   };
@@ -98,7 +125,7 @@ export function QRCodePage() {
   const currentGym = getCurrentGym();
 
   return (
-    <div className="space-y-4 pb-4">
+    <div className="p-4 space-y-4">
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
@@ -180,7 +207,7 @@ export function QRCodePage() {
             </button>
             <button
               disabled={isLoading}
-              onClick={() => handleCheckIn()}
+              onClick={handleQuickCheckIn}
               className="flex items-center justify-center space-x-2 bg-green-600 hover:bg-green-700 text-white font-medium py-3 sm:py-4 px-4 sm:px-6 rounded-xl transition-colors disabled:opacity-50 text-sm sm:text-base"
             >
               <QrCode className="w-4 h-4 sm:w-5 sm:h-5" />
