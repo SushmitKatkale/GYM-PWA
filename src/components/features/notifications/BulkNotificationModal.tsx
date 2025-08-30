@@ -132,7 +132,7 @@ export function BulkNotificationModal({ onClose, onSuccess }: BulkNotificationMo
     if (targetingMode === 'emails') {
       return formData.userEmails?.length || 0;
     } else if (targetingMode === 'role') {
-      const roleCounts = { '1': 'All Users', '2': 'All Gym Owners', '3': 'All Admins' };
+      const roleCounts = { 1: 'All Members', 2: 'All Gym Owners', 3: 'All Trainers', 4: 'All Admins' };
       return formData.role ? roleCounts[formData.role] || 'Unknown' : 'No role selected';
     } else if (targetingMode === 'gym') {
       return formData.gymId ? `All users at Gym #${formData.gymId}` : 'No gym selected';
@@ -313,14 +313,15 @@ export function BulkNotificationModal({ onClose, onSuccess }: BulkNotificationMo
                 </label>
                 <select
                   value={formData.role || ''}
-                  onChange={(e) => handleInputChange('role', e.target.value || undefined)}
+                  onChange={(e) => handleInputChange('role', e.target.value ? parseInt(e.target.value) : undefined)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   required
                 >
                   <option value="">Select Role</option>
-                  <option value="1">All Users (Members)</option>
+                  <option value="1">All Members</option>
                   <option value="2">All Gym Owners</option>
-                  <option value="3">All Admins</option>
+                  <option value="3">All Trainers</option>
+                  <option value="4">All Admins</option>
                 </select>
               </div>
             )}

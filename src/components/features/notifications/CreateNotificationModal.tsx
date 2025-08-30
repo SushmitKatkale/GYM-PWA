@@ -251,13 +251,14 @@ export function CreateNotificationModal({ onClose, onSuccess }: CreateNotificati
                   </label>
                   <select
                     value={formData.recipientRole || ''}
-                    onChange={(e) => handleInputChange('recipientRole', e.target.value || undefined)}
+                    onChange={(e) => handleInputChange('recipientRole', e.target.value ? parseInt(e.target.value) : undefined)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="">Any Role</option>
-                    <option value="1">Users</option>
+                    <option value="1">Members</option>
                     <option value="2">Gym Owners</option>
-                    <option value="3">Admins</option>
+                    <option value="3">Trainers</option>
+                    <option value="4">Admins</option>
                   </select>
                 </div>
               </div>
@@ -305,6 +306,34 @@ export function CreateNotificationModal({ onClose, onSuccess }: CreateNotificati
                   onChange={(e) => handleInputChange('actionText', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Learn More"
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Icon URL (Optional)
+                </label>
+                <input
+                  type="url"
+                  value={formData.iconUrl || ''}
+                  onChange={(e) => handleInputChange('iconUrl', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="https://example.com/icon.png"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Image URL (Optional)
+                </label>
+                <input
+                  type="url"
+                  value={formData.imageUrl || ''}
+                  onChange={(e) => handleInputChange('imageUrl', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="https://example.com/image.png"
                 />
               </div>
             </div>

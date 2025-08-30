@@ -161,7 +161,7 @@ export function NotificationDetailsModal({ notification, onClose }: Notification
                   <Calendar className="w-4 h-4 text-gray-400" />
                   <span className="text-gray-600">Created:</span>
                   <span className="font-medium">
-                    {new Date(notification.createTimestamp).toLocaleString()}
+                    {new Date(notification.createTimestamp || notification.created_at).toLocaleString()}
                   </span>
                 </div>
 
@@ -211,9 +211,10 @@ export function NotificationDetailsModal({ notification, onClose }: Notification
                         <User className="w-4 h-4 text-gray-400" />
                         <span className="text-gray-600">Role:</span>
                         <span className="font-medium">
-                          {notification.recipientRole === '1' ? 'Users' : 
-                           notification.recipientRole === '2' ? 'Gym Owners' : 
-                           notification.recipientRole === '3' ? 'Admins' : 'Unknown'}
+                          {notification.recipientRole === 1 || notification.recipientRole === '1' ? 'Members' : 
+                           notification.recipientRole === 2 || notification.recipientRole === '2' ? 'Gym Owners' : 
+                           notification.recipientRole === 3 || notification.recipientRole === '3' ? 'Trainers' : 
+                           notification.recipientRole === 4 || notification.recipientRole === '4' ? 'Admins' : 'Unknown'}
                         </span>
                       </div>
                     )}

@@ -74,22 +74,48 @@ class AdvertisementService {
     return this.toggleAdvertisementStatus(id, 'inactive');
   }
 
-  // Bulk Operations
+  // Bulk Operations - Note: These are currently not available in backend routes
   async bulkUpdateAdvertisements(
     advertisementIds: string[],
     updates: Partial<UpdateAdvertisementRequest>
   ): Promise<ApiResponse<{ updated: number; errors: string[] }>> {
-    return apiClient.patch(
-      `${this.baseEndpoint}/bulk-update`,
-      { advertisementIds, updates }
-    );
+    // Fallback to individual updates since bulk endpoints are commented out
+    const results = { updated: 0, errors: [] as string[] };
+    
+    for (const id of advertisementIds) {
+      try {
+        await this.updateAdvertisement(id, updates);
+        results.updated++;
+      } catch (error) {
+        results.errors.push(`Failed to update advertisement ${id}: ${error}`);
+      }
+    }
+    
+    return {
+      success: true,
+      data: results,
+      message: `${results.updated} advertisements updated, ${results.errors.length} errors`
+    };
   }
 
   async bulkDeleteAdvertisements(advertisementIds: string[]): Promise<ApiResponse<{ deleted: number; errors: string[] }>> {
-    return apiClient.post(
-      `${this.baseEndpoint}/bulk-delete`,
-      { advertisementIds }
-    );
+    // Fallback to individual deletes since bulk endpoints are commented out
+    const results = { deleted: 0, errors: [] as string[] };
+    
+    for (const id of advertisementIds) {
+      try {
+        await this.deleteAdvertisement(id);
+        results.deleted++;
+      } catch (error) {
+        results.errors.push(`Failed to delete advertisement ${id}: ${error}`);
+      }
+    }
+    
+    return {
+      success: true,
+      data: results,
+      message: `${results.deleted} advertisements deleted, ${results.errors.length} errors`
+    };
   }
 
   // Analytics & Performance
@@ -129,9 +155,7 @@ class AdvertisementService {
     return apiClient.post<void>(`${this.baseEndpoint}/${id}/track`, {
       eventType,
       userId,
-      metadata,
-      timestamp: new Date().toISOString(),
-      userAgent: navigator.userAgent,
+      metadata
     });
   }
 
@@ -139,11 +163,12 @@ class AdvertisementService {
   async getActiveAdvertisements(
     adType?: string,
     placement?: string,
-    limit = 10
+    limit = 10,
+    targetAudience = 'all'
   ): Promise<ApiResponse<Advertisement[]>> {
     const queryParams = new URLSearchParams({
       limit: limit.toString(),
-      status: 'active'
+      targetAudience
     });
     
     if (adType) queryParams.append('adType', adType);
@@ -168,13 +193,13 @@ class AdvertisementService {
     file: File,
     mediaType: 'image' | 'video' | 'gif',
     altText?: string
-  ): Promise<ApiResponse<{ mediaUrl: string; mediaId: string }>> {
+  ): Promise<ApiResponse<{ id: string; advertisementId: string; mediaUrl: string; mediaType: string; mediaAltText?: string; mediaOrder: number; fileName: string; fileSize: number; mimeType: string; createTimestamp: string; }>> {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('mediaType', mediaType);
     if (altText) formData.append('altText', altText);
 
-    return apiClient.postFormData<{ mediaUrl: string; mediaId: string }>(
+    return apiClient.postFormData<{ id: string; advertisementId: string; mediaUrl: string; mediaType: string; mediaAltText?: string; mediaOrder: number; fileName: string; fileSize: number; mimeType: string; createTimestamp: string; }>(
       `${this.baseEndpoint}/${advertisementId}/media`,
       formData
     );

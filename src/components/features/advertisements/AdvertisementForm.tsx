@@ -358,13 +358,13 @@ export function AdvertisementForm({ advertisement, onSave, onCancel }: Advertise
                   {existingMedia.map((media, index) => (
                     <div key={media.id || index} className="relative group">
                       <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                        {media.mediaType === 'image' || media.mediaType === 'gif' ? (
+                        {media.media_type === 'image' || media.media_type === 'gif' ? (
                           <img
-                            src={media.mediaUrl}
-                            alt={media.mediaAltText || 'Advertisement media'}
+                            src={media.url || media.location}
+                            alt={media.alt_text || 'Advertisement media'}
                             className="w-full h-full object-cover"
                           />
-                        ) : media.mediaType === 'video' ? (
+                        ) : media.media_type === 'video' ? (
                           <div className="w-full h-full flex items-center justify-center bg-gray-200">
                             <div className="text-center">
                               <div className="w-8 h-8 mx-auto mb-1 bg-gray-400 rounded-full flex items-center justify-center">
@@ -393,7 +393,7 @@ export function AdvertisementForm({ advertisement, onSave, onCancel }: Advertise
                       )}
 
                       <p className="mt-1 text-xs text-gray-500 truncate">
-                        {media.mediaAltText || media.fileName || `${media.mediaType} file`}
+                        {media.alt_text || media.fileName || `${media.media_type} file`}
                       </p>
                     </div>
                   ))}
@@ -583,9 +583,9 @@ export function AdvertisementForm({ advertisement, onSave, onCancel }: Advertise
                         {/* Media Display */}
                         {(existingMedia.length > 0 || mediaFiles.length > 0) && (
                           <div className="relative">
-                            {existingMedia.length > 0 && (existingMedia[0].mediaType === 'image' || existingMedia[0].mediaType === 'gif') ? (
+                            {existingMedia.length > 0 && (existingMedia[0].media_type === 'image' || existingMedia[0].media_type === 'gif') ? (
                               <img
-                                src={existingMedia[0].mediaUrl}
+                                src={existingMedia[0].url || existingMedia[0].location}
                                 alt={formData.title}
                                 className="w-full h-48 object-cover"
                                 onError={(e) => {
@@ -598,7 +598,7 @@ export function AdvertisementForm({ advertisement, onSave, onCancel }: Advertise
                                 alt={formData.title}
                                 className="w-full h-48 object-cover"
                               />
-                            ) : existingMedia.find(m => m.mediaType === 'video') || mediaFiles.find(f => f.type.startsWith('video/')) ? (
+                            ) : existingMedia.find(m => m.media_type === 'video') || mediaFiles.find(f => f.type.startsWith('video/')) ? (
                               <div className="w-full h-48 bg-gradient-to-br from-gray-800 to-black flex items-center justify-center">
                                 <div className="text-center">
                                   <div className="w-16 h-16 mx-auto mb-3 bg-white bg-opacity-20 rounded-full flex items-center justify-center backdrop-blur-sm">
@@ -699,9 +699,9 @@ export function AdvertisementForm({ advertisement, onSave, onCancel }: Advertise
                             {/* Existing Media Thumbnails */}
                             {existingMedia.map((media, index) => (
                               <div key={media.id || index} className="flex-shrink-0">
-                                {media.mediaType === 'image' || media.mediaType === 'gif' ? (
+                                {media.media_type === 'image' || media.media_type === 'gif' ? (
                                   <img
-                                    src={media.mediaUrl}
+                                    src={media.url || media.location}
                                     alt={`Media ${index + 1}`}
                                     className="w-16 h-16 object-cover rounded-lg border-2 border-white shadow-md"
                                     onError={(e) => {
@@ -766,9 +766,9 @@ export function AdvertisementForm({ advertisement, onSave, onCancel }: Advertise
                 <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
                   {(existingMedia.length > 0 || mediaFiles.length > 0) && (
                     <div className="relative h-64">
-                      {existingMedia.length > 0 && (existingMedia[0].mediaType === 'image' || existingMedia[0].mediaType === 'gif') ? (
+                      {existingMedia.length > 0 && (existingMedia[0].media_type === 'image' || existingMedia[0].media_type === 'gif') ? (
                         <img
-                          src={existingMedia[0].mediaUrl}
+                          src={existingMedia[0].url || existingMedia[0].location}
                           alt={formData.title}
                           className="w-full h-full object-cover"
                           onError={(e) => {

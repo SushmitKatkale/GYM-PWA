@@ -22,10 +22,22 @@ export interface Advertisement {
   impressions: number;
   createdBy?: string;
   updatedBy?: string;
-  createTimestamp: string;
-  updateTimestamp?: string;
+  created_at: string;
+  updated_at?: string;
   
-  // Related data
+  // Related data - includes user info from backend
+  creator?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    username: string;
+  };
+  updater?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    username: string;
+  };
   media?: AdvertisementMedia[];
   targeting?: AdvertisementTargeting[];
   schedules?: AdvertisementSchedule[];
@@ -34,12 +46,21 @@ export interface Advertisement {
 
 export interface AdvertisementMedia {
   id: string;
-  advertisementId: string;
-  mediaType: MediaType;
-  mediaUrl: string;
-  mediaAltText?: string;
-  mediaOrder: number;
-  createTimestamp: string;
+  entity_id: string;
+  entity_type: string;
+  media_type: MediaType;
+  location: string;
+  url: string;
+  alt_text?: string;
+  mime_type?: string;
+  file_size?: number;
+  width?: number;
+  height?: number;
+  duration?: number;
+  record_status: number;
+  created_by?: string;
+  created_at: string;
+  updated_at?: string;
 }
 
 export interface AdvertisementTargeting {
@@ -47,7 +68,7 @@ export interface AdvertisementTargeting {
   advertisementId: string;
   targetType: TargetType;
   targetValue: string;
-  createTimestamp: string;
+  created_at: string;
 }
 
 export interface AdvertisementSchedule {
@@ -66,8 +87,14 @@ export interface AdvertisementAnalytics {
   eventType: EventType;
   userAgent?: string;
   ipAddress?: string;
+  deviceType?: string;
+  browserType?: string;
+  osType?: string;
+  referrerUrl?: string;
+  sessionId?: string;
+  viewDuration?: number;
   locationData?: any;
-  eventTimestamp: string;
+  event_timestamp: string;
 }
 
 // Request/Response interfaces
@@ -113,6 +140,8 @@ export interface AdvertisementFilters {
   createdBy?: string;
   search?: string;
   hasActiveSchedule?: boolean;
+  sortBy?: string;
+  sortOrder?: 'ASC' | 'DESC';
 }
 
 export interface AdvertisementStats {

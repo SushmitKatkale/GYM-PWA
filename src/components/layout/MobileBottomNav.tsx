@@ -103,7 +103,7 @@ export function MobileBottomNav({ activeMenu, setActiveMenu }: MobileBottomNavPr
     // Regular User
     return [
       { id: 'settings', label: 'Settings', icon: Settings },
-      { id: 'wallet', label: 'Wallet', icon: Wallet },
+      // { id: 'wallet', label: 'Wallet', icon: Wallet },
       { id: 'my-subscriptions', label: 'Subscriptions', icon: Subscription },
       { id: 'attendance', label: 'My Attendance', icon: BarChart3 },
       { id: 'help', label: 'Support', icon: HelpCircle }
@@ -131,7 +131,7 @@ export function MobileBottomNav({ activeMenu, setActiveMenu }: MobileBottomNavPr
       
       {/* More Menu Panel */}
       {showMoreMenu && (
-        <div className="md:hidden fixed bottom-16 left-4 right-4 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 max-h-80 overflow-y-auto">
+        <div className="md:hidden fixed bottom-16 left-0 right-0 bg-white rounded-md rounded-b-none shadow-2xl border border-gray-200 z-50 max-h-80 overflow-y-auto">
           <div className="p-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900">More Options</h3>

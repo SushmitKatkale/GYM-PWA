@@ -57,7 +57,7 @@ export function AdminNotifications({ isOpen = true, onClose }: AdminNotification
       filters 
     });
     
-    if (user?.role === 'admin') { // Admin only
+    if (user?.role === 'admin') { 
       console.log('🔍 User is admin, loading notifications...');
       loadNotifications();
       loadStats();
@@ -199,7 +199,7 @@ export function AdminNotifications({ isOpen = true, onClose }: AdminNotification
     });
   };
 
-  if (!user || user.role !== 'admin') {
+  if (!user || user?.role !== 'admin') {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -476,7 +476,7 @@ export function AdminNotifications({ isOpen = true, onClose }: AdminNotification
                             <div className="flex items-center justify-between mt-2">
                               <div className="flex items-center space-x-4 text-xs text-gray-500">
                                 <span>
-                                  {notificationService.formatRelativeTime(notification.createTimestamp)}
+                                  {notificationService.formatRelativeTime(notification.createTimestamp || notification.created_at)}
                                 </span>
                                 {notification.recipientEmail && (
                                   <span>To: {notification.recipientEmail}</span>

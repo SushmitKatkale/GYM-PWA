@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Star, Filter, Navigation, Clock, Map as MapIcon, Users, Zap, IndianRupee, Copy, Eye, EyeOff, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MapPin, Star, Filter, Navigation, Clock, Map as MapIcon, Users, Zap, IndianRupee, Copy, Eye, EyeOff, ChevronLeft, ChevronRight, Ruler, DraftingCompass, List, ListChecks, LayoutList } from 'lucide-react';
 import { GymImageCarousel } from '../ui/GymImageCarousel';
 import { GymDetails } from '../gym/GymDetails';
 import { useGymStore } from '../../stores/gymStore';
@@ -28,7 +28,7 @@ export function GymDiscovery() {
   const [mapRefreshTrigger, setMapRefreshTrigger] = useState(0);
   const [showCoordinates, setShowCoordinates] = useState(false);
   const [copiedCoordinates, setCopiedCoordinates] = useState(false);
-  
+
   // Subscription purchase states
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [selectedSubscription, setSelectedSubscription] = useState<any>(null);
@@ -39,15 +39,16 @@ export function GymDiscovery() {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  
+
   // Payment gateway states
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [currentGym, setCurrentGym] = useState<any>(null);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
-  
+
   // Detailed view state
   const [showDetailedView, setShowDetailedView] = useState(false);
   const [detailedGym, setDetailedGym] = useState<any>(null);
+  const [open, setOpen] = useState(false);
 
   const getCurrentLocation = async () => {
     setIsLoadingLocation(true);
@@ -55,7 +56,7 @@ export function GymDiscovery() {
       if ('geolocation' in navigator) {
         const position = await new Promise<GeolocationPosition>((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(
-            resolve, 
+            resolve,
             reject,
             {
               enableHighAccuracy: true,
@@ -69,7 +70,7 @@ export function GymDiscovery() {
           lat: position.coords.latitude,
           lng: position.coords.longitude
         };
-        
+
         console.log('Got user location:', newLocation);
         setCurrentLocation(newLocation);
         // Trigger map refresh when location is updated
@@ -83,7 +84,7 @@ export function GymDiscovery() {
         lat: 12.9716,  // Bangalore, India
         lng: 77.5946
       };
-      
+
       console.log('Using fallback location:', fallbackLocation);
       setCurrentLocation(fallbackLocation);
       // Trigger map refresh for fallback location too
@@ -218,7 +219,7 @@ export function GymDiscovery() {
 
     // Check for active subscriptions first
     const hasActive = await checkActiveSubscriptions();
-    
+
     // Prepare all subscription details for the modal
     const subscriptionDetails = gym.subscriptions?.map((sub: any) => {
       let planType = 'Custom';
@@ -226,12 +227,12 @@ export function GymDiscovery() {
       else if (sub.validityDays === 7) planType = 'Weekly';
       else if (sub.validityDays === 30) planType = 'Monthly';
       else if (sub.validityDays === 365) planType = 'Yearly';
-      
+
       return {
         id: sub.id,
         planType,
         price: parseFloat(sub.price),
-        discountedPrice: sub.discountedPrice ? parseFloat(sub.discountedPrice) : undefined,
+        discountPercent: sub.discountPercent ? parseFloat(sub.discountPercent) : undefined,
         gymName: gym.name,
         validityDays: sub.validityDays,
         subscriptionId: sub.id,
@@ -259,7 +260,7 @@ export function GymDiscovery() {
 
     // Check for active subscriptions first
     const hasActive = await checkActiveSubscriptions();
-    
+
     // Get plan details
     const subscription = gym.subscriptions?.find((sub: any) => sub.validityDays === validityDays);
     if (!subscription) {
@@ -272,7 +273,7 @@ export function GymDiscovery() {
       id: subscription.id,
       planType,
       price: parseFloat(subscription.price),
-      discountedPrice: subscription.discountedPrice ? parseFloat(subscription.discountedPrice) : undefined,
+      discountPercent: subscription.discountPercent ? parseFloat(subscription.discountPercent) : undefined,
       gymName: gym.name,
       validityDays,
       subscriptionId: subscription.id,
@@ -326,9 +327,9 @@ export function GymDiscovery() {
     setCurrentGym(gym);
     setSelectedPlan({
       subscriptionId: subscription.id.toString(),
-      planType: plan.period === 'day' ? 'Daily' : 
-                plan.period === 'week' ? 'Weekly' : 
-                plan.period === 'month' ? 'Monthly' : 'Yearly',
+      planType: plan.period === 'day' ? 'Daily' :
+        plan.period === 'week' ? 'Weekly' :
+          plan.period === 'month' ? 'Monthly' : 'Yearly',
       amount: plan.price,
       gymName: gym.name
     });
@@ -349,16 +350,16 @@ export function GymDiscovery() {
   // Handle payment confirmation
   const handleConfirmPurchase = async (paymentMethod: string, subscriptionId: string) => {
     if (!selectedSubscriptions.length || !user) return;
-    
+
     const selectedSub = selectedSubscriptions.find(sub => sub.id === subscriptionId);
     if (!selectedSub) return;
 
     setIsProcessingPayment(true);
-    
+
     try {
       // Create payment
-      const finalPrice = selectedSub.discountedPrice || selectedSub.price;
-      
+      const finalPrice = selectedSub.discountPercent || selectedSub.price;
+
       const paymentResponse = await paymentService.createPayment({
         userId: user.id,
         amount: finalPrice,
@@ -434,18 +435,18 @@ export function GymDiscovery() {
           ? Math.min(...gym.subscriptions.map(sub => parseFloat(sub.price) || 0))
           : 0,
         // Create plans object for backward compatibility with discount logic
-        plans: gym.subscriptions && gym.subscriptions.length > 0 
+        plans: gym.subscriptions && gym.subscriptions.length > 0
           ? {
-              daily: gym.subscriptions.find(sub => sub.validityDays === 1) ? parseFloat(gym.subscriptions.find(sub => sub.validityDays === 1).price) : 0,
-              weekly: gym.subscriptions.find(sub => sub.validityDays === 7) ? parseFloat(gym.subscriptions.find(sub => sub.validityDays === 7).price) : 0,
-              monthly: gym.subscriptions.find(sub => sub.validityDays === 30) ? parseFloat(gym.subscriptions.find(sub => sub.validityDays === 30).price) : gym.subscriptions.length > 0 ? parseFloat(gym.subscriptions[0].price) : 0,
-              yearly: gym.subscriptions.find(sub => sub.validityDays === 365) ? parseFloat(gym.subscriptions.find(sub => sub.validityDays === 365).price) : 0,
-              // Add discounted prices from database
-              dailyDiscounted: gym.subscriptions.find(sub => sub.validityDays === 1)?.discountedPrice ? parseFloat(gym.subscriptions.find(sub => sub.validityDays === 1).discountedPrice) : null,
-              weeklyDiscounted: gym.subscriptions.find(sub => sub.validityDays === 7)?.discountedPrice ? parseFloat(gym.subscriptions.find(sub => sub.validityDays === 7).discountedPrice) : null,
-              monthlyDiscounted: gym.subscriptions.find(sub => sub.validityDays === 30)?.discountedPrice ? parseFloat(gym.subscriptions.find(sub => sub.validityDays === 30).discountedPrice) : gym.subscriptions.length > 0 && gym.subscriptions[0].discountedPrice ? parseFloat(gym.subscriptions[0].discountedPrice) : null,
-              yearlyDiscounted: gym.subscriptions.find(sub => sub.validityDays === 365)?.discountedPrice ? parseFloat(gym.subscriptions.find(sub => sub.validityDays === 365).discountedPrice) : null
-            }
+            daily: gym.subscriptions.find(sub => sub.validityDays === 1) ? parseFloat(gym.subscriptions.find(sub => sub.validityDays === 1).price) : 0,
+            weekly: gym.subscriptions.find(sub => sub.validityDays === 7) ? parseFloat(gym.subscriptions.find(sub => sub.validityDays === 7).price) : 0,
+            monthly: gym.subscriptions.find(sub => sub.validityDays === 30) ? parseFloat(gym.subscriptions.find(sub => sub.validityDays === 30).price) : gym.subscriptions.length > 0 ? parseFloat(gym.subscriptions[0].price) : 0,
+            yearly: gym.subscriptions.find(sub => sub.validityDays === 365) ? parseFloat(gym.subscriptions.find(sub => sub.validityDays === 365).price) : 0,
+            // Add discounted prices from database
+            dailyDiscounted: gym.subscriptions.find(sub => sub.validityDays === 1)?.discountPercent ? parseFloat(gym.subscriptions.find(sub => sub.validityDays === 1).discountPercent) : null,
+            weeklyDiscounted: gym.subscriptions.find(sub => sub.validityDays === 7)?.discountPercent ? parseFloat(gym.subscriptions.find(sub => sub.validityDays === 7).discountPercent) : null,
+            monthlyDiscounted: gym.subscriptions.find(sub => sub.validityDays === 30)?.discountPercent ? parseFloat(gym.subscriptions.find(sub => sub.validityDays === 30).discountPercent) : gym.subscriptions.length > 0 && gym.subscriptions[0].discountPercent ? parseFloat(gym.subscriptions[0].discountPercent) : null,
+            yearlyDiscounted: gym.subscriptions.find(sub => sub.validityDays === 365)?.discountPercent ? parseFloat(gym.subscriptions.find(sub => sub.validityDays === 365).discountPercent) : null
+          }
           : { daily: 0, weekly: 0, monthly: 0, yearly: 0, dailyDiscounted: null, weeklyDiscounted: null, monthlyDiscounted: null, yearlyDiscounted: null }
       };
       return gymWithDistance;
@@ -487,47 +488,62 @@ export function GymDiscovery() {
 
   return (
     <div className="p-4 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Discover with {BRAND.name}</h1>
-          <p className="text-gray-600 mt-1">{BRAND.tagline}</p>
-        </div>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-3 justify-between w-full">
-          <div className="flex bg-gray-100 rounded-lg p-1">
-            <button
-              onClick={() => setViewMode('list')}
-              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${viewMode === 'list'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
-                }`}
-            >
-              List
-            </button>
-            <button
-              onClick={() => setViewMode('map')}
-              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${viewMode === 'map'
-                  ? 'bg-white text-gray-900 shadow-sm flex'
-                  : 'text-gray-500 hover:text-gray-700 flex'
-                }`}
-            >
-              <MapIcon className="w-4 h-4 mr-1 mt-[2px]" />
-              <span className="hidden sm:inline">Map</span>
-            </button>
-          </div>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-3 justify-between">
+        <div className="flex bg-gradient-to-br from-pink-400 to-red-500 rounded-lg p-1 fixed left-4 bottom-20 z-20 text-white">
           <button
-            onClick={getCurrentLocation}
-            disabled={isLoadingLocation}
-            className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-3 sm:px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 text-sm sm:text-base"
+            onClick={() => {
+              getCurrentLocation();
+              setViewMode(viewMode === 'map' ? 'list' : 'map')
+            }}
+            className={`px-3 py-1 rounded-md text-sm font-medium transition-colors flex items-center`}
           >
-            <Navigation className="w-4 h-4" />
-            <span className="hidden sm:inline">{isLoadingLocation ? 'Locating...' : 'Update Location'}</span>
-            <span className="sm:hidden">Location</span>
+            {viewMode === 'map' ? <LayoutList className="w-4 h-4 mr-2 mb-[2px] text-white" /> : <MapIcon className="w-4 h-4 mr-2 mb-[2px] text-white" />}
+            <span>Explore in {viewMode === 'map' ? "List" : "Map"} View</span>
           </button>
         </div>
       </div>
 
+      <div className="flex items-center justify-between w-full">
+        <div>
+          <h1 className="text-base font-normal text-gray-900 font-poppins">Discover</h1>
+        </div>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-3 justify-between">
+          <div className="relative flex items-center space-x-2">
+            <div
+              className="flex items-center space-x-2 cursor-pointer"
+              onClick={() => setOpen(!open)}
+            >
+              <Filter className="w-4 h-4 text-gray-500" />
+            </div>
+
+            {open && (
+              <div className="absolute top-full right-0 mt-2 p-1 bg-white border border-gray-300 rounded-sm shadow-md w-40 z-30">
+                <button
+                  className="block w-full text-left px-3 py-2 hover:bg-gray-100 text-sm"
+                  onClick={() => { setFilter("all"); setOpen(false); }}
+                >
+                  All Gyms
+                </button>
+                <button
+                  className="block w-full text-left px-3 py-2 hover:bg-gray-100 text-sm"
+                  onClick={() => { setFilter("nearby"); setOpen(false); }}
+                >
+                  Within 5km
+                </button>
+                <button
+                  className="block w-full text-left px-3 py-2 hover:bg-gray-100 text-sm"
+                  onClick={() => { setFilter("premium"); setOpen(false); }}
+                >
+                  Premium (4.5+ rating)
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      {/* <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
@@ -558,7 +574,7 @@ export function GymDiscovery() {
             </select>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Current Location Coordinates Display */}
       {currentLocation && showCoordinates && (
@@ -600,19 +616,6 @@ export function GymDiscovery() {
         </div>
       )}
 
-      {/* Show Coordinates Button */}
-      {/* {currentLocation && !showCoordinates && (
-        <div className="flex justify-center">
-          <button
-            onClick={() => setShowCoordinates(true)}
-            className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm"
-          >
-            <Eye className="w-4 h-4" />
-            <span>Show Location Coordinates</span>
-          </button>
-        </div>
-      )} */}
-
       {/* Content */}
       {viewMode === 'map' ? (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -631,97 +634,68 @@ export function GymDiscovery() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {filteredAndSortedGyms.map((gym) => (
-            <div key={gym.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-              <div className="relative h-48">
-                {/* Use GymImageCarousel component to display all images */}
-                <GymImageCarousel 
+            <div key={gym.id} className="bg-white rounded-sm shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow font-poppins">
+              <div className="relative h-32">
+                <GymImageCarousel
                   images={gym.images || []}
                   gymName={gym.name}
                   className="w-full h-full"
                   fallbackImage={gym.image || '/images/gyms/placeholder-gym.jpg'}
                 />
-                <div className="absolute top-4 right-4 bg-white rounded-full px-3 py-1 flex items-center space-x-1">
-                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                  <span className="text-sm font-medium">{gym.rating}</span>
-                </div>
                 {gym.plans.monthlyDiscounted && (
-                  <div className="absolute top-4 left-4 bg-red-500 text-white px-2 py-1 rounded-lg text-xs font-bold">
-                    {Math.round(((gym.plans.monthly - gym.plans.monthlyDiscounted) / gym.plans.monthly) * 100)}% OFF
+                  <div className="absolute bottom-2 right-2 rounded-full px-3 py-1 flex items-center space-x-1">
+                    <div className="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs font-medium">
+                      {Math.round(gym.plans.monthlyDiscounted)}% OFF
+                    </div>
                   </div>
                 )}
               </div>
 
               <div className="p-4 sm:p-6">
-                <div className="flex flex-col items-start justify-between mb-3">
+                <div className="flex flex-col items-start justify-between">
                   <div>
-                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900">{gym.name}</h3>
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-1">{gym.name}</h3>
                     <div className="flex items-start text-gray-500 mt-1">
                       <MapPin className="w-4 h-4 mr-1 mt-0.5 flex-shrink-0" />
                       <span className="text-sm break-words">{gym.address}</span>
                     </div>
                     {currentLocation && (
-                      <p className="text-sm text-green-600 mt-1">
-                        {gym.distance.toFixed(1)} km away
-                      </p>
-                    )}
-                    {/* Amenities */}
-                    <div className="mt-4 mb-4">
-                      <div className="flex flex-wrap gap-2">
-                        {gym.amenities && gym.amenities.slice(0, 3).map((amenity, index) => (
-                          <span
-                            key={index}
-                            className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full"
-                          >
-                            {typeof amenity === 'string' ? amenity : amenity.name}
-                          </span>
-                        ))}
-                        {gym.amenities && gym.amenities.length > 3 && (
-                          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                            +{gym.amenities.length - 3} more
-                          </span>
-                        )}
+                      <div className="flex items-start text-gray-500 mt-1">
+                        <DraftingCompass className="w-4 h-4 mr-1 mt-0.5 flex-shrink-0" />
+                        <span className="text-sm break-words">{gym.distance.toFixed(1)} km away</span>
                       </div>
-                    </div>
+                    )}
                   </div>
                   {/* Operating Hours & Price */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between text-sm text-gray-600 mb-4 gap-2">
-                    {/* <div className="flex items-center space-x-1">
-                      <Clock className="w-4 h-4" />
-                      <span>{gym.operatingHours.open} - {gym.operatingHours.close}</span>
-                    </div> */}
                     <div className="flex flex-col items-start space-y-1">
-                      <div className="flex items-center space-x-2">
-                        <IndianRupee className="w-4 h-4" />
+                      <div className="flex items-center space-x-1 mt-2 font-semibold">
+                        <IndianRupee className="w-4 h-4 font-semibold" />
                         {gym.plans.monthlyDiscounted ? (
                           <div className="flex items-center space-x-2">
                             <span className="line-through text-gray-400 text-sm">₹{gym.plans.monthly}</span>
-                            <span className="text-green-600 font-bold">₹{gym.plans.monthlyDiscounted}</span>
-                            <span className="text-xs">/month</span>
+                            <span className="text-green-600 font-bold">{Math.round(gym.plans.monthly - (gym.plans.monthlyDiscounted * gym.plans.monthly / 100))}</span>
+                            <span className="text-xs -pl-2">/month</span>
                           </div>
                         ) : (
-                          <span>₹{gym.plans.monthly}/month</span>
+                          <span>{gym.plans.monthly}/month</span>
                         )}
                       </div>
-                      {gym.plans.monthlyDiscounted && (
-                        <div className="bg-red-100 text-red-600 px-2 py-1 rounded-full text-xs font-medium">
-                          {Math.round(((gym.plans.monthly - gym.plans.monthlyDiscounted) / gym.plans.monthly) * 100)}% OFF
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
 
                 {/* Actions */}
-                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                <div className="flex flex-row sm:flex-row gap-1">
                   <button
                     onClick={() => handleViewDetails(gym)}
-                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors text-sm sm:text-base"
+                    className="flex-1 bg-gradient-to-br from-gray-100 to-gray-200 text-gray-700 font-medium py-2 px-4 rounded-xs rounded-r-none transition-colors text-sm sm:text-base"
                   >
                     View Details
                   </button>
-                  <button 
+                  <button
                     onClick={() => handleShowSubscriptions(gym)}
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm sm:text-base"
+                    className="flex-1 bg-gradient-to-br from-pink-400 to-red-500 text-white font-medium py-2 px-4 rounded-xs rounded-l-none transition-colors text-sm sm:text-base"
                   >
                     Subscribe
                   </button>
@@ -729,7 +703,7 @@ export function GymDiscovery() {
 
                 {/* Expanded Details */}
                 {selectedGym?.id === gym.id && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="mt-4 pt-4 border-t border-gray-200 hidden">
                     <h4 className="font-medium text-gray-900 mb-3">All Amenities</h4>
                     <div className="grid grid-cols-2 gap-2 mb-4">
                       {gym.amenities && gym.amenities.map((amenity, index) => (
@@ -743,7 +717,7 @@ export function GymDiscovery() {
                     <h4 className="font-medium text-gray-900 mb-4">Pricing Plans</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
                       {gym.plans.daily > 0 && (
-                        <div 
+                        <div
                           onClick={() => handlePlanClick(gym, 'Daily', 1)}
                           className="relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-3 sm:p-4 border border-gray-200 hover:shadow-md transition-shadow min-h-[120px] flex flex-col justify-center cursor-pointer hover:border-green-300">
                           {gym.subscriptions.find(sub => sub.validityDays === 1)?.isMostPopular && (
@@ -774,9 +748,9 @@ export function GymDiscovery() {
                           </div>
                         </div>
                       )}
-                      
+
                       {gym.plans.weekly > 0 && (
-                        <div 
+                        <div
                           onClick={() => handlePlanClick(gym, 'Weekly', 7)}
                           className="relative bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-3 sm:p-4 border border-purple-200 hover:shadow-md transition-shadow min-h-[120px] flex flex-col justify-center cursor-pointer hover:border-green-300">
                           {gym.subscriptions.find(sub => sub.validityDays === 7)?.isMostPopular && (
@@ -807,9 +781,9 @@ export function GymDiscovery() {
                           </div>
                         </div>
                       )}
-                      
+
                       {gym.plans.monthly > 0 && (
-                        <div 
+                        <div
                           onClick={() => handlePlanClick(gym, 'Monthly', 30)}
                           className="relative bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-3 sm:p-4 border-2 border-green-300 hover:shadow-lg transition-shadow min-h-[120px] flex flex-col justify-center cursor-pointer hover:border-green-400">
                           {gym.subscriptions.find(sub => sub.validityDays === 30)?.isMostPopular && (
@@ -835,9 +809,9 @@ export function GymDiscovery() {
                           </div>
                         </div>
                       )}
-                      
+
                       {gym.plans.yearly > 0 && (
-                        <div 
+                        <div
                           onClick={() => handlePlanClick(gym, 'Yearly', 365)}
                           className="relative bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-3 sm:p-4 border border-blue-200 hover:shadow-md transition-shadow min-h-[120px] flex flex-col justify-center cursor-pointer hover:border-green-300">
                           <div className="text-center">
@@ -889,7 +863,7 @@ export function GymDiscovery() {
               setSelectedPlan({
                 subscriptionId: selectedSub.subscriptionId,
                 planType: selectedSub.planType,
-                amount: selectedSub.discountedPrice || selectedSub.price,
+                amount: selectedSub.discountPercent || selectedSub.price,
                 gymName: selectedSub.gymName
               });
               setIsPurchaseModalOpen(false);

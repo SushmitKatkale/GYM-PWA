@@ -396,7 +396,7 @@ export const MainDashboard: React.FC = () => {
         </div>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto pb-[5rem] md:pb-0">
+        <main className="flex-1 overflow-y-auto pb-[5rem] md:pb-0 relative">
           {/* Mobile Header */}
           <div className="md:hidden px-4 pt-3 sticky top-0 z-40">
             <div className="flex items-center justify-between">

@@ -44,11 +44,16 @@ export function AdvertisementManagement() {
   // Handle search - manual search only
   const handleSearch = () => {
     const searchFilters = {
-      search: searchTerm,
+      search: searchTerm.trim() || undefined,
       status: filters.status,
       adType: filters.adType,
+      targetAudience: filters.targetAudience,
       startDate: filters.startDate,
       endDate: filters.endDate,
+      minBudget: filters.minBudget,
+      maxBudget: filters.maxBudget,
+      sortBy: filters.sortBy || 'created_at',
+      sortOrder: filters.sortOrder || 'DESC',
     };
     
     // Remove undefined values from filters
@@ -274,9 +279,9 @@ export function AdvertisementManagement() {
       <div className="space-y-4">
         {/* Filter Controls - Always Visible */}
         <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Advertisement Title</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
               <div className="relative">
                 <input
                   type="text"
@@ -321,6 +326,22 @@ export function AdvertisementManagement() {
             </div>
 
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Target Audience</label>
+              <select
+                value={filters.targetAudience || ''}
+                onChange={(e) => handleFilterChange('targetAudience', e.target.value || undefined)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-sm"
+              >
+                <option value="">All Audiences</option>
+                <option value="all">All</option>
+                <option value="members">Members</option>
+                <option value="gym_owners">Gym Owners</option>
+                <option value="specific_gyms">Specific Gyms</option>
+                <option value="location_based">Location Based</option>
+              </select>
+            </div>
+
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
               <input
                 type="date"
@@ -338,6 +359,60 @@ export function AdvertisementManagement() {
                 onChange={(e) => handleFilterChange('endDate', e.target.value || undefined)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               />
+            </div>
+          </div>
+
+          {/* Budget Filter Row */}
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Min Budget</label>
+              <input
+                type="number"
+                placeholder="Min budget"
+                value={filters.minBudget || ''}
+                onChange={(e) => handleFilterChange('minBudget', e.target.value ? parseFloat(e.target.value) : undefined)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Max Budget</label>
+              <input
+                type="number"
+                placeholder="Max budget"
+                value={filters.maxBudget || ''}
+                onChange={(e) => handleFilterChange('maxBudget', e.target.value ? parseFloat(e.target.value) : undefined)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
+              <select
+                value={filters.sortBy || 'created_at'}
+                onChange={(e) => handleFilterChange('sortBy', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-sm"
+              >
+                <option value="created_at">Created Date</option>
+                <option value="updated_at">Updated Date</option>
+                <option value="title">Title</option>
+                <option value="status">Status</option>
+                <option value="budget">Budget</option>
+                <option value="clicks">Clicks</option>
+                <option value="impressions">Impressions</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Sort Order</label>
+              <select
+                value={filters.sortOrder || 'DESC'}
+                onChange={(e) => handleFilterChange('sortOrder', e.target.value as 'ASC' | 'DESC')}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-sm"
+              >
+                <option value="DESC">Newest First</option>
+                <option value="ASC">Oldest First</option>
+              </select>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center mt-6">
@@ -548,8 +623,8 @@ export function AdvertisementManagement() {
                           {ad.media && ad.media.length > 0 ? (
                             <img
                               className="h-12 w-12 rounded-lg object-cover"
-                              src={ad.media[0].mediaUrl}
-                              alt={ad.media[0].mediaAltText || ad.title}
+                              src={ad.media[0].url || ad.media[0].location}
+                              alt={ad.media[0].alt_text || ad.title}
                             />
                           ) : (
                             <div className="h-12 w-12 rounded-lg bg-gray-200 flex items-center justify-center">
@@ -584,13 +659,18 @@ export function AdvertisementManagement() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        {ad.budget && typeof ad.budget === 'number' ? `$${ad.budget.toFixed(2)}` : 'Not set'}
+                        {ad.budget ? (typeof ad.budget === 'number' ? `$${ad.budget.toFixed(2)}` : ad.budget) : 'Not set'}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        {new Date(ad.createTimestamp).toLocaleDateString()}
+                        {new Date(ad.created_at).toLocaleDateString()}
                       </div>
+                      {ad.creator && (
+                        <div className="text-xs text-gray-500">
+                          by {ad.creator.firstName} {ad.creator.lastName}
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">

@@ -9,7 +9,8 @@ export interface Notification {
   category?: 'subscription' | 'class' | 'workout' | 'payment' | 'system' | 'promotion' | 'reminder' | 'security';
   priority: 'low' | 'normal' | 'high' | 'urgent';
   recipientEmail?: string;
-  recipientRole?: '1' | '2' | '3'; // 1=user, 2=owner, 3=admin
+  recipientRole?: 1 | 2 | 3 | 4; // Updated to use numeric roles: 1=member, 2=owner, 3=trainer, 4=admin
+  senderEmail?: string; // Added missing field from backend
   isRead: boolean;
   readAt?: string;
   gymId?: number;
@@ -19,10 +20,16 @@ export interface Notification {
   imageUrl?: string;
   isGlobal: boolean;
   deliveryChannels: string[];
-  deliveryStatus?: Record<string, string>;
+  deliveryStatus?: Record<string, any>; // Updated to allow objects from globalDelivery
   scheduledFor?: string;
   expiresAt?: string;
   tags?: string[];
+  data?: any; // Additional data payload
+  // Backend uses snake_case field names
+  created_at: string;
+  updated_at: string;
+  recipient_id?: number;
+  // Frontend convenience properties
   createTimestamp: string;
   updateTimestamp: string;
 }
@@ -45,7 +52,8 @@ export interface CreateNotificationRequest {
   category?: 'subscription' | 'class' | 'workout' | 'payment' | 'system' | 'promotion' | 'reminder' | 'security';
   priority?: 'low' | 'normal' | 'high' | 'urgent';
   recipientEmail?: string;
-  recipientRole?: '1' | '2' | '3';
+  recipientRole?: 1 | 2 | 3 | 4; // Updated to numeric: 1=member, 2=owner, 3=trainer, 4=admin
+  senderEmail?: string; // Added missing field from backend
   isGlobal?: boolean;
   isRead?: boolean;
   readAt?: string;
@@ -55,7 +63,7 @@ export interface CreateNotificationRequest {
   iconUrl?: string;
   imageUrl?: string;
   deliveryChannels?: string[];
-  deliveryStatus?: Record<string, string>;
+  deliveryStatus?: Record<string, any>;
   scheduledFor?: string;
   expiresAt?: string;
   tags?: string[];
@@ -71,7 +79,7 @@ export interface BulkNotificationRequest {
   category?: 'subscription' | 'class' | 'workout' | 'payment' | 'system' | 'promotion' | 'reminder' | 'security';
   priority?: 'low' | 'normal' | 'high' | 'urgent';
   userEmails?: string[];
-  role?: '1' | '2' | '3';
+  role?: 1 | 2 | 3 | 4; // Updated to numeric: 1=member, 2=owner, 3=trainer, 4=admin
   gymId?: number;
   deliveryChannels?: string[];
   data?: any;
@@ -100,6 +108,31 @@ export interface NotificationListResponse {
 
 class NotificationService {
   private baseUrl = '/notifications';
+
+  // Transform backend notification data to frontend format
+  private transformNotification(backendNotification: any): Notification {
+    const notification = {
+      ...backendNotification,
+      // Add frontend convenience fields
+      createTimestamp: backendNotification.created_at || backendNotification.createTimestamp || new Date().toISOString(),
+      updateTimestamp: backendNotification.updated_at || backendNotification.updateTimestamp || new Date().toISOString(),
+      // Ensure required fields have defaults
+      deliveryChannels: backendNotification.deliveryChannels || ['push'],
+      isGlobal: backendNotification.isGlobal || false,
+      priority: backendNotification.priority || 'normal',
+      type: backendNotification.type || 'info'
+    };
+    return notification;
+  }
+
+  // Transform frontend notification data for backend
+  private transformForBackend(frontendData: CreateNotificationRequest): any {
+    return {
+      ...frontendData,
+      // Convert role to string for backend compatibility if needed
+      recipientRole: frontendData.recipientRole ? frontendData.recipientRole.toString() : undefined
+    };
+  }
 
   // User notification methods
   async getUserNotifications(params?: {
@@ -174,7 +207,8 @@ class NotificationService {
 
   // Admin methods
   async createNotification(data: CreateNotificationRequest): Promise<NotificationResponse> {
-    return apiClient.post(`${this.baseUrl}/admin/create`, data);
+    const transformedData = this.transformForBackend(data);
+    return apiClient.post(`${this.baseUrl}/admin/create`, transformedData);
   }
 
   async getAllNotifications(params?: {
@@ -206,6 +240,14 @@ class NotificationService {
         hasData: !!response.data,
         hasPagination: !!response.data?.pagination
       });
+      
+      // Transform notification data if response is successful
+      if (response.success && response.data?.notifications) {
+        response.data.notifications = response.data.notifications.map((notification: any) => 
+          this.transformNotification(notification)
+        );
+      }
+      
       return response;
     } catch (error) {
       console.error('🔍 API call failed:', error);
@@ -214,7 +256,12 @@ class NotificationService {
   }
 
   async sendBulkNotification(data: BulkNotificationRequest): Promise<NotificationResponse> {
-    return apiClient.post(`${this.baseUrl}/admin/bulk-send`, data);
+    const transformedData = {
+      ...data,
+      // Convert role to string for backend compatibility if needed
+      role: data.role ? data.role.toString() : undefined
+    };
+    return apiClient.post(`${this.baseUrl}/admin/bulk-send`, transformedData);
   }
 
   async cleanupExpiredNotifications(): Promise<{
@@ -225,6 +272,21 @@ class NotificationService {
     };
   }> {
     return apiClient.post(`${this.baseUrl}/admin/cleanup`);
+  }
+
+  // Scheduler management methods
+  async getSchedulerStatus(): Promise<{
+    success: boolean;
+    data: {
+      isRunning: boolean;
+      nextRun: string | null;
+    };
+  }> {
+    return apiClient.get(`${this.baseUrl}/admin/scheduler/status`);
+  }
+
+  async triggerScheduledProcessing(): Promise<NotificationResponse> {
+    return apiClient.post(`${this.baseUrl}/admin/scheduler/trigger`);
   }
 
   // Utility methods

@@ -493,7 +493,13 @@ export const useAdvertisementStore = create<AdvertisementState>()(
               get().fetchAdvertisementById(advertisementId);
             }
             
-            return response.data;
+            // Also refresh the advertisements list to show updated media
+            get().fetchAdvertisements(get().pagination.currentPage, get().pagination.limit, get().filters);
+            
+            return {
+              mediaUrl: response.data.mediaUrl,
+              mediaId: response.data.id
+            };
           } else {
             set({ error: response.message });
             return null;
