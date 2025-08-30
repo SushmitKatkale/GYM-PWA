@@ -48,7 +48,7 @@ export function ProfileSettings({ activeSettingsTab = 'profile', onTabChange }: 
   const [isLoading, setIsLoading] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [availableFitnessGoals, setAvailableFitnessGoals] = useState<any[]>([]);
-  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [profileImage, setProfileImage] = useState<string | null>(user?.profileImage ?? null);
   const [isImageUploading, setIsImageUploading] = useState(false);
 
   // Profile data
@@ -157,6 +157,8 @@ export function ProfileSettings({ activeSettingsTab = 'profile', onTabChange }: 
           // Load current profile image if available
           try {
             const imageUrl = await userService.getProfileImageUrl();
+            console.log('Loaded profile image URL:', imageUrl);
+            
             setProfileImage(imageUrl);
           } catch (error) {
             // Profile image not found or error occurred - this is OK

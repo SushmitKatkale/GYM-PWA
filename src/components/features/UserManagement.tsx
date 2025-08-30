@@ -40,7 +40,7 @@ export function UserManagement() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [userTypeFilter, setUserTypeFilter] = useState('');
-  const [activeStatusFilter, setActiveStatusFilter] = useState('');
+  const [recordStatusFilter, setRecordStatusFilter] = useState(''); // Changed from activeStatusFilter
   const [verifiedFilter, setVerifiedFilter] = useState('');
   const [dateRangeFilter, setDateRangeFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -55,7 +55,7 @@ export function UserManagement() {
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [viewUserId, setViewUserId] = useState<string | null>(null);
-  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]); // Changed to number[]
 
   // Stats
   const [stats, setStats] = useState({
@@ -71,8 +71,8 @@ export function UserManagement() {
       const filters: UserFilters = {};
       
       // Build filters
-      if (userTypeFilter) filters.type = userTypeFilter as '1' | '2' | '3';
-      if (activeStatusFilter) filters.activeStatus = activeStatusFilter === 'true';
+      if (userTypeFilter) filters.type = userTypeFilter as '1' | '2' | '3' | '4';
+      if (recordStatusFilter) filters.recordStatus = recordStatusFilter as '0' | '1';
       if (verifiedFilter) filters.isVerified = verifiedFilter === 'true';
       if (searchTerm.includes('@')) {
         filters.email = searchTerm;
@@ -136,6 +136,7 @@ export function UserManagement() {
       }
     } catch (error) {
       console.error('Failed to load users:', error);
+      setUsers([]);
     } finally {
       setLoading(false);
     }
@@ -164,7 +165,7 @@ export function UserManagement() {
   const clearAllFilters = async () => {
     setSearchTerm('');
     setUserTypeFilter('');
-    setActiveStatusFilter('');
+    setRecordStatusFilter('');
     setVerifiedFilter('');
     setDateRangeFilter('');
     setCurrentPage(1);
@@ -195,7 +196,7 @@ export function UserManagement() {
     }
   };
 
-  const hasActiveFilters = userTypeFilter || activeStatusFilter || verifiedFilter || dateRangeFilter || searchTerm;
+  const hasActiveFilters = userTypeFilter || recordStatusFilter || verifiedFilter || dateRangeFilter || searchTerm;
 
   const handleCreateUser = () => {
     setShowCreateModal(true);
@@ -216,7 +217,7 @@ export function UserManagement() {
     setShowActivityModal(true);
   };
 
-  const handleToggleUserSelection = (userId: string) => {
+  const handleToggleUserSelection = (userId: number) => {
     setSelectedUserIds(prev => 
       prev.includes(userId) 
         ? prev.filter(id => id !== userId)
@@ -243,16 +244,18 @@ export function UserManagement() {
       
       switch (action) {
         case 'activate':
-          response = await adminUserService.activateUser(user.email);
+          response = await adminUserService.activateUser(user.id);
+          loadUsers(currentPage);
           break;
         case 'deactivate':
-          response = await adminUserService.deactivateUser(user.email);
+          response = await adminUserService.deactivateUser(user.id);
+          loadUsers(currentPage);
           break;
         case 'verify':
-          response = await adminUserService.verifyUser(user.email);
+          response = await adminUserService.verifyUser(user.id);
           break;
         case 'unverify':
-          response = await adminUserService.unverifyUser(user.email);
+          response = await adminUserService.unverifyUser(user.id);
           break;
         default:
           return;
@@ -269,19 +272,20 @@ export function UserManagement() {
     }
   };
 
-  const getUserTypeBadge = (type: string) => {
+  const getUserTypeBadge = (role: number) => {
     const badges = {
-      '1': { label: 'User', class: 'bg-blue-100 text-blue-800', icon: User },
-      '2': { label: 'Owner', class: 'bg-purple-100 text-purple-800', icon: Building },
-      '3': { label: 'Admin', class: 'bg-red-100 text-red-800', icon: Crown },
+      1: { label: 'Member', class: 'bg-blue-100 text-blue-800', icon: User },
+      2: { label: 'Owner', class: 'bg-purple-100 text-purple-800', icon: Building },
+      3: { label: 'Admin', class: 'bg-red-100 text-red-800', icon: Crown },
+      4: { label: 'Trainer', class: 'bg-green-100 text-green-800', icon: Activity },
     };
-    return badges[type as keyof typeof badges] || badges['1'];
+    return badges[role as keyof typeof badges] || badges[1];
   };
 
   const getStatusIcon = (user: AdminUser) => {
-    if (user.activeStatus === '1' && user.isVerified) {
+    if (user.recordStatus === 1 && user.isVerified) {
       return <CheckCircle className="w-4 h-4 text-green-600" />;
-    } else if (user.activeStatus === '1') {
+    } else if (user.recordStatus === 1) {
       return <AlertCircle className="w-4 h-4 text-yellow-600" />;
     } else {
       return <XCircle className="w-4 h-4 text-red-600" />;
@@ -291,8 +295,8 @@ export function UserManagement() {
   const handleExportUsers = async () => {
     try {
       const filters: UserFilters = {};
-      if (userTypeFilter) filters.type = userTypeFilter as '1' | '2' | '3';
-      if (activeStatusFilter) filters.activeStatus = activeStatusFilter === 'true';
+      if (userTypeFilter) filters.type = userTypeFilter as '1' | '2' | '3' | '4';
+      if (recordStatusFilter) filters.recordStatus = recordStatusFilter as '0' | '1';
       if (verifiedFilter) filters.isVerified = verifiedFilter === 'true';
       
       // The exportUsers method now handles the download directly
@@ -414,22 +418,23 @@ export function UserManagement() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-sm"
               >
                 <option value="">All Types</option>
-                <option value="1">Regular Users</option>
+                <option value="1">Members</option>
                 <option value="2">Gym Owners</option>
                 <option value="3">Admins</option>
+                <option value="4">Trainers</option>
               </select>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Active Status</label>
               <select
-                value={activeStatusFilter}
-                onChange={(e) => setActiveStatusFilter(e.target.value)}
+                value={recordStatusFilter}
+                onChange={(e) => setRecordStatusFilter(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-sm"
               >
                 <option value="">All Status</option>
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
+                <option value="1">Active</option>
+                <option value="0">Inactive</option>
               </select>
             </div>
 
@@ -489,7 +494,7 @@ export function UserManagement() {
               {hasActiveFilters && (
                 <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
                   <Filter className="w-3 h-3 mr-1" />
-                  {[userTypeFilter, activeStatusFilter, verifiedFilter, dateRangeFilter, searchTerm].filter(Boolean).length} filter{[userTypeFilter, activeStatusFilter, verifiedFilter, dateRangeFilter, searchTerm].filter(Boolean).length !== 1 ? 's' : ''} active
+                  {[userTypeFilter, recordStatusFilter, verifiedFilter, dateRangeFilter, searchTerm].filter(Boolean).length} filter{[userTypeFilter, recordStatusFilter, verifiedFilter, dateRangeFilter, searchTerm].filter(Boolean).length !== 1 ? 's' : ''} active
                 </span>
               )}
             </p>
@@ -545,7 +550,7 @@ export function UserManagement() {
                 </tr>
               ) : (
                 users.map((user) => {
-                  const typeBadge = getUserTypeBadge(user.type);
+                  const typeBadge = getUserTypeBadge(user.role);
                   const TypeIcon = typeBadge.icon;
                   
                   return (
@@ -578,10 +583,10 @@ export function UserManagement() {
                           <Mail className="w-4 h-4 text-gray-400 mr-2" />
                           {user.email}
                         </div>
-                        {user.phoneNumber && (
+                        {user.phone && (
                           <div className="flex items-center text-sm text-gray-500">
                             <Phone className="w-4 h-4 text-gray-400 mr-2" />
-                            {user.phoneNumber}
+                            {user.phone}
                           </div>
                         )}
                       </td>
@@ -594,9 +599,9 @@ export function UserManagement() {
                           <div className="flex items-center space-x-2">
                             {getStatusIcon(user)}
                             <span className={`text-xs ${
-                              user.activeStatus === '1' ? 'text-green-600' : 'text-red-600'
+                              user.recordStatus === 1 ? 'text-green-600' : 'text-red-600'
                             }`}>
-                              {user.activeStatus === '1' ? 'Active' : 'Inactive'}
+                              {user.recordStatus === 1 ? 'Active' : 'Inactive'}
                             </span>
                             {user.isVerified && (
                               <span className="text-xs text-blue-600">• Verified</span>
@@ -607,7 +612,7 @@ export function UserManagement() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center text-sm text-gray-500">
                           <Calendar className="w-4 h-4 mr-2" />
-                          {new Date(user.createTimestamp).toLocaleDateString()}
+                          {new Date(user.created_at).toLocaleDateString()}
                         </div>
                         {user.lastLoginAt && (
                           <div className="text-xs text-gray-400 mt-1">
@@ -638,7 +643,7 @@ export function UserManagement() {
                           >
                             <Activity className="w-4 h-4" />
                           </button>
-                          {user.activeStatus === '1' ? (
+                          {user.recordStatus === 1 ? (
                             <button
                               onClick={() => handleQuickAction('deactivate', user)}
                               className="text-red-600 hover:text-red-900 p-1"
@@ -679,7 +684,7 @@ export function UserManagement() {
           </div>
         ) : (
           users.map((user) => {
-            const typeBadge = getUserTypeBadge(user.type);
+            const typeBadge = getUserTypeBadge(user.role);
             const TypeIcon = typeBadge.icon;
             
             return (
@@ -718,24 +723,24 @@ export function UserManagement() {
                     <Mail className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
                     <span className="truncate">{user.email}</span>
                   </div>
-                  {user.phoneNumber && (
+                  {user.phone && (
                     <div className="flex items-center text-sm text-gray-600">
                       <Phone className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
-                      <span>{user.phoneNumber}</span>
+                      <span>{user.phone}</span>
                     </div>
                   )}
                   <div className="flex items-center text-sm text-gray-600">
                     <Calendar className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
-                    <span>Joined {new Date(user.createTimestamp).toLocaleDateString()}</span>
+                    <span>Joined {new Date(user.created_at).toLocaleDateString()}</span>
                   </div>
                 </div>
 
                 {/* Status badges */}
                 <div className="flex items-center space-x-2 mb-4">
                   <span className={`inline-flex items-center px-2 py-1 text-xs rounded-full ${
-                    user.activeStatus === '1' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    user.recordStatus === 1 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                   }`}>
-                    {user.activeStatus === '1' ? 'Active' : 'Inactive'}
+                    {user.recordStatus === 1 ? 'Active' : 'Inactive'}
                   </span>
                   {user.isVerified && (
                     <span className="inline-flex items-center px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
@@ -776,7 +781,7 @@ export function UserManagement() {
                     </button>
                   </div>
                   <div>
-                    {user.activeStatus === '1' ? (
+                    {user.recordStatus === 1 ? (
                       <button
                         onClick={() => handleQuickAction('deactivate', user)}
                         className="flex items-center px-3 py-2 text-xs bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"

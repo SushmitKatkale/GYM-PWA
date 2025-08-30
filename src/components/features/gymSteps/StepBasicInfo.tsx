@@ -17,12 +17,14 @@ interface FormData {
 interface StepBasicInfoProps {
   formData: FormData;
   onChange: (data: FormData) => void;
+  setCurrentStep: (step: number) => void;
 }
 
 const StepBasicInfo: React.FC<StepBasicInfoProps> = ({ formData, onChange, setCurrentStep }) => {
-  const { hasRole } = useAuthStore();
+  const { hasRole, user } = useAuthStore();
 
   // Check if current user is admin or owner
+  const isAdmin = hasRole('admin');
   const isOwner = hasRole('owner');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -50,12 +52,14 @@ const StepBasicInfo: React.FC<StepBasicInfoProps> = ({ formData, onChange, setCu
       <div className="flex justify-center">
         <div className="flex items-center space-x-2">
           <div onClick={() => {setCurrentStep(0)}} className="cursor-pointer w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">1</div>
-          <div className="w-16 h-1 bg-gray-200 rounded"></div>
+          <div className="w-12 h-1 bg-gray-200 rounded"></div>
           <div onClick={() => {setCurrentStep(1)}} className="cursor-pointer w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-medium">2</div>
-          <div className="w-16 h-1 bg-gray-200 rounded"></div>
+          <div className="w-12 h-1 bg-gray-200 rounded"></div>
           <div onClick={() => {setCurrentStep(2)}} className="cursor-pointer w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-medium">3</div>
-          <div className="w-16 h-1 bg-gray-200 rounded"></div>
+          <div className="w-12 h-1 bg-gray-200 rounded"></div>
           <div onClick={() => {setCurrentStep(3)}} className="cursor-pointer w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-medium">4</div>
+          <div className="w-12 h-1 bg-gray-200 rounded"></div>
+          <div onClick={() => {setCurrentStep(4)}} className="cursor-pointer w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-medium">5</div>
         </div>
       </div>
 
@@ -121,39 +125,22 @@ const StepBasicInfo: React.FC<StepBasicInfoProps> = ({ formData, onChange, setCu
           </p>
         </div>
 
-        {/* Capacity and Occupancy */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <Users className="w-4 h-4 inline mr-2" />
-              Total Capacity *
-            </label>
-            <input
-              type="number"
-              name="capacity"
-              value={formData.capacity}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="100"
-              min="1"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Current Occupancy
-            </label>
-            <input
-              type="number"
-              name="currentOccupancy"
-              value={formData.currentOccupancy}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="0"
-              min="0"
-              max={formData.capacity}
-            />
-          </div>
+        {/* Capacity */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            <Users className="w-4 h-4 inline mr-2" />
+            Total Capacity *
+          </label>
+          <input
+            type="number"
+            name="capacity"
+            value={formData.capacity}
+            onChange={handleInputChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="100"
+            min="1"
+            required
+          />
         </div>
 
         {/* Rating */}

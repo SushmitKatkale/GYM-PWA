@@ -38,19 +38,20 @@ export function ViewUserModal({ isOpen, onClose, userId }: ViewUserModalProps) {
     }
   };
 
-  const getUserTypeBadge = (type: string) => {
+  const getUserRoleBadge = (role: 1 | 2 | 3 | 4) => {
     const badges = {
-      '1': { label: 'Regular User', class: 'bg-blue-100 text-blue-800', icon: User },
-      '2': { label: 'Gym Owner', class: 'bg-purple-100 text-purple-800', icon: Building },
-      '3': { label: 'Admin', class: 'bg-red-100 text-red-800', icon: Crown },
+      1: { label: 'Member', class: 'bg-blue-100 text-blue-800', icon: User },
+      2: { label: 'Gym Owner', class: 'bg-purple-100 text-purple-800', icon: Building },
+      3: { label: 'Trainer', class: 'bg-green-100 text-green-800', icon: User },
+      4: { label: 'Admin', class: 'bg-red-100 text-red-800', icon: Crown },
     };
-    return badges[type as keyof typeof badges] || badges['1'];
+    return badges[role] || badges[1];
   };
 
   const getStatusIcon = (user: AdminUser) => {
-    if (user.activeStatus === '1' && user.isVerified) {
+    if (user.recordStatus === 1 && user.isVerified) {
       return <CheckCircle className="w-5 h-5 text-green-600" />;
-    } else if (user.activeStatus === '1') {
+    } else if (user.recordStatus === 1) {
       return <AlertCircle className="w-5 h-5 text-yellow-600" />;
     } else {
       return <XCircle className="w-5 h-5 text-red-600" />;
@@ -58,9 +59,9 @@ export function ViewUserModal({ isOpen, onClose, userId }: ViewUserModalProps) {
   };
 
   const getStatusText = (user: AdminUser) => {
-    if (user.activeStatus === '1' && user.isVerified) {
+    if (user.recordStatus === 1 && user.isVerified) {
       return { text: 'Active & Verified', class: 'text-green-600' };
-    } else if (user.activeStatus === '1') {
+    } else if (user.recordStatus === 1) {
       return { text: 'Active (Unverified)', class: 'text-yellow-600' };
     } else {
       return { text: 'Inactive', class: 'text-red-600' };
@@ -108,12 +109,12 @@ export function ViewUserModal({ isOpen, onClose, userId }: ViewUserModalProps) {
                       {user.firstName} {user.lastName}
                     </h4>
                     {(() => {
-                      const typeBadge = getUserTypeBadge(user.type);
-                      const TypeIcon = typeBadge.icon;
+                      const roleBadge = getUserRoleBadge(user.role);
+                      const RoleIcon = roleBadge.icon;
                       return (
-                        <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${typeBadge.class}`}>
-                          <TypeIcon className="w-3 h-3 mr-1" />
-                          {typeBadge.label}
+                        <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${roleBadge.class}`}>
+                          <RoleIcon className="w-3 h-3 mr-1" />
+                          {roleBadge.label}
                         </span>
                       );
                     })()}
@@ -143,11 +144,11 @@ export function ViewUserModal({ isOpen, onClose, userId }: ViewUserModalProps) {
                       </div>
                     </div>
 
-                    {user.phoneNumber && (
+                    {user.phone && (
                       <div className="flex items-center space-x-3">
                         <Phone className="w-4 h-4 text-gray-400" />
                         <div>
-                          <p className="text-sm font-medium text-gray-900">{user.phoneNumber}</p>
+                          <p className="text-sm font-medium text-gray-900">{user.phone}</p>
                           <p className="text-xs text-gray-500">Phone Number</p>
                         </div>
                       </div>
@@ -164,18 +165,18 @@ export function ViewUserModal({ isOpen, onClose, userId }: ViewUserModalProps) {
                       <Calendar className="w-4 h-4 text-gray-400" />
                       <div>
                         <p className="text-sm font-medium text-gray-900">
-                          {new Date(user.createTimestamp).toLocaleDateString()} at {new Date(user.createTimestamp).toLocaleTimeString()}
+                          {new Date(user.created_at).toLocaleDateString()} at {new Date(user.created_at).toLocaleTimeString()}
                         </p>
                         <p className="text-xs text-gray-500">Account Created</p>
                       </div>
                     </div>
 
-                    {user.updateTimestamp && (
+                    {user.updated_at && (
                       <div className="flex items-center space-x-3">
                         <Calendar className="w-4 h-4 text-gray-400" />
                         <div>
                           <p className="text-sm font-medium text-gray-900">
-                            {new Date(user.updateTimestamp).toLocaleDateString()} at {new Date(user.updateTimestamp).toLocaleTimeString()}
+                            {new Date(user.updated_at).toLocaleDateString()} at {new Date(user.updated_at).toLocaleTimeString()}
                           </p>
                           <p className="text-xs text-gray-500">Last Updated</p>
                         </div>
@@ -211,15 +212,15 @@ export function ViewUserModal({ isOpen, onClose, userId }: ViewUserModalProps) {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center">
                     <div className={`w-8 h-8 mx-auto mb-1 rounded-full flex items-center justify-center ${
-                      user.activeStatus === '1' ? 'bg-green-100' : 'bg-red-100'
+                      user.recordStatus === 1 ? 'bg-green-100' : 'bg-red-100'
                     }`}>
-                      {user.activeStatus === '1' ? 
+                      {user.recordStatus === 1 ? 
                         <CheckCircle className="w-4 h-4 text-green-600" /> : 
                         <XCircle className="w-4 h-4 text-red-600" />
                       }
                     </div>
                     <p className="text-xs font-medium text-gray-900">
-                      {user.activeStatus === '1' ? 'Active' : 'Inactive'}
+                      {user.recordStatus === 1 ? 'Active' : 'Inactive'}
                     </p>
                     <p className="text-xs text-gray-500">Status</p>
                   </div>

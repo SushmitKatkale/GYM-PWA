@@ -1,20 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Edit, Trash2, MapPin, X, Image, Info, Search, Filter, Star, Users, Building, Grid, List } from 'lucide-react';
+import { Plus, Edit, Trash2, MapPin, X, Image, Info, Search, Filter, Star, Users, Building, Grid, List, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
 import StepBasicInfo from './gymSteps/StepBasicInfo';
 import StepLocation from './gymSteps/StepLocation';
 import StepOperatingHours from './gymSteps/StepOperatingHours';
+import StepContactInfo from './gymSteps/StepContactInfo';
 import StepAmenities from './gymSteps/StepAmenities';
 import GymImageEditModal from './GymImageEditModal';
 import SuccessModal from '../ui/SuccessModal';
 import ErrorModal from '../ui/ErrorModal';
 import ImageUploadModal from '../ui/ImageUploadModal';
 import ConfirmationModal from '../ui/ConfirmationModal';
-import { gymService } from '../../services/gymService';
+import { gymService, Gym, GymManagementFilters, GymListResponse } from '../../services/gymService';
 import { useAuthStore } from '../../stores/authStore';
 import { buildApiUrl, API_CONFIG } from '../../config/api';
-
-// Import the Gym interface from the service
-import { Gym } from '../../services/gymService';
 
 const GymManagement = () => {
     const [gyms, setGyms] = useState<Gym[]>([]);
@@ -61,9 +59,14 @@ const GymManagement = () => {
         name: '',
         description: '',
         capacity: 0,
-        currentOccupancy: 0,
         rating: 0,
         ownerId: '',
+        email: '',
+        phone: '',
+        websiteUrl: '',
+        gstNumber: '',
+        registrationNo: '',
+        daysOpen: '',
         location: {
             address: '',
             city: '',
@@ -75,11 +78,19 @@ const GymManagement = () => {
             }
         },
         operatingHours: { open: '', close: '' },
-        plans: [] as { name: string; description: string; price: number }[],
+        plans: [] as { title: string; validityDays: number; price: number; discountPercent: number; bufferDays: number; bufferFee: number; features: any[] }[],
         amenities: [] as any[],
         images: [] as { file: File; previewUrl: string; id: string }[],
         imageUrls: [] as string[],
     });
+
+    // Debug formData changes
+    useEffect(() => {
+        console.log('DEBUG GymManagement formData changed:', {
+            location: formData.location,
+            operatingHours: formData.operatingHours
+        });
+    }, [formData]);
     const [searchTerm, setSearchTerm] = useState('');
     const [ownerFilter, setOwnerFilter] = useState('');
     const [ratingFilter, setRatingFilter] = useState('');
@@ -89,14 +100,23 @@ const GymManagement = () => {
     const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [totalResults, setTotalResults] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'active', 'inactive'
+    const [isSearching, setIsSearching] = useState(false);
 
     useEffect(() => {
         fetchGyms();
     }, []);
 
-    const fetchGyms = async () => {
+    const fetchGyms = async (reset = false) => {
         setLoading(true);
         setError(null);
+        
+        if (reset) {
+            setCurrentPage(1);
+        }
+        
         try {
             const token = getAccessToken();
             if (!token) {
@@ -107,23 +127,80 @@ const GymManagement = () => {
 
             console.log('DEBUG: Fetching gyms from API...');
             console.log('DEBUG: Using token:', token ? 'Token available' : 'No token');
-            console.log('DEBUG: API URL:', buildApiUrl(API_CONFIG.ENDPOINTS.GYMS));
 
-            const response = await gymService.getGyms(token);
+            // Prepare all filters for API call
+            const trimmedSearch = searchTerm?.trim();
+            const isValidSearch = trimmedSearch && trimmedSearch.length >= 2;
+            
+            const filters: GymManagementFilters = {
+                page: reset ? 1 : currentPage,
+                limit: itemsPerPage,
+                search: isValidSearch ? trimmedSearch : undefined,
+                owner: ownerFilter && ownerFilter.trim().length > 0 ? ownerFilter.trim() : undefined,
+                minRating: ratingFilter && ratingFilter !== '' ? ratingFilter : undefined,
+                capacity: capacityFilter && capacityFilter !== '' ? capacityFilter : undefined
+            };
+            
+            console.log('DEBUG: All filters being sent:', {
+                searchTerm: searchTerm,
+                trimmedSearch: trimmedSearch,
+                isValidSearch: isValidSearch,
+                ownerFilter: ownerFilter,
+                ratingFilter: ratingFilter,
+                capacityFilter: capacityFilter,
+                finalFilters: filters
+            });
+
+            console.log('DEBUG: API filters:', filters);
+
+            const response = await gymService.getGymsForManagement(filters);
             console.log('DEBUG: Raw API response:', response);
 
             if (response.success && response.data) {
-                console.log('DEBUG: Successfully fetched gyms:', response.data.length);
-                console.log('DEBUG: Gym data structure:', response.data);
-                setGyms(response.data);
+                console.log('DEBUG: Successfully fetched gyms:', response.data.gyms?.length || 0);
+                console.log('DEBUG: Gym data structure:', response.data.gyms);
+                console.log('DEBUG: Pagination data:', response.data.pagination);
+                
+                // Handle both paginated and non-paginated responses
+                if (Array.isArray(response.data)) {
+                    // Non-paginated response (fallback to old structure)
+                    setGyms(response.data);
+                    setTotalResults(response.data.length);
+                    setTotalPages(Math.ceil(response.data.length / itemsPerPage));
+                } else if (response.data.gyms) {
+                    // New paginated response structure
+                    setGyms(response.data.gyms);
+                    
+                    if (response.data.pagination) {
+                        // Use the new pagination structure
+                        setTotalResults(response.data.pagination.totalItems || response.data.gyms.length);
+                        setTotalPages(response.data.pagination.totalPages || Math.ceil((response.data.pagination.totalItems || response.data.gyms.length) / itemsPerPage));
+                        setCurrentPage(response.data.pagination.currentPage || (reset ? 1 : currentPage));
+                    } else {
+                        // Fallback to old pagination structure if exists
+                        setTotalResults(response.data.total || response.data.gyms.length);
+                        setTotalPages(response.data.totalPages || Math.ceil((response.data.total || response.data.gyms.length) / itemsPerPage));
+                        setCurrentPage(response.data.currentPage || (reset ? 1 : currentPage));
+                    }
+                } else {
+                    setGyms([]);
+                    setTotalResults(0);
+                    setTotalPages(0);
+                }
             } else {
                 console.error('DEBUG: API call failed:', response.message);
                 setError(response.message || 'Failed to fetch gyms');
+                setGyms([]);
+                setTotalResults(0);
+                setTotalPages(0);
             }
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
             console.error('DEBUG: Network/catch error:', error);
             setError(errorMessage);
+            setGyms([]);
+            setTotalResults(0);
+            setTotalPages(0);
         } finally {
             setLoading(false);
         }
@@ -137,48 +214,79 @@ const GymManagement = () => {
     const openModal = (gym: Gym | null = null) => {
         if (gym) {
             console.log('DEBUG: Opening modal for gym:', {
+                id: gym.id,
                 name: gym.name,
+                description: gym.description,
+                capacity: gym.capacity,
+                currentOccupancy: gym.currentOccupancy,
+                rating: gym.rating,
+                ownerId: gym.ownerId,
                 address: gym.address,
                 city: gym.city,
                 state: gym.state,
                 zipCode: gym.zipCode,
                 latitude: gym.latitude,
-                longitude: gym.longitude
+                longitude: gym.longitude,
+                openingTime: gym.openingTime,
+                closingTime: gym.closingTime,
+                email: gym.email,
+                phone: gym.phone,
+                websiteUrl: gym.websiteUrl,
+                gstNumber: gym.gstNumber,
+                registrationNo: gym.registrationNo,
+                daysOpen: gym.daysOpen,
+                amenities: gym.amenities,
+                subscriptions: gym.subscriptions,
+                images: gym.images
             });
+            console.log('DEBUG: Setting formData with ownerId:', {
+                originalOwnerId: gym.ownerId,
+                convertedOwnerId: gym.ownerId ? gym.ownerId.toString() : '',
+                ownerObject: gym.owner
+            });
+            
             setFormData({
-                id: gym.id.toString(),
-                name: gym.name,
-                description: gym.description,
-                capacity: gym.capacity,
-                currentOccupancy: gym.currentOccupancy,
-                rating: parseFloat(gym.rating),
-                ownerId: gym.ownerId,
+                id: gym.id ? gym.id.toString() : '',
+                name: gym.name || '',
+                description: gym.description || '',
+                capacity: gym.capacity || 0,
+                rating: gym.rating ? parseFloat(gym.rating.toString()) : 0,
+                ownerId: gym.ownerId ? gym.ownerId.toString() : '',
+                email: gym.email || '',
+                phone: gym.phone || '',
+                websiteUrl: gym.websiteUrl || '',
+                gstNumber: gym.gstNumber || '',
+                registrationNo: gym.registrationNo || '',
+                daysOpen: gym.daysOpen || '',
                 location: {
                     address: gym.address || '',
                     city: gym.city || '',
                     state: gym.state || '',
                     zip: gym.zipCode || '',
                     coordinates: {
-                        latitude: gym.latitude ? parseFloat(gym.latitude) : 0,
-                        longitude: gym.longitude ? parseFloat(gym.longitude) : 0
+                        latitude: gym.latitude ? parseFloat(gym.latitude.toString()) : 0,
+                        longitude: gym.longitude ? parseFloat(gym.longitude.toString()) : 0
                     }
                 },
                 operatingHours: gym.operatingHours || {
-                    open: gym.openingTime,
-                    close: gym.closingTime
+                    open: gym.openingTime || '',
+                    close: gym.closingTime || ''
                 },
                 plans: gym.subscriptions ? gym.subscriptions.map(sub => ({
-                    name: sub.title,
-                    title: sub.title,
-                    description: `${sub.validityDays} days validity`,
-                    validityDays: sub.validityDays,
-                    price: parseFloat(sub.price),
-                    discountedPrice: parseFloat(sub.discountedPrice) || 0,
-                    isMostPopular: sub.isMostPopular || false,
-                    isCheapest: sub.isCheapest || false,
-                    features: sub.features || []
+                    title: sub.name || '',
+                    validityDays: sub.validityDays || 0,
+                    price: sub.price ? parseFloat(sub.price.toString()) : 0,
+                    discountPercent: sub.discountPercent ? parseFloat(sub.discountPercent.toString()) : 0,
+                    bufferDays: sub.bufferDays || 0,
+                    bufferFee: sub.bufferFee ? parseFloat(sub.bufferFee.toString()) : 0,
+                    features: sub.features ? sub.features.map(f => ({
+                        title: f.title || f.description || '',
+                        isHighlighted: f.isHighlighted === 1 || f.isHighlighted === true
+                    })) : []
                 })) : [],
-                amenities: gym.amenities || [],
+                amenities: gym.amenities ? gym.amenities.map(amenity => 
+                    typeof amenity === 'string' ? amenity : (amenity.name || '')
+                ) : [],
                 images: [],
                 imageUrls: gym.images || [],
             });
@@ -188,9 +296,14 @@ const GymManagement = () => {
                 name: '',
                 description: '',
                 capacity: 0,
-                currentOccupancy: 0,
                 rating: 0,
                 ownerId: '',
+                email: '',
+                phone: '',
+                websiteUrl: '',
+                gstNumber: '',
+                registrationNo: '',
+                daysOpen: '',
                 location: {
                     address: '',
                     city: '',
@@ -208,9 +321,9 @@ const GymManagement = () => {
                 imageUrls: [],
             };
 
-            // For owners, set their own email as ownerId
-            if (isOwner && user?.email) {
-                initialFormData.ownerId = user.email;
+            // For owners, set their own user ID as ownerId
+            if (isOwner && user?.id) {
+                initialFormData.ownerId = user.id.toString();
             }
 
             setFormData(initialFormData);
@@ -226,9 +339,14 @@ const GymManagement = () => {
             name: '',
             description: '',
             capacity: 0,
-            currentOccupancy: 0,
             rating: 0,
             ownerId: '',
+            email: '',
+            phone: '',
+            websiteUrl: '',
+            gstNumber: '',
+            registrationNo: '',
+            daysOpen: '',
             location: {
                 address: '',
                 city: '',
@@ -246,9 +364,9 @@ const GymManagement = () => {
             imageUrls: [],
         };
 
-        // For owners, set their own email as ownerId
-        if (isOwner && user?.email) {
-            initialFormData.ownerId = user.email;
+        // For owners, set their own user ID as ownerId
+        if (isOwner && user?.id) {
+            initialFormData.ownerId = user.id.toString();
         }
 
         setFormData(initialFormData);
@@ -278,7 +396,8 @@ const GymManagement = () => {
                 isEditing: !!formData.id,
                 hasImages: formData.images.length > 0,
                 existingImageUrls: formData.imageUrls.length,
-                ownerId: formData.ownerId
+                ownerId: formData.ownerId,
+                operatingHours: formData.operatingHours
             });
 
             // Prepare gym data as JSON
@@ -293,16 +412,24 @@ const GymManagement = () => {
                 latitude: formData.location.coordinates.latitude,
                 longitude: formData.location.coordinates.longitude,
                 rating: formData.rating,
+                email: formData.email,
+                phone: formData.phone,
+                websiteUrl: formData.websiteUrl,
+                gstNumber: formData.gstNumber,
+                registrationNo: formData.registrationNo,
+                daysOpen: formData.daysOpen,
+                // Send operating hours as individual fields for backend compatibility
+                openingTime: formData.operatingHours?.open || '',
+                closingTime: formData.operatingHours?.close || '',
+                operatingHours: formData.operatingHours, // Also send as nested object
                 amenities: formData.amenities.map(amenity =>
                     typeof amenity === 'string'
                         ? { name: amenity, description: '' }
                         : amenity
                 ),
-                operatingHours: formData.operatingHours,
                 plans: formData.plans,
-                ownerId: formData.ownerId,
+                ownerId: parseInt(formData.ownerId) || 0,
                 capacity: formData.capacity,
-                currentOccupancy: formData.currentOccupancy,
                 images: formData.imageUrls // Send existing image URLs
             };
 
@@ -372,8 +499,23 @@ const GymManagement = () => {
     const performDelete = async (id: number) => {
         setLoading(true);
         try {
+            const token = getAccessToken();
+            if (!token) {
+                setErrorModal({
+                    isOpen: true,
+                    title: 'Authentication Error',
+                    message: 'You need to be logged in to delete gyms.',
+                    error: 'No authentication token found'
+                });
+                setLoading(false);
+                return;
+            }
+
             const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.GYMS}/${id}`), {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
             });
             const data = await response.json();
             if (data.success) {
@@ -408,46 +550,8 @@ const GymManagement = () => {
         setLoading(false);
     };
 
-    // Enhanced filtering function
-    const getFilteredGyms = () => {
-        if (!gyms || gyms.length === 0) return [];
-        
-        return gyms.filter(gym => {
-            // Search term filter (includes city and state in search now)
-            const matchesSearch = !searchTerm || 
-                gym.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                gym.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                gym.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                gym.state.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                gym.owner.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                gym.owner.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                gym.owner.email.toLowerCase().includes(searchTerm.toLowerCase());
-                
-            // Owner filter
-            const matchesOwner = !ownerFilter || 
-                gym.owner.firstName.toLowerCase().includes(ownerFilter.toLowerCase()) ||
-                gym.owner.lastName.toLowerCase().includes(ownerFilter.toLowerCase()) ||
-                gym.owner.email.toLowerCase().includes(ownerFilter.toLowerCase());
-                
-            // Rating filter
-            const matchesRating = !ratingFilter || 
-                (ratingFilter === '4+' && parseFloat(gym.rating) >= 4) ||
-                (ratingFilter === '3+' && parseFloat(gym.rating) >= 3) ||
-                (ratingFilter === '2+' && parseFloat(gym.rating) >= 2) ||
-                (ratingFilter === '1+' && parseFloat(gym.rating) >= 1);
-                
-            // Capacity filter
-            const matchesCapacity = !capacityFilter || 
-                (capacityFilter === 'small' && gym.capacity <= 50) ||
-                (capacityFilter === 'medium' && gym.capacity > 50 && gym.capacity <= 200) ||
-                (capacityFilter === 'large' && gym.capacity > 200);
-                
-            return matchesSearch && matchesOwner && matchesRating && matchesCapacity;
-        });
-    };
-
     const handleSearch = () => {
-        // Trigger re-render with current filters
+        fetchGyms(true); // Reset to first page and fetch with current filters
     };
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -461,21 +565,35 @@ const GymManagement = () => {
         setOwnerFilter('');
         setRatingFilter('');
         setCapacityFilter('');
+        // Trigger search with cleared filters
+        setTimeout(() => fetchGyms(true), 0);
     };
 
-    const hasActiveFilters = searchTerm || ownerFilter || ratingFilter || capacityFilter;
+    // Check for active filters (only count those that actually affect the API)
+    const hasActiveFilters = 
+        (searchTerm && searchTerm.trim().length >= 2) || 
+        (ownerFilter && ownerFilter.trim().length > 0) || 
+        (ratingFilter && ratingFilter !== '') || 
+        (capacityFilter && capacityFilter !== '');
 
-    const filteredGyms = getFilteredGyms();
-
-    // Pagination logic
-    const totalPages = Math.ceil(filteredGyms.length / itemsPerPage);
+    // Use API pagination instead of client-side
     const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const paginatedGyms = filteredGyms.slice(startIndex, endIndex);
+    const endIndex = Math.min(startIndex + gyms.length, totalResults);
 
-    // Reset to first page when filters change
+    // Fetch gyms when pagination or key filters change
     useEffect(() => {
-        setCurrentPage(1);
+        // if (currentPage > 1) {
+            fetchGyms(); // Don't reset page when changing pages
+        // }
+    }, [currentPage, itemsPerPage]);
+
+    // Fetch gyms when any filter changes (with debounce)
+    useEffect(() => {
+        const debounceTimeout = setTimeout(() => {
+            fetchGyms(true); // Reset to first page when filters change
+        }, 500);
+
+        return () => clearTimeout(debounceTimeout);
     }, [searchTerm, ownerFilter, ratingFilter, capacityFilter]);
 
     const handlePageChange = (page: number) => {
@@ -486,6 +604,7 @@ const GymManagement = () => {
     const handleItemsPerPageChange = (newItemsPerPage: number) => {
         setItemsPerPage(newItemsPerPage);
         setCurrentPage(1);
+        // Will trigger useEffect to fetch gyms with new page size
     };
 
     // Handle location selection from Google Places or Map
@@ -524,10 +643,6 @@ const GymManagement = () => {
     const handleImageSave = async (gymId: number, images: string[]) => {
         setLoading(true);
         try {
-            // Note: The GymImageEditModal handles individual image uploads/deletions
-            // This function is called after the modal has already handled the image management
-            // We just need to refresh the gym data to get the updated images
-            
             setSuccessModal({
                 isOpen: true,
                 title: 'Images Updated!',
@@ -579,12 +694,24 @@ const GymManagement = () => {
                             <div className="relative">
                                 <input
                                     type="text"
-                                    placeholder="Name, location, owner..."
+                                    placeholder="Name, location, owner... (min 2 chars)"
                                     value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    onChange={(e) => {
+                                        const rawValue = e.target.value.trimStart(); // Remove leading whitespace but allow trailing for UX
+                                        // Basic sanitization: remove excessive whitespace and potentially dangerous characters
+                                        const sanitizedValue = rawValue
+                                            .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+                                            .replace(/[<>"'&]/g, ''); // Remove basic HTML/script injection characters
+                                        setSearchTerm(sanitizedValue);
+                                    }}
                                     onKeyPress={handleKeyPress}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                                 />
+                                {searchTerm && searchTerm.trim().length > 0 && searchTerm.trim().length < 2 && (
+                                    <div className="absolute top-full left-0 mt-1 text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded border border-amber-200">
+                                        Minimum 2 characters required
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -630,7 +757,7 @@ const GymManagement = () => {
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center mt-4">
-                        <div className="flex gap-2">
+                        {/* <div className="flex gap-2">
                             <button
                                 onClick={handleSearch}
                                 className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -638,7 +765,7 @@ const GymManagement = () => {
                                 <Search className="w-4 h-4 mr-2" />
                                 Search
                             </button>
-                        </div>
+                        </div> */}
                         {hasActiveFilters && (
                             <button
                                 onClick={clearAllFilters}
@@ -652,7 +779,7 @@ const GymManagement = () => {
 
                     <div className="mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <p className="text-sm text-gray-600">
-                            Showing {startIndex + 1}-{Math.min(endIndex, filteredGyms.length)} of {filteredGyms.length} gyms
+                            Showing {startIndex + 1}-{endIndex} of {totalResults} gyms
                             {hasActiveFilters && (
                                 <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
                                     <Filter className="w-3 h-3 mr-1" />
@@ -738,20 +865,37 @@ const GymManagement = () => {
             {/* Gyms Display */}
             {!loading && !error && (
                 <div className="space-y-4">
-                    {filteredGyms.length === 0 ? (
+                    {gyms.length === 0 ? (
                         <div className="text-center py-12 bg-white rounded-lg shadow border">
                             <MapPin className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">No gyms found</h3>
-                            <p className="text-gray-500">
-                                {hasActiveFilters ? 'Try adjusting your search criteria' : 'Start by adding your first gym'}
-                            </p>
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">
+                                {hasActiveFilters ? 'No gyms match your search criteria' : 'No gyms found'}
+                            </h3>
+                            <div className="max-w-md mx-auto text-gray-500 space-y-2">
+                                {hasActiveFilters ? (
+                                    <>
+                                        <p>Your search for {searchTerm && `"${searchTerm}"`} didn't return any results.</p>
+                                        <div className="text-sm space-y-1">
+                                            <p><strong>Try:</strong></p>
+                                            <ul className="list-disc list-inside space-y-1">
+                                                <li>Using different keywords</li>
+                                                <li>Checking your spelling</li>
+                                                <li>Removing some filters</li>
+                                                <li>Searching for gym names or locations</li>
+                                            </ul>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <p>Start by adding your first gym to get started with gym management.</p>
+                                )}
+                            </div>
                         </div>
                     ) : (
                         <>
                             {/* Grid View */}
                             {viewMode === 'grid' && (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
-                                    {paginatedGyms.map((gym) => (
+                                    {gyms.map((gym) => (
                                         <div key={gym.id} className="bg-white rounded-lg shadow border p-4 hover:shadow-md transition-shadow">
                                             <div className="flex items-start justify-between relative">
                                                 <div className="flex-1 min-w-0">
@@ -820,7 +964,7 @@ const GymManagement = () => {
                                                         </div>
                                                         <div className="bg-green-50 rounded-lg p-2">
                                                             <p className="text-sm font-bold text-green-700">
-                                                                {gym.currentOccupancy}/{gym.capacity}
+                                                                {gym.capacity}
                                                             </p>
                                                             <p className="text-xs font-medium text-green-600">
                                                                 Members
@@ -828,7 +972,7 @@ const GymManagement = () => {
                                                         </div>
                                                         <div className="bg-green-50 rounded-lg p-2">
                                                             <p className="text-sm font-bold text-green-700">
-                                                                {gym.openingTime.slice(0, 5)}
+                                                                {gym.openingTime ? gym.openingTime.slice(0, 5) : 'N/A'}
                                                             </p>
                                                             <p className="text-xs font-medium text-green-600">
                                                                 Opening
@@ -836,7 +980,7 @@ const GymManagement = () => {
                                                         </div>
                                                         <div className="bg-green-50 rounded-lg p-2">
                                                             <p className="text-sm font-bold text-green-700">
-                                                                {gym.closingTime.slice(0, 5)}
+                                                                {gym.closingTime ? gym.closingTime.slice(0, 5) : 'N/A'}
                                                             </p>
                                                             <p className="text-xs font-medium text-green-600">
                                                                 Closing
@@ -891,7 +1035,7 @@ const GymManagement = () => {
                                                 </tr>
                                             </thead>
                                             <tbody className="bg-white divide-y divide-gray-200">
-                                                {paginatedGyms.map((gym) => (
+                                                {gyms.map((gym) => (
                                                     <tr key={gym.id} className="hover:bg-gray-50">
                                                         <td className="px-6 py-4 whitespace-nowrap">
                                                             <div className="flex items-center">
@@ -920,7 +1064,7 @@ const GymManagement = () => {
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap">
                                                             <div className="text-sm text-gray-900">
-                                                                {gym.currentOccupancy}/{gym.capacity}
+                                                                {gym.capacity}
                                                             </div>
                                                             <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
                                                                 <div 
@@ -930,9 +1074,14 @@ const GymManagement = () => {
                                                             </div>
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                            <div>{gym.openingTime.slice(0, 5)} - {gym.closingTime.slice(0, 5)}</div>
+                                                            <div>
+                                                                {gym.openingTime && gym.closingTime 
+                                                                    ? `${gym.openingTime.slice(0, 5)} - ${gym.closingTime.slice(0, 5)}`
+                                                                    : 'Hours not set'
+                                                                }
+                                                            </div>
                                                         </td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                             <div className="flex items-center justify-end space-x-2">
                                                                 <button
                                                                     onClick={() => openImageModal(gym)}
@@ -969,7 +1118,7 @@ const GymManagement = () => {
                             {totalPages > 1 && (
                                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white rounded-lg border p-4">
                                     <div className="text-sm text-gray-700">
-                                        Showing <span className="font-medium">{startIndex + 1}</span> to <span className="font-medium">{Math.min(endIndex, filteredGyms.length)}</span> of <span className="font-medium">{filteredGyms.length}</span> results
+                                        Showing <span className="font-medium">{startIndex + 1}</span> to <span className="font-medium">{endIndex}</span> of <span className="font-medium">{totalResults}</span> results
                                     </div>
                                     <div className="flex items-center space-x-2">
                                         <button
@@ -1042,8 +1191,9 @@ const GymManagement = () => {
                         <div className="p-6 space-y-4">
                             {currentStep === 0 && <StepBasicInfo setCurrentStep={setCurrentStep} formData={formData} onChange={setFormData} />}
                             {currentStep === 1 && <StepLocation setCurrentStep={setCurrentStep} formData={formData} onChange={setFormData} isEditing={!!formData.id} />}
-                            {currentStep === 2 && <StepOperatingHours setCurrentStep={setCurrentStep} formData={formData} onChange={setFormData} />}
-                            {currentStep === 3 && <StepAmenities setCurrentStep={setCurrentStep} formData={formData} onChange={setFormData} />}
+                            {currentStep === 2 && <StepContactInfo setCurrentStep={setCurrentStep} formData={formData} onChange={setFormData} />}
+                            {currentStep === 3 && <StepOperatingHours setCurrentStep={setCurrentStep} formData={formData} onChange={setFormData} />}
+                            {currentStep === 4 && <StepAmenities setCurrentStep={setCurrentStep} formData={formData} onChange={setFormData} />}
                         </div>
 
                         <div className="flex space-x-3 p-6 border-t">
@@ -1056,8 +1206,8 @@ const GymManagement = () => {
                                 </button>
                             )}
 
-                            {/* For new gym creation, show Create button after step 3 (Amenities) */}
-                            {!formData.id && currentStep < 3 && (
+                            {/* For new gym creation, show Create button after step 4 (Amenities) */}
+                            {!formData.id && currentStep < 4 && (
                                 <button
                                     onClick={handleNextStep}
                                     className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -1066,7 +1216,7 @@ const GymManagement = () => {
                                 </button>
                             )}
 
-                            {!formData.id && currentStep === 3 && (
+                            {!formData.id && currentStep === 4 && (
                                 <button
                                     onClick={handleSave}
                                     className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
@@ -1075,8 +1225,8 @@ const GymManagement = () => {
                                 </button>
                             )}
 
-                            {/* For gym editing, show Update button after step 3 (Amenities) */}
-                            {formData.id && currentStep < 3 && (
+                            {/* For gym editing, show Update button after step 4 (Amenities) */}
+                            {formData.id && currentStep < 4 && (
                                 <button
                                     onClick={handleNextStep}
                                     className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -1085,7 +1235,7 @@ const GymManagement = () => {
                                 </button>
                             )}
 
-                            {formData.id && currentStep === 3 && (
+                            {formData.id && currentStep === 4 && (
                                 <button
                                     onClick={handleSave}
                                     className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"

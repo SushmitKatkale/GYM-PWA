@@ -15,9 +15,9 @@ interface Plan {
   title: string;
   validityDays: number;
   price: number;
-  discountedPrice: number;
-  isMostPopular: boolean;
-  isCheapest: boolean;
+  discountPercent: number;
+  bufferDays: number;
+  bufferFee: number;
   features: SubscriptionFeature[];
 }
 
@@ -30,27 +30,36 @@ interface FormData {
 interface StepOperatingHoursProps {
   formData: FormData;
   onChange: (data: FormData) => void;
+  setCurrentStep: (step: number) => void;
 }
 
 const StepOperatingHours: React.FC<StepOperatingHoursProps> = ({ formData, onChange, setCurrentStep }) => {
   const [newFeature, setNewFeature] = useState<SubscriptionFeature>({ title: '', isHighlighted: false });
 
+  // Debug logging
+  console.log('DEBUG StepOperatingHours: formData.operatingHours:', formData.operatingHours);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, dataset, type, checked } = e.target;
+    console.log('DEBUG: handleInputChange called with:', { name, value, datasetType: dataset.type });
 
     if (dataset.type === 'operatingHours') {
+      // Ensure operatingHours exists
+      const currentHours = formData.operatingHours || { open: '', close: '' };
       const updatedHours = {
-        ...formData.operatingHours,
+        ...currentHours,
         [name]: value
       };
+      console.log('DEBUG: Updating operating hours:', updatedHours);
       onChange({ ...formData, operatingHours: updatedHours });
     }
 
     if (dataset.type === 'plans') {
       const index = Number(dataset.index);
       const updatedPlans = [...formData.plans];
-      const processedValue = type === 'checkbox' ? checked : 
-        (name === 'price' || name === 'discountedPrice' || name === 'validityDays') ? 
+    const processedValue = type === 'checkbox' ? checked : 
+        (name === 'price' || name === 'validityDays' || 
+         name === 'discountPercent' || name === 'bufferDays' || name === 'bufferFee') ? 
         parseFloat(value) || 0 : value;
       
       updatedPlans[index] = {
@@ -66,9 +75,9 @@ const StepOperatingHours: React.FC<StepOperatingHoursProps> = ({ formData, onCha
       title: '',
       validityDays: 30,
       price: 0,
-      discountedPrice: 0,
-      isMostPopular: false,
-      isCheapest: false,
+      discountPercent: 0,
+      bufferDays: 0,
+      bufferFee: 0,
       features: []
     };
     onChange({ ...formData, plans: [...formData.plans, newPlan] });
@@ -124,12 +133,14 @@ const StepOperatingHours: React.FC<StepOperatingHoursProps> = ({ formData, onCha
       <div className="flex justify-center">
         <div className="flex items-center space-x-2">
           <div onClick={() => {setCurrentStep(0)}} className="cursor-pointer w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-medium">1</div>
-          <div className="w-16 h-1 bg-gray-200 rounded"></div>
+          <div className="w-12 h-1 bg-gray-200 rounded"></div>
           <div onClick={() => {setCurrentStep(1)}} className="cursor-pointer w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-medium">2</div>
-          <div className="w-16 h-1 bg-gray-200 rounded"></div>
-          <div onClick={() => {setCurrentStep(2)}} className="cursor-pointer w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">3</div>
-          <div className="w-16 h-1 bg-gray-200 rounded"></div>
-          <div onClick={() => {setCurrentStep(3)}} className="cursor-pointer w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-medium">4</div>
+          <div className="w-12 h-1 bg-gray-200 rounded"></div>
+          <div onClick={() => {setCurrentStep(2)}} className="cursor-pointer w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-medium">3</div>
+          <div className="w-12 h-1 bg-gray-200 rounded"></div>
+          <div onClick={() => {setCurrentStep(3)}} className="cursor-pointer w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">4</div>
+          <div className="w-12 h-1 bg-gray-200 rounded"></div>
+          <div onClick={() => {setCurrentStep(4)}} className="cursor-pointer w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-medium">5</div>
         </div>
       </div>
 
@@ -145,7 +156,7 @@ const StepOperatingHours: React.FC<StepOperatingHoursProps> = ({ formData, onCha
               type="time"
               name="open"
               data-type="operatingHours"
-              value={formData.operatingHours.open}
+              value={formData.operatingHours?.open || ''}
               onChange={handleInputChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
               required
@@ -159,7 +170,7 @@ const StepOperatingHours: React.FC<StepOperatingHoursProps> = ({ formData, onCha
               type="time"
               name="close"
               data-type="operatingHours"
-              value={formData.operatingHours.close}
+              value={formData.operatingHours?.close || ''}
               onChange={handleInputChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
               required
@@ -266,56 +277,63 @@ const StepOperatingHours: React.FC<StepOperatingHoursProps> = ({ formData, onCha
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Discounted Price ($)
+                    Discount Percent (%)
                   </label>
                   <input
                     type="number"
-                    name="discountedPrice"
+                    name="discountPercent"
                     data-type="plans"
                     data-index={planIndex}
-                    value={plan.discountedPrice}
+                    value={plan.discountPercent}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                    placeholder="39.99"
+                    placeholder="20"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                  />
+                </div>
+              </div>
+
+              {/* Buffer Settings */}
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Buffer Days
+                    <span className="text-xs text-gray-500 ml-1">(Grace period after expiry)</span>
+                  </label>
+                  <input
+                    type="number"
+                    name="bufferDays"
+                    data-type="plans"
+                    data-index={planIndex}
+                    value={plan.bufferDays}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                    placeholder="7"
+                    min="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Buffer Fee ($)
+                    <span className="text-xs text-gray-500 ml-1">(Fee for using buffer days)</span>
+                  </label>
+                  <input
+                    type="number"
+                    name="bufferFee"
+                    data-type="plans"
+                    data-index={planIndex}
+                    value={plan.bufferFee}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                    placeholder="5.00"
                     min="0"
                     step="0.01"
                   />
                 </div>
               </div>
 
-              {/* Plan Flags */}
-              <div className="flex items-center space-x-6 mb-4">
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="isMostPopular"
-                    data-type="plans"
-                    data-index={planIndex}
-                    checked={plan.isMostPopular}
-                    onChange={handleInputChange}
-                    className="mr-2 h-4 w-4 text-yellow-600 focus:ring-yellow-500 border-gray-300 rounded"
-                  />
-                  <label className="text-sm text-gray-700 flex items-center">
-                    <Star className="w-4 h-4 mr-1 text-yellow-500" />
-                    Most Popular
-                  </label>
-                </div>
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="isCheapest"
-                    data-type="plans"
-                    data-index={planIndex}
-                    checked={plan.isCheapest}
-                    onChange={handleInputChange}
-                    className="mr-2 h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-                  />
-                  <label className="text-sm text-gray-700 flex items-center">
-                    <Tag className="w-4 h-4 mr-1 text-green-500" />
-                    Cheapest Option
-                  </label>
-                </div>
-              </div>
 
               {/* Features Section */}
               <div className="border-t pt-4">

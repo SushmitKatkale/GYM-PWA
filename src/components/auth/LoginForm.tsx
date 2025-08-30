@@ -50,14 +50,11 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md py-8 px-4">
         <div className="text-center mb-8">
-          <div className="flex justify-center mb-6">
-            <BrandLogo size="xl" variant="full" showTagline={true} />
-          </div>
-          <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
-          <p className="text-gray-600 mt-2">{BRAND.tagline}</p>
+          <h2 className="heading-md text-gray-900 font-poppins">Welcome</h2>
+          <p className="text-gray-600 mt-2 font-opensans">Sign in to continue!</p>
         </div>
 
 
@@ -69,7 +66,7 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block body-sm font-medium text-gray-700 mb-2">
               Email Address
             </label>
             <div className="relative">
@@ -79,14 +76,14 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
                 required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all font-body outline-none"
                 placeholder="Enter your email address"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block body-sm font-medium text-gray-700 mb-2">
               Password
             </label>
             <div className="relative">
@@ -96,7 +93,7 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
                 required
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all font-body outline-none"
                 placeholder="Enter your password"
               />
               <button
@@ -112,18 +109,18 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-stone-800 hover:bg-stone-900 text-white button-base py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? 'Signing In...' : 'Sign In'}
           </button>
         </form>
 
-        <div className="mt-6 text-center">
-          <p className="text-gray-600">
+        <div className="mt-6 text-center font-opensans">
+          <p className="text-stone-800">
             Don't have an account?{' '}
             <button
               onClick={onToggleMode}
-              className="text-indigo-600 hover:text-indigo-700 font-medium"
+              className="text-indigo-600 hover:text-indigo-700 font-button"
             >
               Sign up
             </button>

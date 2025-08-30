@@ -15,14 +15,15 @@ export function EditUserModal({ isOpen, onClose, onSuccess, user }: EditUserModa
     lastName: '',
     username: '',
     email: '',
-    phoneNumber: '',
-    type: '1',
-    activeStatus: '1',
+    phone: '',
+    role: 1,
+    recordStatus: 1,
     isVerified: false
   });
   
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [backendErrors, setBackendErrors] = useState<string[]>([]);
 
   useEffect(() => {
     if (user) {
@@ -31,9 +32,9 @@ export function EditUserModal({ isOpen, onClose, onSuccess, user }: EditUserModa
         lastName: user.lastName,
         username: user.username,
         email: user.email,
-        phoneNumber: user.phoneNumber || '',
-        type: user.type,
-        activeStatus: user.activeStatus,
+        phone: user.phone || '',
+        role: user.role,
+        recordStatus: user.recordStatus,
         isVerified: user.isVerified
       });
     }
@@ -62,8 +63,8 @@ export function EditUserModal({ isOpen, onClose, onSuccess, user }: EditUserModa
       newErrors.email = 'Please enter a valid email address';
     }
 
-    if (formData.phoneNumber && !/^\+?[\d\s-()]+$/.test(formData.phoneNumber)) {
-      newErrors.phoneNumber = 'Please enter a valid phone number';
+    if (formData.phone && !/^\+?[\d\s-()]+$/.test(formData.phone)) {
+      newErrors.phone = 'Please enter a valid phone number';
     }
 
     setErrors(newErrors);
@@ -73,10 +74,18 @@ export function EditUserModal({ isOpen, onClose, onSuccess, user }: EditUserModa
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
-    }));
+    setFormData(prev => {
+      if (name === 'role' || name === 'recordStatus') {
+        return {
+          ...prev,
+          [name]: parseInt(value) as 1 | 2 | 3 | 4 | 0
+        };
+      }
+      return {
+        ...prev,
+        [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+      };
+    });
 
     // Clear error when user starts typing
     if (errors[name]) {
@@ -98,10 +107,34 @@ export function EditUserModal({ isOpen, onClose, onSuccess, user }: EditUserModa
       if (response.success) {
         onSuccess();
       } else {
-        setErrors({ submit: response.message || 'Failed to update user' });
+        // Handle different types of backend errors
+        const errorMessage = response.message || 'Failed to update user';
+        
+        // Check if response has validation errors or errors array
+        const responseData = response as any;
+        if (responseData.errors && Array.isArray(responseData.errors)) {
+          setBackendErrors(responseData.errors);
+          setErrors({ submit: errorMessage });
+        } else {
+          setErrors({ submit: errorMessage });
+          setBackendErrors([]);
+        }
       }
-    } catch (error) {
-      setErrors({ submit: 'Network error. Please try again.' });
+    } catch (error: any) {
+      console.error('Update user error:', error);
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        if (errorData.errors && Array.isArray(errorData.errors)) {
+          setBackendErrors(errorData.errors);
+          setErrors({ submit: errorData.message || 'Validation failed' });
+        } else {
+          setErrors({ submit: errorData.message || 'Failed to update user' });
+          setBackendErrors([]);
+        }
+      } else {
+        setErrors({ submit: 'Network error. Please try again.' });
+        setBackendErrors([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -109,6 +142,7 @@ export function EditUserModal({ isOpen, onClose, onSuccess, user }: EditUserModa
 
   const handleClose = () => {
     setErrors({});
+    setBackendErrors([]);
     onClose();
   };
 
@@ -134,6 +168,13 @@ export function EditUserModal({ isOpen, onClose, onSuccess, user }: EditUserModa
             {errors.submit && (
               <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg">
                 {errors.submit}
+                {backendErrors.length > 0 && (
+                  <ul className="mt-2 list-disc list-inside space-y-1">
+                    {backendErrors.map((error, index) => (
+                      <li key={index} className="text-xs">{error}</li>
+                    ))}
+                  </ul>
+                )}
               </div>
             )}
 
@@ -229,17 +270,17 @@ export function EditUserModal({ isOpen, onClose, onSuccess, user }: EditUserModa
                 <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
                   type="tel"
-                  name="phoneNumber"
-                  value={formData.phoneNumber}
+                  name="phone"
+                  value={formData.phone}
                   onChange={handleInputChange}
                   className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.phoneNumber ? 'border-red-300' : 'border-gray-300'
+                    errors.phone ? 'border-red-300' : 'border-gray-300'
                   }`}
                   placeholder="Enter phone number"
                 />
               </div>
-              {errors.phoneNumber && (
-                <p className="mt-1 text-xs text-red-600">{errors.phoneNumber}</p>
+              {errors.phone && (
+                <p className="mt-1 text-xs text-red-600">{errors.phone}</p>
               )}
             </div>
 
@@ -249,14 +290,15 @@ export function EditUserModal({ isOpen, onClose, onSuccess, user }: EditUserModa
                   User Type
                 </label>
                 <select
-                  name="type"
-                  value={formData.type}
+                  name="role"
+                  value={formData.role}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
                 >
-                  <option value="1">Regular User</option>
+                  <option value="1">Member</option>
                   <option value="2">Gym Owner</option>
                   <option value="3">Admin</option>
+                  <option value="4">Trainer</option>
                 </select>
               </div>
 
@@ -265,8 +307,8 @@ export function EditUserModal({ isOpen, onClose, onSuccess, user }: EditUserModa
                   Status
                 </label>
                 <select
-                  name="activeStatus"
-                  value={formData.activeStatus}
+                  name="recordStatus"
+                  value={formData.recordStatus}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
                 >

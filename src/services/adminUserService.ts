@@ -2,29 +2,29 @@ import { apiClient, ApiResponse } from './apiClient';
 import { API_CONFIG, buildApiUrl } from '../config/api';
 
 export interface User {
-  id: string;
+  id: number; // Backend uses BIGINT
   firstName: string;
   lastName: string;
-  username: string;
+  username?: string;
   email: string;
-  phoneNumber?: string;
-  type: '1' | '2' | '3'; // 1-user, 2-owner, 3-admin
-  activeStatus: '0' | '1';
-  isVerified: boolean;
-  createTimestamp: string;
-  updateTimestamp?: string;
-  createdBy?: string;
-  updatedBy?: string;
+  phone?: string; // Backend uses 'phone' not 'phoneNumber'
+  role: 1 | 2 | 3 | 4; // Backend: 1=member, 2=owner, 3=trainer, 4=admin
+  recordStatus: 0 | 1; // Backend uses 'recordStatus' not 'activeStatus'
+  isVerified?: boolean;
+  created_at: string; // Backend uses snake_case
+  updated_at?: string;
+  createdBy?: number;
+  updatedBy?: number;
   lastLoginAt?: string;
   profileImageUrl?: string;
   
   // Additional fields that might be available
   gym?: {
-    id: string;
+    id: number;
     name: string;
   };
   subscriptions?: {
-    id: string;
+    id: number;
     planName: string;
     status: string;
     expiryDate: string;
@@ -39,10 +39,9 @@ export interface CreateUserRequest {
   username: string;
   email: string;
   password: string;
-  phoneNumber?: string;
-  type?: '1' | '2' | '3';
-  activeStatus?: '0' | '1';
-  isVerified?: boolean;
+  phone?: string;
+  role?: 1 | 2 | 3 | 4;
+  recordStatus?: 0 | 1;
 }
 
 export interface UpdateUserRequest {
@@ -50,21 +49,21 @@ export interface UpdateUserRequest {
   lastName?: string;
   username?: string;
   email?: string;
-  phoneNumber?: string;
-  type?: '1' | '2' | '3';
-  activeStatus?: '0' | '1';
+  phone?: string; // Backend uses 'phone' not 'phoneNumber'
+  role?: 1 | 2 | 3 | 4; // Backend uses 'role' not 'type'
+  recordStatus?: 0 | 1; // Backend uses 'recordStatus' not 'activeStatus'
   isVerified?: boolean;
 }
 
 export interface UserFilters {
-  type?: '1' | '2' | '3';
-  activeStatus?: boolean;
+  type?: '1' | '2' | '3' | '4'; // Keep as 'type' for query param but map to role
+  recordStatus?: '0' | '1'; // Backend expects string for query params
   isVerified?: boolean;
   email?: string;
   firstName?: string;
   lastName?: string;
   username?: string;
-  phoneNumber?: string;
+  phone?: string; // Backend uses 'phone' not 'phoneNumber'
   createdAfter?: string;
   createdBefore?: string;
   lastLoginAfter?: string;
@@ -106,16 +105,11 @@ class AdminUserService {
       limit: limit.toString(),
     });
 
-    // Add filters to query params and map activeStatus to correct format
+    // Add filters to query params with correct mapping
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
-          if (key === 'activeStatus') {
-            // Convert boolean to string for backend compatibility
-            queryParams.append(key, value ? '1' : '0');
-          } else {
-            queryParams.append(key, value.toString());
-          }
+          queryParams.append(key, value.toString());
         }
       });
     }
@@ -145,26 +139,26 @@ class AdminUserService {
     return apiClient.delete<void>(`${API_CONFIG.ENDPOINTS.USERS}/hard/${encodeURIComponent(email)}`);
   }
 
-  async toggleUserStatus(email: string, activeStatus: '0' | '1'): Promise<ApiResponse<User>> {
-    return apiClient.put<User>(`${API_CONFIG.ENDPOINTS.USERS}/toggle/${encodeURIComponent(email)}`, {
-      activeStatus
+  async toggleUserStatus(userId: number, recordStatus: 0 | 1): Promise<ApiResponse<User>> {
+    return apiClient.put<User>(`${API_CONFIG.ENDPOINTS.USERS}/${userId}/toggle`, {
+      recordStatus
     });
   }
 
-  async activateUser(email: string): Promise<ApiResponse<User>> {
-    return this.toggleUserStatus(email, '1');
+  async activateUser(userId: number): Promise<ApiResponse<User>> {
+    return this.toggleUserStatus(userId, 1);
   }
 
-  async deactivateUser(email: string): Promise<ApiResponse<User>> {
-    return this.toggleUserStatus(email, '0');
+  async deactivateUser(userId: number): Promise<ApiResponse<User>> {
+    return this.toggleUserStatus(userId, 0);
   }
 
-  async verifyUser(email: string): Promise<ApiResponse<User>> {
-    return apiClient.put<User>(`${API_CONFIG.ENDPOINTS.USERS}/${encodeURIComponent(email)}/verify`);
+  async verifyUser(userId: number): Promise<ApiResponse<User>> {
+    return apiClient.put<User>(`${API_CONFIG.ENDPOINTS.USERS}/${userId}/verify`);
   }
 
-  async unverifyUser(email: string): Promise<ApiResponse<User>> {
-    return apiClient.put<User>(`${API_CONFIG.ENDPOINTS.USERS}/${encodeURIComponent(email)}/unverify`);
+  async unverifyUser(userId: number): Promise<ApiResponse<User>> {
+    return apiClient.put<User>(`${API_CONFIG.ENDPOINTS.USERS}/${userId}/unverify`);
   }
 
   async resetUserPassword(email: string, newPassword?: string): Promise<ApiResponse<{ temporaryPassword: string }>> {

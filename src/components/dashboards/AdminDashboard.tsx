@@ -380,7 +380,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps = {}) {
                   <span className="font-medium text-gray-700">Regular Users</span>
                 </div>
                 <span className="text-xl font-bold text-gray-900">
-                  {adminAnalytics?.userTypeBreakdown.users || 0}
+                  {adminAnalytics?.userTypeBreakdown?.users || 0}
                 </span>
               </div>
               <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
@@ -389,7 +389,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps = {}) {
                   <span className="font-medium text-gray-700">Gym Owners</span>
                 </div>
                 <span className="text-xl font-bold text-gray-900">
-                  {adminAnalytics?.userTypeBreakdown.owners || 0}
+                  {adminAnalytics?.userTypeBreakdown?.owners || 0}
                 </span>
               </div>
               <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
@@ -398,7 +398,7 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps = {}) {
                   <span className="font-medium text-gray-700">Administrators</span>
                 </div>
                 <span className="text-xl font-bold text-gray-900">
-                  {adminAnalytics?.userTypeBreakdown.admins || 0}
+                  {adminAnalytics?.userTypeBreakdown?.admins || 0}
                 </span>
               </div>
             </div>

@@ -1,62 +1,106 @@
 import { buildApiUrl, API_CONFIG } from '../config/api';
 import { apiClient, ApiResponse } from './apiClient';
 
+// Exact backend model interfaces
+export interface GymAmenity {
+  id: number;
+  gymId: number;
+  name: string;
+  description?: string;
+  recordStatus: number; // 1=active, 0=inactive
+  createdBy?: number;
+  updatedBy?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SubscriptionFeature {
+  id: number;
+  subscriptionId: number;
+  title: string;
+  description?: string;
+  isHighlighted: number; // 1=highlighted, 0=normal
+  displayOrder?: number;
+  createdBy?: number;
+  updatedBy?: number;
+  recordStatus: number; // 1=active, 0=inactive
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Subscription {
+  id: number;
+  gymId: number;
+  name: string;
+  price: string; // DECIMAL as string
+  validityDays: number;
+  discountPercent?: string; // DECIMAL as string
+  bufferDays?: number;
+  bufferFee?: string; // DECIMAL as string
+  createdBy?: number;
+  updatedBy?: number;
+  recordStatus: number; // 1=active, 0=inactive
+  created_at: string;
+  updated_at: string;
+  features?: SubscriptionFeature[];
+}
+
+export interface GymOwner {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
 export interface Gym {
   id: number;
   name: string;
+  ownerId: number;
   address: string;
-  latitude: string;
-  longitude: string;
-  rating: string;
-  image?: string;
-  description: string;
-  amenities: {
-    id: number;
-    name: string;
-    description: string;
-    gymId: number;
-    activeStatus: boolean;
-  }[];
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  latitude: string; // DECIMAL as string
+  longitude: string; // DECIMAL as string
+  rating?: string; // DECIMAL as string
+  capacity?: number;
+  email?: string;
+  phone?: string;
+  websiteUrl?: string;
+  gstNumber?: string;
+  registrationNo?: string;
+  openingTime?: string;
+  closingTime?: string;
+  daysOpen?: string;
+  description?: string;
+  createdBy?: number;
+  updatedBy?: number;
+  recordStatus: number; // 1=active, 0=inactive
+  created_at: string;
+  updated_at: string;
+  
+  // Related entities (populated by includes)
+  amenities?: GymAmenity[];
+  subscriptions?: Subscription[];
+  owner?: GymOwner;
+  
+  // Legacy computed fields for backward compatibility
+  currentOccupancy?: number;
   operatingHours?: {
     open: string;
     close: string;
   };
-  openingTime: string;
-  closingTime: string;
-  subscriptions: {
-    id: number;
-    title: string;
-    validityDays: number;
-    price: string;
-    discountedPrice: string;
-    gymId: number;
-    isMostPopular: boolean;
-    isCheapest: boolean;
-    activeStatus: boolean;
-    features: {
-      id: number;
-      title: string;
-      subscriptionId: number;
-      isHighlighted: boolean;
-      activeStatus: boolean;
-    }[];
-  }[];
-  ownerId: string;
-  capacity: number;
-  currentOccupancy: number;
-  city: string;
-  state: string;
-  zipCode: string;
-  activeStatus: boolean;
-  owner: {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
+  images?: string[];
+}
+
+export interface GymListResponse {
+  gyms: Gym[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    itemsPerPage: number;
   };
-  images: any[];
-  createTimestamp: string;
-  updateTimestamp?: string;
 }
 
 
@@ -73,7 +117,19 @@ export interface GymFilters {
   sortOrder?: 'asc' | 'desc';
 }
 
+// Management filters for admin/owner authenticated endpoints
+export interface GymManagementFilters {
+  page?: number;
+  limit?: number;
+  search?: string;
+  activeOnly?: boolean;
+  owner?: string;
+  minRating?: string;
+  capacity?: string;
+}
+
 class GymService {
+  // Public discovery method for regular users (shows only active gyms)
   async getGyms(filters?: GymFilters): Promise<ApiResponse<Gym[]>> {
     try {
       // Build query parameters
@@ -117,6 +173,56 @@ class GymService {
       };
     } catch (error) {
       console.error('Error fetching gyms:', error);
+      return {
+        success: false,
+        message: 'Failed to fetch gyms. Please try again.',
+        data: null
+      };
+    }
+  }
+  
+  // Admin/Owner management method (shows both active and inactive gyms)
+  async getGymsForManagement(filters?: GymManagementFilters): Promise<ApiResponse<GymListResponse>> {
+    try {
+      const params = new URLSearchParams();
+      
+      // Set defaults - by default show both active and inactive gyms for management
+      const page = filters?.page || 1;
+      const limit = filters?.limit || 10;
+      const activeOnly = filters?.activeOnly !== undefined ? filters.activeOnly : false;
+      
+      params.append('page', page.toString());
+      params.append('limit', limit.toString());
+      params.append('activeOnly', activeOnly.toString());
+      
+      // Add search filter only if it has valid content
+      if (filters?.search && filters.search.trim().length >= 2) {
+        params.append('search', filters.search.trim());
+      }
+      
+      // Add owner filter if provided
+      if (filters?.owner && filters.owner.trim().length > 0) {
+        params.append('owner', filters.owner.trim());
+      }
+      
+      // Add rating filter if provided
+      if (filters?.minRating && filters.minRating !== '') {
+        params.append('minRating', filters.minRating);
+      }
+      
+      // Add capacity filter if provided
+      if (filters?.capacity && filters.capacity !== '') {
+        params.append('capacity', filters.capacity);
+      }
+      
+      console.log('DEBUG: Final URL params:', params.toString());
+      
+      const endpoint = `${API_CONFIG.ENDPOINTS.GYMS}?${params.toString()}`;
+      
+      // Use authenticated API client
+      return apiClient.get<GymListResponse>(endpoint);
+    } catch (error) {
+      console.error('Error fetching gyms for management:', error);
       return {
         success: false,
         message: 'Failed to fetch gyms. Please try again.',

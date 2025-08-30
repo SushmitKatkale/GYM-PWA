@@ -15,26 +15,7 @@ interface NavbarProps {
 export function Navbar({ onMenuToggle, isMobileMenuOpen, onNotificationClick }: NavbarProps) {
   const { user } = useAuthStore();
   const { unreadCount } = useNotificationCount();
-  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
-
-  // Load profile image
-  useEffect(() => {
-    const loadProfileImage = async () => {
-      if (user) {
-        try {
-          const imageUrl = await userService.getProfileImageUrl();
-          setProfileImageUrl(imageUrl);
-        } catch (error) {
-          // Profile image not found - use default avatar
-          setProfileImageUrl(null);
-        }
-      } else {
-        setProfileImageUrl(null);
-      }
-    };
-
-    loadProfileImage();
-  }, [user]);
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(user?.profileImage ?? null);
 
   const getRoleColor = () => {
     switch (user?.role) {

@@ -9,21 +9,21 @@ interface CreateUserModalProps {
 }
 
 export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalProps) {
-  const [formData, setFormData] = useState<CreateUserRequest>({
+  const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     username: '',
     email: '',
     password: '',
-    phoneNumber: '',
-    type: '1',
-    activeStatus: '1',
-    isVerified: false
+    phone: '',
+    role: 1,
+    recordStatus: 1
   });
   
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [backendErrors, setBackendErrors] = useState<string[]>([]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -54,8 +54,8 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
       newErrors.password = 'Password must be at least 6 characters';
     }
 
-    if (formData.phoneNumber && !/^\+?[\d\s-()]+$/.test(formData.phoneNumber)) {
-      newErrors.phoneNumber = 'Please enter a valid phone number';
+    if (formData.phone && !/^\+?[\d\s-()]+$/.test(formData.phone)) {
+      newErrors.phone = 'Please enter a valid phone number';
     }
 
     setErrors(newErrors);
@@ -63,12 +63,20 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
+    const { name, value } = e.target;
     
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
-    }));
+    setFormData(prev => {
+      if (name === 'role' || name === 'recordStatus') {
+        return {
+          ...prev,
+          [name]: parseInt(value)
+        };
+      }
+      return {
+        ...prev,
+        [name]: value
+      };
+    });
 
     // Clear error when user starts typing
     if (errors[name]) {
@@ -90,10 +98,34 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
       if (response.success) {
         onSuccess();
       } else {
-        setErrors({ submit: response.message || 'Failed to create user' });
+        // Handle different types of backend errors
+        const errorMessage = response.message || 'Failed to create user';
+        
+        // Check if response has validation errors or errors array
+        const responseData = response as any;
+        if (responseData.errors && Array.isArray(responseData.errors)) {
+          setBackendErrors(responseData.errors);
+          setErrors({ submit: errorMessage });
+        } else {
+          setErrors({ submit: errorMessage });
+          setBackendErrors([]);
+        }
       }
-    } catch (error) {
-      setErrors({ submit: 'Network error. Please try again.' });
+    } catch (error: any) {
+      console.error('Create user error:', error);
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        if (errorData.errors && Array.isArray(errorData.errors)) {
+          setBackendErrors(errorData.errors);
+          setErrors({ submit: errorData.message || 'Validation failed' });
+        } else {
+          setErrors({ submit: errorData.message || 'Failed to create user' });
+          setBackendErrors([]);
+        }
+      } else {
+        setErrors({ submit: 'Network error. Please try again.' });
+        setBackendErrors([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -106,12 +138,12 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
       username: '',
       email: '',
       password: '',
-      phoneNumber: '',
-      type: '1',
-      activeStatus: '1',
-      isVerified: false
+      phone: '',
+      role: 1,
+      recordStatus: 1
     });
     setErrors({});
+    setBackendErrors([]);
     setShowPassword(false);
     onClose();
   };
@@ -138,6 +170,13 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
             {errors.submit && (
               <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg">
                 {errors.submit}
+                {backendErrors.length > 0 && (
+                  <ul className="mt-2 list-disc list-inside space-y-1">
+                    {backendErrors.map((error, index) => (
+                      <li key={index} className="text-xs">{error}</li>
+                    ))}
+                  </ul>
+                )}
               </div>
             )}
 
@@ -233,17 +272,17 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
                 <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
                   type="tel"
-                  name="phoneNumber"
-                  value={formData.phoneNumber}
+                  name="phone"
+                  value={formData.phone}
                   onChange={handleInputChange}
                   className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.phoneNumber ? 'border-red-300' : 'border-gray-300'
+                    errors.phone ? 'border-red-300' : 'border-gray-300'
                   }`}
                   placeholder="Enter phone number"
                 />
               </div>
-              {errors.phoneNumber && (
-                <p className="mt-1 text-xs text-red-600">{errors.phoneNumber}</p>
+              {errors.phone && (
+                <p className="mt-1 text-xs text-red-600">{errors.phone}</p>
               )}
             </div>
 
@@ -282,14 +321,15 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
                   User Type
                 </label>
                 <select
-                  name="type"
-                  value={formData.type}
+                  name="role"
+                  value={formData.role}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
                 >
-                  <option value="1">Regular User</option>
+                  <option value="1">Member</option>
                   <option value="2">Gym Owner</option>
                   <option value="3">Admin</option>
+                  <option value="4">Trainer</option>
                 </select>
               </div>
 
@@ -298,8 +338,8 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
                   Status
                 </label>
                 <select
-                  name="activeStatus"
-                  value={formData.activeStatus}
+                  name="recordStatus"
+                  value={formData.recordStatus}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
                 >
@@ -307,19 +347,6 @@ export function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUserModalP
                   <option value="0">Inactive</option>
                 </select>
               </div>
-            </div>
-
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                name="isVerified"
-                checked={formData.isVerified}
-                onChange={handleInputChange}
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              <label className="ml-2 text-sm text-gray-700">
-                Mark as verified
-              </label>
             </div>
 
             <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">

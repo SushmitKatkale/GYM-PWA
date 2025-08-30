@@ -19,6 +19,7 @@ export interface User {
   activeStatus: '0' | '1';
   createTimestamp: string;
   gender: string;
+  profileImage?: string;
 }
 
 export interface Subscription {
@@ -67,6 +68,8 @@ interface AuthState {
 
 // Helper function to map backend user type to frontend role
 const mapUserTypeToRole = (type: string): UserRole => {
+  console.log('Mapping user type:', type, typeof type);
+  
   switch (type) {
     case '3': return 'admin';
     case '2': return 'owner';
@@ -114,17 +117,7 @@ export const useAuthStore = create<AuthState>()(
             });
             
             // Create a basic user object first to allow login
-            const basicUser: User = {
-              id: '',
-              firstName: '',
-              lastName: '',
-              username: '',
-              email: email,
-              role: 'user',
-              isVerified: true,
-              activeStatus: '1',
-              createTimestamp: new Date().toISOString()
-            };
+            const basicUser: any = response.data.user;
             
             set({ user: basicUser });
             
@@ -134,19 +127,21 @@ export const useAuthStore = create<AuthState>()(
               .then(profileResponse => {
                 if (profileResponse.success && profileResponse.data) {
                   const profileData = profileResponse.data;
+                  
                   const enhancedUser: User = {
                     id: profileData.id || basicUser.id,
                     firstName: profileData.firstName || basicUser.firstName,
                     lastName: profileData.lastName || basicUser.lastName,
                     username: profileData.username || basicUser.username,
                     email: profileData.email || email,
-                    role: mapUserTypeToRole(profileData.type || '1'),
+                    role: mapUserTypeToRole(profileData?.role?.value.toString() || '1'),
                     gymId: profileData.gymId,
                     phoneNumber: profileData.phoneNumber,
                     avatar: profileData.avatar,
                     isVerified: profileData.isVerified !== false,
                     activeStatus: profileData.activeStatus || '1',
-                    createTimestamp: profileData.createTimestamp || basicUser.createTimestamp
+                    createTimestamp: profileData.createTimestamp || basicUser.createTimestamp,
+                    profileImage: profileData.profileImage,
                   };
                   
                   console.log('User profile loaded successfully:', enhancedUser);
@@ -282,14 +277,14 @@ export const useAuthStore = create<AuthState>()(
           if (response.success) {
             console.log('Registration successful - OTP should be sent by backend');
             set({ isLoading: false });
-            return true;
+            return {isValid: true, message: 'Registration successful. Please verify your email with the OTP sent.'};
           } else {
             console.log('Registration failed:', response.message);
             set({ 
               error: response.message || response.error || 'Registration failed', 
               isLoading: false 
             });
-            return false;
+            return {isValid: false, message: response.message || 'Registration failed'};
           }
         } catch (error: any) {
           console.error('Registration error in store:', error);

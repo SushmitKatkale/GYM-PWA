@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, User, ChevronDown, Check } from 'lucide-react';
-import { API_CONFIG } from '../../config/api';
-import { apiClient } from '../../services/apiClient';
+import { buildApiUrl, API_CONFIG } from '../../config/api';
+import { useAuthStore } from '../../stores/authStore';
 
 interface Owner {
   id: string;
@@ -37,21 +37,48 @@ const OwnerAutocomplete: React.FC<OwnerAutocompleteProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedOwner, setSelectedOwner] = useState<Owner | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { getAccessToken } = useAuthStore();
 
   // Fetch owners on component mount
   useEffect(() => {
     const fetchOwners = async () => {
       try {
         setIsLoading(true);
-        const data = await apiClient.get(API_CONFIG.ENDPOINTS.OWNERS);
-        if (data.success) {
-          const activeOwners = data.data.filter((owner: Owner) => owner.activeStatus === '1');
-          setOwners(activeOwners);
-          setFilteredOwners(activeOwners);
+        const token = getAccessToken();
+        if (!token) {
+          console.error('No authentication token available');
+          setIsLoading(false);
+          return;
+        }
+
+        console.log('DEBUG: Fetching owners from:', buildApiUrl(API_CONFIG.ENDPOINTS.OWNERS));
+        
+        const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.OWNERS), {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const data = await response.json();
+        console.log('DEBUG: Owners API response:', data);
+
+        if (response.status === 403) {
+          // User doesn't have admin privileges to view owners
+          setError('Insufficient permissions to load owner list');
+          console.warn('User does not have admin privileges to view owners list');
+        } else if (data.success) {
+          // All owners returned are already filtered by role=2 (owners) in the backend
+          setOwners(data.data);
+          setFilteredOwners(data.data);
+          console.log('DEBUG: Loaded owners:', data.data.length);
         } else {
+          setError(data.message || 'Failed to load owners');
           console.error('API returned error:', data.message);
         }
       } catch (error) {
@@ -62,16 +89,24 @@ const OwnerAutocomplete: React.FC<OwnerAutocompleteProps> = ({
     };
 
     fetchOwners();
-  }, []);
+  }, [getAccessToken]);
 
   // Update selected owner when value changes
   useEffect(() => {
     if (value && owners.length > 0) {
-      const owner = owners.find(o => o.email === value);
+      // Look for owner by ID first, then by email for backward compatibility
+      // Handle both string and number comparison for ID
+      const owner = owners.find(o => 
+        o.id === value || 
+        o.id === parseInt(value) || 
+        o.id.toString() === value || 
+        o.email === value
+      );
       setSelectedOwner(owner || null);
       if (owner) {
         setSearchQuery(`${owner.email} - ${owner.firstName} ${owner.lastName}`);
       }
+      console.log('DEBUG OwnerAutocomplete: Looking for owner with value:', value, 'Found:', owner);
     } else {
       setSelectedOwner(null);
       setSearchQuery('');
@@ -127,7 +162,8 @@ const OwnerAutocomplete: React.FC<OwnerAutocompleteProps> = ({
     setSelectedOwner(owner);
     setSearchQuery(`${owner.email} - ${owner.firstName} ${owner.lastName}`);
     setIsOpen(false);
-    onChange(owner.email);
+    // Return user ID instead of email to match backend expectations
+    onChange(owner.id);
   };
 
   const handleInputFocus = () => {
@@ -203,13 +239,18 @@ const OwnerAutocomplete: React.FC<OwnerAutocompleteProps> = ({
 
       {/* Helper text */}
       <div className="mt-1 text-xs text-gray-500">
-        {isLoading
-          ? 'Loading available owners...'
-          : disabled ? "" : `${owners.length} owners available`
-        }
+        {error ? (
+          <span className="text-red-500">{error}</span>
+        ) : isLoading ? (
+          'Loading available owners...'
+        ) : disabled ? (
+          ""
+        ) : (
+          `${owners.length} owners available`
+        )}
       </div>
 
-      {!disabled && owners.length === 0 && !isLoading && (
+      {!disabled && owners.length === 0 && !isLoading && !error && (
         <div className="mt-1 text-xs text-red-500">
           No active owners found. Please ensure there are registered gym owners.
         </div>

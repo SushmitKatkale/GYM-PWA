@@ -4,13 +4,47 @@
 
 @layer base {
   html {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Roboto', 'Open Sans', system-ui, sans-serif;
   }
   
   /* PWA Safe Areas */
   body {
     padding-bottom: env(safe-area-inset-bottom);
   }
+  
+  /* Typography defaults
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', 'Montserrat', system-ui, sans-serif;
+  } */
+
+  .font-poppins {
+    font-family: 'Poppins', 'Montserrat', system-ui, sans-serif;
+  }
+
+  .font-opensans {
+    font-family: 'Open Sans', 'Roboto', system-ui, sans-serif;
+  }
+
+  .font-roboto {
+    font-family: 'Roboto', 'Open Sans', system-ui, sans-serif;
+  }
+  
+}
+
+/* Design tokens */
+:root {
+  --bg-surface: #FFFFFF;
+  --bg-muted: #F7F7F9;
+  --text-primary: #12171F;
+  --text-secondary: #3B4352;
+  --text-tertiary: #717A8C;
+  --brand: #FF7A00;
+  --brand-press: #CC6100;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --shadow-card: 0 8px 24px rgba(18, 23, 31, 0.08);
+  --shadow-soft: 0 4px 12px rgba(18, 23, 31, 0.06);
 }
 
 @layer utilities {
@@ -92,5 +126,95 @@
   /* Modal positioning for mobile */
   .mobile-modal {
     margin-bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
+
+  /* Card primitives */
+  .card {
+    background: var(--bg-surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+  }
+  .card-muted {
+    background: var(--bg-muted);
+    border-radius: var(--radius-lg);
+  }
+  .btn-primary {
+    background: var(--brand);
+    color: white;
+    border-radius: var(--radius-md);
+  }
+  .btn-primary:active { 
+    background: var(--brand-press);
+  }
+  .text-secondary { color: var(--text-secondary); }
+  .text-tertiary { color: var(--text-tertiary); }
+  
+  /* Typography utilities */
+  .font-heading {
+    font-family: 'Poppins', 'Montserrat', system-ui, sans-serif;
+  }
+  
+  .font-body {
+    font-family: 'Open Sans', 'Roboto', system-ui, sans-serif;
+  }
+  
+  .font-button {
+    font-family: 'Poppins', 'Montserrat', system-ui, sans-serif;
+    font-weight: 600;
+  }
+  
+  /* Specific text styles */
+  .heading-xl {
+    font-family: 'Poppins', 'Montserrat', system-ui, sans-serif;
+    font-size: 2.25rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  
+  .heading-lg {
+    font-family: 'Poppins', 'Montserrat', system-ui, sans-serif;
+    font-size: 1.875rem;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  
+  .heading-md {
+    font-family: 'Poppins', 'Montserrat', system-ui, sans-serif;
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  
+  .body-lg {
+    font-family: 'Open Sans', 'Roboto', system-ui, sans-serif;
+    font-size: 1.125rem;
+    font-weight: 400;
+    line-height: 1.5;
+  }
+  
+  .body-base {
+    font-family: 'Open Sans', 'Roboto', system-ui, sans-serif;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+  }
+  
+  .body-sm {
+    font-family: 'Open Sans', 'Roboto', system-ui, sans-serif;
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.4;
+  }
+  
+  .button-base {
+    font-family: 'Poppins', 'Montserrat', system-ui, sans-serif;
+    font-weight: 300;
+    font-size: 1rem;
+  }
+  
+  .button-lg {
+    font-family: 'Poppins', 'Montserrat', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 1.125rem;
   }
 }

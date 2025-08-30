@@ -19,7 +19,7 @@ export function RegisterForm({ onToggleMode, onRegistrationSuccess }: RegisterFo
     confirmPassword: ''
   });
   const [error, setError] = useState('');
-  
+
   const { register, isLoading, error: authError, clearError } = useAuthStore();
 
   React.useEffect(() => {
@@ -32,13 +32,13 @@ export function RegisterForm({ onToggleMode, onRegistrationSuccess }: RegisterFo
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
+
     console.log('Form submitted with data:', formData);
 
     // Basic required field validation only
-    if (!formData.firstName.trim() || !formData.lastName.trim() || 
-        !formData.username.trim() || !formData.email.trim() || 
-        !formData.password.trim()) {
+    if (!formData.firstName.trim() || !formData.lastName.trim() ||
+      !formData.username.trim() || !formData.email.trim() ||
+      !formData.password.trim()) {
       setError('Please fill in all required fields');
       return;
     }
@@ -58,12 +58,12 @@ export function RegisterForm({ onToggleMode, onRegistrationSuccess }: RegisterFo
         password: formData.password,
         type: '1' as const // Always user type for public registration
       };
-      
+
       console.log('Calling register with data:', registrationData);
       const success = await register(registrationData);
       console.log('Register result:', success);
-      
-      if (success) {
+
+      if (success.isValid) {
         console.log('Registration successful');
         onRegistrationSuccess(formData.email);
       } else {
@@ -71,7 +71,7 @@ export function RegisterForm({ onToggleMode, onRegistrationSuccess }: RegisterFo
         // If there's no error from the store yet, wait a bit for it to be set
         setTimeout(() => {
           if (!authError) {
-            setError('Registration failed. Please check your information and try again.');
+            setError(success?.message ?? 'Registration failed. Please check your information and try again.');
           }
         }, 100);
       }
@@ -83,26 +83,23 @@ export function RegisterForm({ onToggleMode, onRegistrationSuccess }: RegisterFo
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-500 via-teal-500 to-blue-500 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md py-6 px-4">
         <div className="text-center mb-8">
-          <div className="flex justify-center mb-6">
-            <BrandLogo size="xl" variant="full" showTagline={true} />
-          </div>
-          <h2 className="text-3xl font-bold text-gray-900">Join {BRAND.name}</h2>
-          <p className="text-gray-600 mt-2">Start your fitness journey with us today</p>
+          <h2 className="heading-md text-gray-900 font-poppins">Create Account</h2>
+          <p className="text-gray-600 mt-2 font-opensans">Enter your credentials to continue!</p>
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-sm mb-4">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block body-sm font-medium text-gray-700 mb-2">
                 First Name
               </label>
               <div className="relative">
@@ -112,13 +109,13 @@ export function RegisterForm({ onToggleMode, onRegistrationSuccess }: RegisterFo
                   required
                   value={formData.firstName}
                   onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all font-body outline-none"
                   placeholder="John"
                 />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block body-sm font-medium text-gray-700 mb-2">
                 Last Name
               </label>
               <div className="relative">
@@ -128,15 +125,15 @@ export function RegisterForm({ onToggleMode, onRegistrationSuccess }: RegisterFo
                   required
                   value={formData.lastName}
                   onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all font-body outline-none"
                   placeholder="Doe"
                 />
               </div>
             </div>
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block body-sm font-medium text-gray-700 mb-2">
               Username
             </label>
             <div className="relative">
@@ -146,14 +143,14 @@ export function RegisterForm({ onToggleMode, onRegistrationSuccess }: RegisterFo
                 required
                 value={formData.username}
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all font-body outline-none"
                 placeholder="johndoe"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block body-sm font-medium text-gray-700 mb-2">
               Email Address
             </label>
             <div className="relative">
@@ -163,14 +160,14 @@ export function RegisterForm({ onToggleMode, onRegistrationSuccess }: RegisterFo
                 required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all font-body outline-none"
                 placeholder="john@example.com"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block body-sm font-medium text-gray-700 mb-2">
               Password
             </label>
             <div className="relative">
@@ -180,14 +177,14 @@ export function RegisterForm({ onToggleMode, onRegistrationSuccess }: RegisterFo
                 required
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all font-body outline-none"
                 placeholder="Minimum 6 characters"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block body-sm font-medium text-gray-700 mb-2">
               Confirm Password
             </label>
             <div className="relative">
@@ -197,7 +194,7 @@ export function RegisterForm({ onToggleMode, onRegistrationSuccess }: RegisterFo
                 required
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all font-body outline-none"
                 placeholder="Confirm your password"
               />
             </div>
@@ -206,18 +203,18 @@ export function RegisterForm({ onToggleMode, onRegistrationSuccess }: RegisterFo
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-stone-800 hover:bg-stone-900 text-white button-base py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? 'Creating Account...' : 'Create Account'}
           </button>
         </form>
 
-        <div className="mt-6 text-center">
-          <p className="text-gray-600">
+        <div className="mt-6 text-center font-opensans">
+          <p className="text-stone-800">
             Already have an account?{' '}
             <button
               onClick={onToggleMode}
-              className="text-green-600 hover:text-green-700 font-medium"
+              className="text-indigo-600 hover:text-indigo-700 font-button"
             >
               Sign in
             </button>

@@ -14,19 +14,19 @@ export const BRAND = {
     favicon: '/icons/favicon.ico'
   },
   colors: {
-    primary: '#2563EB', // Blue
-    secondary: '#10B981', // Green  
-    accent: '#8B5CF6', // Purple
-    error: '#EF4444', // Red
-    warning: '#F59E0B', // Yellow
-    success: '#10B981', // Green
+    primary: '#FF7A00',
+    secondary: '#12171F',  
+    accent: '#3B4352',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    success: '#22C55E',
     gradients: {
-      primary: 'from-blue-600 to-blue-700',
-      secondary: 'from-green-600 to-green-700',
-      accent: 'from-purple-600 to-purple-700',
-      admin: 'from-purple-600 to-pink-600',
-      owner: 'from-blue-600 to-indigo-600',
-      user: 'from-green-600 to-teal-600'
+      primary: 'from-orange-500 to-orange-600',
+      secondary: 'from-slate-800 to-slate-900',
+      accent: 'from-slate-500 to-slate-600',
+      admin: 'from-fuchsia-500 to-pink-500',
+      owner: 'from-orange-500 to-amber-600',
+      user: 'from-emerald-500 to-teal-600'
     }
   },
   social: {

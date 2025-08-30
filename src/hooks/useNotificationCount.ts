@@ -40,10 +40,10 @@ export function useNotificationCount() {
   }, [fetchUnreadCount]);
 
   // Auto-refresh every 30 seconds
-  useEffect(() => {
-    const interval = setInterval(fetchUnreadCount, 30000);
-    return () => clearInterval(interval);
-  }, [fetchUnreadCount]);
+  // useEffect(() => {
+  //   const interval = setInterval(fetchUnreadCount, 30000);
+  //   return () => clearInterval(interval);
+  // }, [fetchUnreadCount]);
 
   // Function to manually refresh count (useful after marking notifications as read)
   const refresh = useCallback(() => {
