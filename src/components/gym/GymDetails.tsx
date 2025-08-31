@@ -184,7 +184,8 @@ export const GymDetails: React.FC<GymDetailsProps> = ({
 
         <div className="flex items-center justify-between w-full">
           <button
-            onClick={() => onDirectPayment ? onDirectPayment(gym, bestPlan) : onSubscribe(gym)}
+            // onClick={() => onDirectPayment ? onDirectPayment(gym, bestPlan) : onSubscribe(gym)}
+            onClick={() => onSubscribe(gym)}
             className="flex-1 bg-gradient-to-br from-pink-400 to-red-500 text-white font-medium py-2 px-4 rounded-xs transition-colors text-sm sm:text-base w-1/2 max-w-[180px]"
           >
             Subscribe

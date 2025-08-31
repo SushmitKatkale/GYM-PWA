@@ -246,7 +246,7 @@ export const SubscriptionPlansPage: React.FC<SubscriptionPlansPageProps> = ({
   console.log(sortedPlans);
   
   return (
-    <div className="min-h-screen bg-gray-50 font-poppins">
+    <div className="min-h-screen bg-gray-50 font-poppins overflow-hidden">
       {/* Header */}
       {/* <div className="sticky top-0 z-40 bg-white border-b border-gray-200">
         <div className="flex items-center p-4">
@@ -436,26 +436,39 @@ export const SubscriptionPlansPage: React.FC<SubscriptionPlansPageProps> = ({
 
                               {/* Pricing Section */}
                               <div className="border-t border-gray-100">
-                                <div className="flex justify-between items-center mb-1">
-                                  <span className="text-sm text-gray-600">Billed</span>
-                                  <div className="text-right">
-                                    {plan.discountPercent && savings > 0 ? (
-                                      <div>
-                                        <span className="text-lg text-gray-400 line-through">₹{plan.price.toLocaleString()}</span>
-                                        <span className="text-2xl font-bold text-gray-900 ml-2">₹{regularPrice.toLocaleString()}</span>
-                                      </div>
-                                    ) : (
-                                      <span className="text-2xl font-bold text-gray-900">₹{regularPrice.toLocaleString()}</span>
-                                    )}
-                                  </div>
-                                </div>
                                 <div className="flex justify-between items-center">
-                                  <span className="text-sm text-gray-500">{plan.validityDays} days {period}</span>
-                                  {plan.discountPercent && savings > 0 && (
-                                    <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-bold">
-                                      {Math.round(plan.discountPercent)}% OFF
-                                    </span>
-                                  )}
+                                  <div>
+                                    <div className="text-xs text-gray-500 mb-1">Payment Amount</div>
+                                    <div className="text-xl font-semibold text-gray-900">
+                                      {plan.discountPercent && savings > 0 ? (
+                                        <div className='flex flex-col items-start'>
+                                          <span className="text-lg text-gray-400 line-through mr-2">₹{plan.price.toLocaleString()}</span>
+                                          ₹{regularPrice.toLocaleString()}
+                                        </div>
+                                      ) : (
+                                        `₹${regularPrice.toLocaleString()}`
+                                      )}
+                                    </div>
+                                    {/* {plan.discountPercent && savings > 0 && (
+                                      <span className="bg-green-100 text-green-700 px-3 py-1 rounded-lg text-xs font-bold mt-1 inline-block">
+                                        {Math.round(plan.discountPercent)}% OFF
+                                      </span>
+                                    )}
+                                    <div className="text-sm text-gray-500 mt-1">{plan.validityDays} days • {period}</div> */}
+                                  </div>
+                                  <div>
+                                    <button
+                                      onClick={() => handleSubscribe(plan, activeTab)}
+                                      disabled={hasActiveSubscription}
+                                      className={`px-6 py-3 rounded-sm font-semibold text-white transition-all text-sm ${
+                                        hasActiveSubscription
+                                          ? 'bg-gray-300 cursor-not-allowed'
+                                          : 'bg-gradient-to-br from-pink-400 to-red-500 bg-opacity-90 backdrop-blur-sm'
+                                      }`}
+                                    >
+                                      {hasActiveSubscription ? 'Subscribed' : 'PAY NOW'}
+                                    </button>
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -528,34 +541,31 @@ export const SubscriptionPlansPage: React.FC<SubscriptionPlansPageProps> = ({
                               </div>
 
                               {/* Pricing Section */}
-                              <div className="border-t border-gray-100 pt-4">
-                                <div className="flex justify-between items-center mb-1">
-                                  <span className="text-sm text-gray-600">Billed</span>
-                                  <span className="text-2xl font-bold text-gray-900">₹{bufferPrice.toLocaleString()}</span>
-                                </div>
-                                <div className="flex justify-end">
-                                  <span className="text-sm text-gray-500">{plan.validityDays} days + {plan.bufferDays} buffer days {period}</span>
+                              <div className="border-t border-gray-100">
+                                <div className="flex justify-between items-center">
+                                  <div>
+                                    <div className="text-xs text-gray-500 mb-1">Payment Amount</div>
+                                    <div className="text-xl font-semibold text-gray-900">₹{bufferPrice.toLocaleString()}</div>
+                                    {/* <div className="text-sm text-gray-500 mt-1">{plan.validityDays} days + {plan.bufferDays} buffer days • {period}</div> */}
+                                  </div>
+                                  <div>
+                                    <button
+                                      onClick={() => handleSubscribe(plan, activeTab)}
+                                      disabled={hasActiveSubscription}
+                                      className={`px-6 py-3 rounded-sm font-semibold text-white transition-all text-sm ${
+                                        hasActiveSubscription
+                                          ? 'bg-gray-300 cursor-not-allowed'
+                                          : 'bg-gradient-to-br from-pink-400 to-red-500 bg-opacity-90 backdrop-blur-sm'
+                                      }`}
+                                    >
+                                      {hasActiveSubscription ? 'Subscribed' : 'PAY NOW'}
+                                    </button>
+                                  </div>
                                 </div>
                               </div>
                             </div>
                           )}
 
-                          {/* Subscribe Button */}
-                          <div className="px-5 pb-5 font-poppins">
-                            <button
-                              onClick={() => handleSubscribe(plan, activeTab)}
-                              disabled={hasActiveSubscription}
-                              className={`w-full py-3 rounded-sm font-semibold text-white transition-all text-sm ${
-                                hasActiveSubscription
-                                  ? 'bg-gray-300 cursor-not-allowed'
-                                  : 'bg-gradient-to-br from-pink-400 to-red-500 bg-opacity-90 backdrop-blur-sm'
-                              }`}
-                            >
-                              {hasActiveSubscription ? 'Already Subscribed' : (
-                                `Get Started - ₹${activeTab === 'regular' ? regularPrice.toLocaleString() : bufferPrice.toLocaleString()}`
-                              )}
-                            </button>
-                          </div>
                         </div>
                       </div>
                     );
