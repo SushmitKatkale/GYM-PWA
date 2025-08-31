@@ -77,6 +77,17 @@ export const SubscriptionPlansPage: React.FC<SubscriptionPlansPageProps> = ({
   const [successMessage, setSuccessMessage] = useState('');
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [showValueComparison, setShowValueComparison] = useState(false);
+  const [planViewCounts] = useState({
+    // Simulated view counts for social proof
+    buffer: Math.floor(Math.random() * 50) + 150,
+    regular: Math.floor(Math.random() * 30) + 80
+  });
+  const [recentPurchases] = useState([
+    { planType: 'buffer', timeAgo: '2 hours ago', userName: 'S***h' },
+    { planType: 'buffer', timeAgo: '5 hours ago', userName: 'A***a' },
+    { planType: 'regular', timeAgo: '1 day ago', userName: 'R***j' }
+  ]);
 
   // Calculate distance
   const calculateDistance = (gymLat: string | number, gymLng: string | number) => {
@@ -244,7 +255,7 @@ export const SubscriptionPlansPage: React.FC<SubscriptionPlansPageProps> = ({
   };
 
   console.log(sortedPlans);
-  
+
   return (
     <div className="min-h-screen bg-gray-50 font-poppins overflow-hidden">
       {/* Header */}
@@ -292,7 +303,7 @@ export const SubscriptionPlansPage: React.FC<SubscriptionPlansPageProps> = ({
       </div>
 
       {/* Subscription Plans Carousel */}
-      <div className="px-4 py-4">
+      <div className="px-4 py-6">
         {sortedPlans.length === 0 ? (
           <div className="text-center py-8">
             <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -342,9 +353,9 @@ export const SubscriptionPlansPage: React.FC<SubscriptionPlansPageProps> = ({
 
                     return (
                       <div key={plan.id} className="w-full flex-shrink-0 relative">
-                        <div className="relative bg-white rounded-xl border border-gray-200 shadow-sm transition-all mx-1">
+                        <div className="relative bg-white rounded-xl border border-gray-200 shadow-sm transition-all mx-2">
                           {/* Plan Header */}
-                          <div className="px-5 pt-5 pb-2 flex justify-start items-center mb-2">
+                          <div className="px-6 pt-6 pb-4 flex justify-start items-center mb-4">
                             <div className="flex items-center justify-center">
                               <div className={`w-10 h-10 bg-gradient-to-br ${getPlanGradient(planType, plan.isMostPopular)} rounded-full flex items-center justify-center shadow-md`}>
                                 {planType === 'Daily' && <Zap className="w-5 h-5 text-white" />}
@@ -357,37 +368,62 @@ export const SubscriptionPlansPage: React.FC<SubscriptionPlansPageProps> = ({
                             <div className="text-start ml-4">
                               <h3 className="text-xl font-bold text-gray-900 mb-1">{planType}</h3>
                               <p className="text-sm text-gray-500">
-                                {planType === 'Custom' 
-                                  ? `Valid for ${plan.validityDays} days` 
+                                {planType === 'Custom'
+                                  ? `Valid for ${plan.validityDays} days`
                                   : 'Perfect for getting started'
                                 }
                               </p>
                             </div>
                           </div>
 
+                          {/* Popular Badge */}
+                          {plan.isMostPopular && (
+                            <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 z-10">
+                              <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md flex items-center space-x-1">
+                                <Crown className="w-3 h-3" />
+                                <span>MOST POPULAR</span>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Social proof for buffer plans - moved above tabs */}
+                          {plan.bufferDays && plan.bufferFee && (
+                            <div className="px-2 mb-2">
+                              <div className="p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-sm border border-green-200">
+                                <div className="flex items-center space-x-2 text-xs">
+                                  <TrendingUp className="w-3 h-3 text-green-600" />
+                                  <span className="text-green-700 font-medium">85% of members choose Buffer plans for extra flexibility!</span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
                           {/* Tab Buttons */}
-                          <div className="px-5 pb-4">
-                            <div className="flex bg-gray-100 rounded-lg p-1">
+                          <div className="px-2 mb-3">
+                            <div className="flex bg-gray-100 rounded-sm p-1.5 relative">
                               <button
                                 onClick={() => setActiveTab('regular')}
-                                className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all ${
-                                  activeTab === 'regular'
+                                className={`flex-1 py-3 px-4 rounded-sm text-sm font-medium transition-all ${activeTab === 'regular'
                                     ? 'bg-white text-gray-900 shadow-sm'
                                     : 'text-gray-600 hover:text-gray-900'
-                                }`}
+                                  }`}
                               >
                                 Regular
                               </button>
                               {plan.bufferDays && plan.bufferFee && (
                                 <button
                                   onClick={() => setActiveTab('buffer')}
-                                  className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all ${
-                                    activeTab === 'buffer'
+                                  className={`flex-1 py-3 px-4 rounded-md text-sm font-medium transition-all relative ${activeTab === 'buffer'
                                       ? 'bg-white text-gray-900 shadow-sm'
                                       : 'text-gray-600 hover:text-gray-900'
-                                  }`}
+                                    }`}
                                 >
-                                  Buffer
+                                  <div className="flex items-center justify-center space-x-1">
+                                    <span>Buffer</span>
+                                    <Sparkles className="w-3 h-3 text-orange-500" />
+                                    {/* Trending indicator */}
+                                    <div className="ml-1 w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                  </div>
                                 </button>
                               )}
                             </div>
@@ -395,11 +431,11 @@ export const SubscriptionPlansPage: React.FC<SubscriptionPlansPageProps> = ({
 
                           {/* Content based on active tab */}
                           {activeTab === 'regular' ? (
-                            <div className="px-5 pb-5">
+                            <div className="px-6 pb-6">
                               {/* Features Section */}
-                              <div className="mb-6">
+                              <div className="mb-2">
                                 <h4 className="text-sm font-semibold text-gray-900 mb-3">Features</h4>
-                                <div className="space-y-2">
+                                <div className="space-y-3">
                                   {plan.features && plan.features.length > 0 ? (
                                     plan.features
                                       .slice()
@@ -435,7 +471,7 @@ export const SubscriptionPlansPage: React.FC<SubscriptionPlansPageProps> = ({
                               </div>
 
                               {/* Pricing Section */}
-                              <div className="border-t border-gray-100">
+                              <div className="border-t border-gray-100 pt-4">
                                 <div className="flex justify-between items-center">
                                   <div>
                                     <div className="text-xs text-gray-500 mb-1">Payment Amount</div>
@@ -460,11 +496,10 @@ export const SubscriptionPlansPage: React.FC<SubscriptionPlansPageProps> = ({
                                     <button
                                       onClick={() => handleSubscribe(plan, activeTab)}
                                       disabled={hasActiveSubscription}
-                                      className={`px-6 py-3 rounded-sm font-semibold text-white transition-all text-sm ${
-                                        hasActiveSubscription
+                                      className={`px-6 py-3 rounded-sm font-semibold text-white transition-all text-sm ${hasActiveSubscription
                                           ? 'bg-gray-300 cursor-not-allowed'
                                           : 'bg-gradient-to-br from-pink-400 to-red-500 bg-opacity-90 backdrop-blur-sm'
-                                      }`}
+                                        }`}
                                     >
                                       {hasActiveSubscription ? 'Subscribed' : 'PAY NOW'}
                                     </button>
@@ -473,75 +508,64 @@ export const SubscriptionPlansPage: React.FC<SubscriptionPlansPageProps> = ({
                               </div>
                             </div>
                           ) : (
-                            <div className="px-5 pb-5">
+                            <div className="px-3 pb-3">
                               {/* Buffer Plan Benefits */}
-                              <div className="mb-4">
-                                <h4 className="text-sm font-semibold text-gray-900 mb-3">Buffer Plan Benefits</h4>
-                                <div className="space-y-2 text-sm">
-                                  <div className="flex justify-between">
-                                    <span className="text-gray-600">Regular {plan.validityDays}-day access</span>
-                                    <span className="text-gray-900 font-medium">₹{regularPrice}</span>
+                              <div className="mb-6">
+                                <div className="flex items-center justify-between space-x-2 mb-4">
+                                  <h4 className="text-sm font-semibold text-gray-900">Why Buffer Plan?</h4>
+                                  <div className="bg-green-500 text-white px-2 py-0.5 rounded-full text-xs font-bold">RECOMMENDED</div>
+                                </div>
+
+                                {/* Value comparison box */}
+                                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-sm p-4 mb-4">
+                                  <div className="text-xs text-green-700 font-medium mb-3">💡 Smart Choice:</div>
+                                  <div className="space-y-2 text-sm">
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-gray-700">You get: <span className="font-semibold text-green-700">{plan.validityDays + (plan.bufferDays || 0)} total days</span></span>
+                                      <span className="text-lg font-bold text-green-700">₹{bufferPrice}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-xs">
+                                      <span className="text-gray-600">Regular plan: {plan.validityDays} days only</span>
+                                      <span className="text-gray-600">₹{regularPrice}</span>
+                                    </div>
+                                    <div className="border-t border-green-200 pt-2 mt-2">
+                                      <div className="flex justify-between items-center font-semibold">
+                                        <span className="text-green-800">Extra value you get:</span>
+                                        <span className="text-green-600">₹{Math.round((regularPrice / plan.validityDays) * (plan.bufferDays || 0)) - (plan.bufferFee || 0)} saved!</span>
+                                      </div>
+                                    </div>
                                   </div>
-                                  <div className="flex justify-between">
-                                    <span className="text-orange-600">+ {plan.bufferDays} extra buffer days</span>
-                                    <span className="text-orange-600 font-medium">₹{plan.bufferFee}</span>
+                                </div>
+
+                                {/* Why buffer is better */}
+                                <div className="space-y-3 text-sm">
+                                  <div className="flex items-start space-x-3">
+                                    <Sparkles className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
+                                    <div>
+                                      <span className="text-gray-700 font-medium">Flexibility when you need it</span>
+                                      <p className="text-xs text-gray-600 mt-1">Life happens! Get extra days for busy periods or travel</p>
+                                    </div>
                                   </div>
-                                  <div className="flex justify-between text-xs text-gray-500">
-                                    <span>Regular price for extra days</span>
-                                    <span className="line-through">₹{Math.round((regularPrice / plan.validityDays) * (plan.bufferDays || 0))}</span>
+                                  <div className="flex items-start space-x-3">
+                                    <TrendingUp className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                                    <div>
+                                      <span className="text-gray-700 font-medium">Better value per day</span>
+                                      <p className="text-xs text-gray-600 mt-1">Pay less per day compared to buying additional regular plans</p>
+                                    </div>
                                   </div>
-                                  <hr className="border-gray-200" />
-                                  <div className="flex justify-between font-semibold">
-                                    <span className="text-gray-900">Total: {plan.validityDays + (plan.bufferDays || 0)} days</span>
-                                    <span className="text-green-600">Save ₹{Math.round((regularPrice / plan.validityDays) * (plan.bufferDays || 0)) - (plan.bufferFee || 0)}</span>
+                                  <div className="flex items-start space-x-3">
+                                    <Crown className="w-4 h-4 text-purple-500 flex-shrink-0 mt-0.5" />
+                                    <div>
+                                      <span className="text-gray-700 font-medium">Peace of mind</span>
+                                      <p className="text-xs text-gray-600 mt-1">No stress about membership expiring during important workout periods</p>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
 
-                              {/* Features Section */}
-                              <div className="mb-6">
-                                <h4 className="text-sm font-semibold text-gray-900 mb-3">Features</h4>
-                                <div className="space-y-2">
-                                  {plan.features && plan.features.length > 0 ? (
-                                    plan.features
-                                      .slice()
-                                      .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0))
-                                      .slice(0, 4)
-                                      .map((feature, featureIndex) => (
-                                        <div key={featureIndex} className="flex items-center space-x-3">
-                                          <Check className="w-4 h-4 text-orange-500 flex-shrink-0" />
-                                          <span className="text-sm text-gray-700">{feature.title}</span>
-                                        </div>
-                                      ))
-                                  ) : (
-                                    <>
-                                      <div className="flex items-center space-x-3">
-                                        <Check className="w-4 h-4 text-orange-500 flex-shrink-0" />
-                                        <span className="text-sm text-gray-700">Gym access for {plan.validityDays + (plan.bufferDays || 0)} days</span>
-                                      </div>
-                                      <div className="flex items-center space-x-3">
-                                        <Check className="w-4 h-4 text-orange-500 flex-shrink-0" />
-                                        <span className="text-sm text-gray-700">Basic equipment access</span>
-                                      </div>
-                                      <div className="flex items-center space-x-3">
-                                        <Check className="w-4 h-4 text-orange-500 flex-shrink-0" />
-                                        <span className="text-sm text-gray-700">Mobile app access</span>
-                                      </div>
-                                      <div className="flex items-center space-x-3">
-                                        <Check className="w-4 h-4 text-orange-500 flex-shrink-0" />
-                                        <span className="text-sm text-gray-700">Basic support</span>
-                                      </div>
-                                      <div className="flex items-center space-x-3">
-                                        <Sparkles className="w-4 h-4 text-orange-500 flex-shrink-0" />
-                                        <span className="text-sm text-orange-700 font-medium">+ {plan.bufferDays} extra flexibility days</span>
-                                      </div>
-                                    </>
-                                  )}
-                                </div>
-                              </div>
 
                               {/* Pricing Section */}
-                              <div className="border-t border-gray-100">
+                              <div className="border-t border-gray-100 pt-4 pb-2">
                                 <div className="flex justify-between items-center">
                                   <div>
                                     <div className="text-xs text-gray-500 mb-1">Payment Amount</div>
@@ -552,11 +576,10 @@ export const SubscriptionPlansPage: React.FC<SubscriptionPlansPageProps> = ({
                                     <button
                                       onClick={() => handleSubscribe(plan, activeTab)}
                                       disabled={hasActiveSubscription}
-                                      className={`px-6 py-3 rounded-sm font-semibold text-white transition-all text-sm ${
-                                        hasActiveSubscription
+                                      className={`px-6 py-3 rounded-sm font-semibold text-white transition-all text-sm ${hasActiveSubscription
                                           ? 'bg-gray-300 cursor-not-allowed'
                                           : 'bg-gradient-to-br from-pink-400 to-red-500 bg-opacity-90 backdrop-blur-sm'
-                                      }`}
+                                        }`}
                                     >
                                       {hasActiveSubscription ? 'Subscribed' : 'PAY NOW'}
                                     </button>
@@ -581,17 +604,48 @@ export const SubscriptionPlansPage: React.FC<SubscriptionPlansPageProps> = ({
                   <button
                     key={index}
                     onClick={() => goToSlide(index)}
-                    className={`w-2 h-2 rounded-full transition-colors ${
-                      index === currentSlide
+                    className={`w-2 h-2 rounded-full transition-colors ${index === currentSlide
                         ? 'bg-pink-500'
                         : 'bg-gray-300 hover:bg-gray-400'
-                    }`}
+                      }`}
                   />
                 ))}
               </div>
             )}
           </>
         )}
+
+        {/* Limited Time Offer Banner */}
+        {!hasActiveSubscription && (
+          <div className="bg-gradient-to-br from-pink-400 to-red-500 bg-opacity-90 backdrop-blur-sm rounded-lg p-5 mt-6 text-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-20 h-20 bg-white bg-opacity-10 rounded-full -mr-10 -mt-10"></div>
+            <div className="relative">
+              <div className="flex items-center space-x-2 mb-2">
+                <Gift className="w-4 h-4 text-yellow-300" />
+                <span className="text-sm font-bold text-yellow-300">LIMITED TIME OFFER</span>
+              </div>
+              <h4 className="font-bold text-base mb-1">🎉 Buffer Plans - Extra Value!</h4>
+              <p className="text-sm text-purple-100 mb-3">
+                Get extra flexibility days at a fraction of the regular cost. Perfect for busy schedules!
+              </p>
+              <div className="flex items-center space-x-4 text-xs">
+                <div className="flex items-center space-x-1">
+                  <Sparkles className="w-3 h-3 text-yellow-300" />
+                  <span>More flexibility</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <TrendingUp className="w-3 h-3 text-yellow-300" />
+                  <span>Better value</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Crown className="w-3 h-3 text-yellow-300" />
+                  <span>Member favorite</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Active Subscription Warning */}
         {hasActiveSubscription && (
           <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mt-4">
