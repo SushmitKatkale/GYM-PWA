@@ -344,8 +344,8 @@ export const SubscriptionPlansPage: React.FC<SubscriptionPlansPageProps> = ({
                       <div key={plan.id} className="w-full flex-shrink-0 relative">
                         <div className="relative bg-white rounded-xl border border-gray-200 shadow-sm transition-all mx-1">
                           {/* Plan Header */}
-                          <div className="px-5 pt-5 pb-2">
-                            <div className="flex items-center justify-center mb-4">
+                          <div className="px-5 pt-5 pb-2 flex justify-start items-center mb-2">
+                            <div className="flex items-center justify-center">
                               <div className={`w-10 h-10 bg-gradient-to-br ${getPlanGradient(planType, plan.isMostPopular)} rounded-full flex items-center justify-center shadow-md`}>
                                 {planType === 'Daily' && <Zap className="w-5 h-5 text-white" />}
                                 {planType === 'Weekly' && <Award className="w-5 h-5 text-white" />}
@@ -354,7 +354,7 @@ export const SubscriptionPlansPage: React.FC<SubscriptionPlansPageProps> = ({
                                 {!['Daily', 'Weekly', 'Monthly', 'Yearly'].includes(planType) && <Clock className="w-5 h-5 text-white" />}
                               </div>
                             </div>
-                            <div className="text-center">
+                            <div className="text-start ml-4">
                               <h3 className="text-xl font-bold text-gray-900 mb-1">{planType}</h3>
                               <p className="text-sm text-gray-500">
                                 {planType === 'Custom' 
@@ -435,7 +435,7 @@ export const SubscriptionPlansPage: React.FC<SubscriptionPlansPageProps> = ({
                               </div>
 
                               {/* Pricing Section */}
-                              <div className="border-t border-gray-100 pt-4">
+                              <div className="border-t border-gray-100">
                                 <div className="flex justify-between items-center mb-1">
                                   <span className="text-sm text-gray-600">Billed</span>
                                   <div className="text-right">
@@ -541,14 +541,14 @@ export const SubscriptionPlansPage: React.FC<SubscriptionPlansPageProps> = ({
                           )}
 
                           {/* Subscribe Button */}
-                          <div className="px-5 pb-5">
+                          <div className="px-5 pb-5 font-poppins">
                             <button
                               onClick={() => handleSubscribe(plan, activeTab)}
                               disabled={hasActiveSubscription}
-                              className={`w-full py-3 rounded-lg font-semibold text-white transition-all ${
+                              className={`w-full py-3 rounded-sm font-semibold text-white transition-all text-sm ${
                                 hasActiveSubscription
                                   ? 'bg-gray-300 cursor-not-allowed'
-                                  : 'bg-orange-500 hover:bg-orange-600 shadow-md hover:shadow-lg'
+                                  : 'bg-gradient-to-br from-pink-400 to-red-500 bg-opacity-90 backdrop-blur-sm'
                               }`}
                             >
                               {hasActiveSubscription ? 'Already Subscribed' : (
