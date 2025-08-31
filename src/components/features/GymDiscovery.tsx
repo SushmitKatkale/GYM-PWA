@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MapPin, Star, Filter, Navigation, Clock, Map as MapIcon, Users, Zap, IndianRupee, Copy, Eye, EyeOff, ChevronLeft, ChevronRight, Ruler, DraftingCompass, List, ListChecks, LayoutList } from 'lucide-react';
 import { GymImageCarousel } from '../ui/GymImageCarousel';
 import { GymDetails } from '../gym/GymDetails';
+import { SubscriptionPlansPage } from './SubscriptionPlansPage';
 import { useGymStore } from '../../stores/gymStore';
 import { useAuthStore } from '../../stores/authStore';
 import { GymDiscoveryMap } from '../common/GymDiscoveryMap';
@@ -49,6 +50,12 @@ export function GymDiscovery() {
   const [showDetailedView, setShowDetailedView] = useState(false);
   const [detailedGym, setDetailedGym] = useState<any>(null);
   const [open, setOpen] = useState(false);
+
+  // Subscription flow state
+  const [showSubscriptionView, setShowSubscriptionView] = useState(false);
+  const [subscriptionGym, setSubscriptionGym] = useState<any>(null);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [showPlanDetails, setShowPlanDetails] = useState(true);
 
   const getCurrentLocation = async () => {
     setIsLoadingLocation(true);
@@ -207,7 +214,7 @@ export function GymDiscovery() {
     setShowErrorModal(true);
   };
 
-  // Handle showing all gym subscriptions
+  // Handle showing subscription plans page
   const handleShowSubscriptions = async (gym: any) => {
     if (!user) {
       setErrorMessage('Please login to purchase a subscription');
@@ -216,38 +223,17 @@ export function GymDiscovery() {
     }
 
     setCurrentGym(gym); // Set current gym for payment processing
+    setSubscriptionGym(gym);
 
-    // Check for active subscriptions first
-    const hasActive = await checkActiveSubscriptions();
+    // Show subscription plans page
+    setShowSubscriptionView(true);
 
-    // Prepare all subscription details for the modal
-    const subscriptionDetails = gym.subscriptions?.map((sub: any) => {
-      let planType = 'Custom';
-      if (sub.validityDays === 1) planType = 'Daily';
-      else if (sub.validityDays === 7) planType = 'Weekly';
-      else if (sub.validityDays === 30) planType = 'Monthly';
-      else if (sub.validityDays === 365) planType = 'Yearly';
-
-      return {
-        id: sub.id,
-        planType,
-        price: parseFloat(sub.price),
-        discountPercent: sub.discountPercent ? parseFloat(sub.discountPercent) : undefined,
-        gymName: gym.name,
-        validityDays: sub.validityDays,
-        subscriptionId: sub.id,
-        gymId: gym.id,
-        features: sub.features || [],  // Ensure features are included
-        isMostPopular: sub.isMostPopular || false,
-        isCheapest: sub.isCheapest || false,
-        amenities: gym.amenities || [],  // Add gym amenities
-        location: gym.address || 'Location not available'  // Add gym location/address
-      };
-    }) || [];
-
-    setSelectedSubscriptions(subscriptionDetails);
-    setHasActiveSubscription(hasActive);
-    setIsPurchaseModalOpen(true);
+    // Add entry to browser history
+    window.history.pushState(
+      { view: 'subscription-plans', gymId: gym.id },
+      `Subscription Plans - ${gym.name}`,
+      `/discover/gym/${gym.id}/subscribe`
+    );
   };
 
   // Handle plan selection (for individual plan clicks - kept for backward compatibility)
@@ -336,16 +322,65 @@ export function GymDiscovery() {
     setShowPaymentModal(true);
   };
 
-  // Handle detailed view
+  // Handle detailed view with browser history support
   const handleViewDetails = (gym: any) => {
     setDetailedGym(gym);
     setShowDetailedView(true);
+
+    // Add entry to browser history so back button works
+    window.history.pushState(
+      { view: 'gym-details', gymId: gym.id },
+      `Gym Details - ${gym.name}`,
+      `/discover/gym/${gym.id}`
+    );
   };
 
   const handleBackFromDetails = () => {
     setShowDetailedView(false);
     setDetailedGym(null);
+
+    // Go back in browser history
+    window.history.back();
   };
+
+  // Handle browser back/forward button events
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      if (event.state?.view === 'gym-details' && event.state?.gymId) {
+        // User navigated to gym details via back/forward
+        const gym = gyms.find(g => g.id.toString() === event.state.gymId.toString());
+        if (gym) {
+          setDetailedGym(gym);
+          setShowDetailedView(true);
+          // Make sure subscription view is hidden
+          setShowSubscriptionView(false);
+          setSubscriptionGym(null);
+        }
+      } else if (event.state?.view === 'subscription-plans' && event.state?.gymId) {
+        // User navigated to subscription plans via back/forward
+        const gym = gyms.find(g => g.id.toString() === event.state.gymId.toString());
+        if (gym) {
+          // Re-initialize subscription view
+          handleShowSubscriptions(gym);
+        }
+      } else {
+        // User navigated back to gym list
+        setShowDetailedView(false);
+        setDetailedGym(null);
+        setShowSubscriptionView(false);
+        setSubscriptionGym(null);
+        // Close any open modals
+        setIsPurchaseModalOpen(false);
+        setShowPaymentModal(false);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [gyms]);
 
   // Handle payment confirmation
   const handleConfirmPurchase = async (paymentMethod: string, subscriptionId: string) => {
@@ -472,6 +507,58 @@ export function GymDiscovery() {
         default: return 0;
       }
     });
+
+  // Handle back from subscription view
+  const handleBackFromSubscriptions = () => {
+    setShowSubscriptionView(false);
+    setSubscriptionGym(null);
+    setSelectedSubscriptions([]);
+    setIsPurchaseModalOpen(false);
+    setShowPaymentModal(false);
+
+    // Go back in browser history
+    window.history.back();
+  };
+
+  // Handle subscription plan selection
+  const handleSubscriptionPlanSelect = (subscriptionId: string) => {
+    setSelectedPlanId(subscriptionId);
+  };
+
+  // Handle make payment button
+  const handleMakePayment = () => {
+    if (!selectedPlanId) return;
+
+    // Find the selected subscription
+    const selectedSub = selectedSubscriptions.find(sub => sub.id === selectedPlanId);
+    if (selectedSub && currentGym) {
+      setSelectedPlan({
+        subscriptionId: selectedSub.subscriptionId,
+        planType: selectedSub.planType,
+        amount: selectedSub.discountPercent ? Math.round(selectedSub.price - (selectedSub.discountPercent * selectedSub.price / 100)) : selectedSub.price,
+        gymName: selectedSub.gymName
+      });
+      setShowPaymentModal(true);
+
+      // Add payment step to browser history
+      window.history.pushState(
+        { view: 'payment', gymId: currentGym.id, subscriptionId: selectedPlanId },
+        `Payment - ${selectedSub.gymName}`,
+        `/discover/gym/${currentGym.id}/subscribe/payment`
+      );
+    }
+  };
+
+  // Show subscription plans view if a gym is selected for subscription
+  if (showSubscriptionView && subscriptionGym) {
+    return (
+      <SubscriptionPlansPage
+        gym={subscriptionGym}
+        onBack={handleBackFromSubscriptions}
+        currentLocation={currentLocation}
+      />
+    );
+  }
 
   // Show detailed gym view if a gym is selected for details
   if (showDetailedView && detailedGym) {
@@ -850,26 +937,27 @@ export function GymDiscovery() {
       )}
       {/* <p className="text-gray-600 text-sm mb-4">${gym.description}</p> */}
 
-      {/* Modals */}
-      {isPurchaseModalOpen && selectedSubscriptions.length > 0 && (
-        <SubscriptionPurchaseModal
-          isOpen={isPurchaseModalOpen}
-          subscriptions={selectedSubscriptions}
-          onClose={() => setIsPurchaseModalOpen(false)}
-          onSelectPlan={(subscriptionId) => {
-            // Find the selected subscription
-            const selectedSub = selectedSubscriptions.find(sub => sub.id === subscriptionId);
-            if (selectedSub && currentGym) {
-              setSelectedPlan({
-                subscriptionId: selectedSub.subscriptionId,
-                planType: selectedSub.planType,
-                amount: selectedSub.discountPercent || selectedSub.price,
-                gymName: selectedSub.gymName
-              });
-              setIsPurchaseModalOpen(false);
-              setShowPaymentModal(true);
-            }
+      {/* Payment Gateway Modal - Only shown when in subscription flow */}
+      {showPaymentModal && selectedPlan && currentGym && (
+        <PaymentGatewayModal
+          isOpen={showPaymentModal}
+          onClose={() => {
+            setShowPaymentModal(false);
+            setSelectedPlan(null);
+            // Go back to subscription plans
+            window.history.back();
           }}
+          gymId={currentGym.id}
+          subscriptionId={selectedPlan.subscriptionId}
+          amount={selectedPlan.amount}
+          gymName={selectedPlan.gymName}
+          planType={selectedPlan.planType}
+          onSuccess={(paymentId) => {
+            handlePaymentSuccess(paymentId);
+            // Navigate back to gym list after success
+            window.history.go(-2); // Go back 2 steps to gym list
+          }}
+          onError={handlePaymentError}
         />
       )}
       {showSuccessModal && (
@@ -882,23 +970,6 @@ export function GymDiscovery() {
         <ErrorModal
           message={errorMessage}
           onClose={() => setShowErrorModal(false)}
-        />
-      )}
-      {showPaymentModal && selectedPlan && currentGym && (
-        <PaymentGatewayModal
-          isOpen={showPaymentModal}
-          onClose={() => {
-            setShowPaymentModal(false);
-            setSelectedPlan(null);
-            setCurrentGym(null);
-          }}
-          gymId={currentGym.id}
-          subscriptionId={selectedPlan.subscriptionId}
-          amount={selectedPlan.amount}
-          gymName={selectedPlan.gymName}
-          planType={selectedPlan.planType}
-          onSuccess={handlePaymentSuccess}
-          onError={handlePaymentError}
         />
       )}
       {filteredAndSortedGyms.length === 0 && (
