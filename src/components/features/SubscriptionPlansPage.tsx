@@ -68,7 +68,7 @@ export const SubscriptionPlansPage: React.FC<SubscriptionPlansPageProps> = ({
 }) => {
   const { user } = useAuthStore();
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
-  const [selectedPaymentType, setSelectedPaymentType] = useState<'regular' | 'buffer'>('regular');
+  const [activeTab, setActiveTab] = useState<'regular' | 'buffer'>('buffer');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -337,201 +337,224 @@ export const SubscriptionPlansPage: React.FC<SubscriptionPlansPageProps> = ({
                     const regularPrice = plan.discountPercent
                       ? Math.round(plan.price - (plan.discountPercent * plan.price / 100))
                       : plan.price;
-                    const bufferPrice = regularPrice + (plan.bufferFee || 0);
+                    const bufferPrice = Math.round(regularPrice + (parseFloat(plan.bufferFee) || 0));
                     const savings = plan.discountPercent ? plan.price - regularPrice : 0;
 
                     return (
                       <div key={plan.id} className="w-full flex-shrink-0 relative">
-                        <div
-                          className={`relative bg-white rounded-sm border-2 transition-all mx-1 ${plan.isMostPopular
-                            ? 'border-pink-300 shadow-xl bg-gradient-to-b from-pink-50 to-white'
-                            : 'border-gray-200 hover:border-gray-300 hover:shadow-lg'
-                            }`}
-                        >
-                          {/* Most Popular Badge */}
-                          {plan.isMostPopular || true && (
-                            <div className="absolute top-2 right-2 transform z-10">
-                              <div className="flex items-center space-x-1">
-                                <Star className="w-3 h-3 text-white" />
-                                <span className="bg-gradient-to-r from-pink-500 to-red-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-                                  MOST POPULAR
-                                </span>
+                        <div className="relative bg-white rounded-xl border border-gray-200 shadow-sm transition-all mx-1">
+                          {/* Plan Header */}
+                          <div className="px-5 pt-5 pb-2">
+                            <div className="flex items-center justify-center mb-4">
+                              <div className={`w-10 h-10 bg-gradient-to-br ${getPlanGradient(planType, plan.isMostPopular)} rounded-full flex items-center justify-center shadow-md`}>
+                                {planType === 'Daily' && <Zap className="w-5 h-5 text-white" />}
+                                {planType === 'Weekly' && <Award className="w-5 h-5 text-white" />}
+                                {planType === 'Monthly' && <Crown className="w-5 h-5 text-white" />}
+                                {planType === 'Yearly' && <Shield className="w-5 h-5 text-white" />}
+                                {!['Daily', 'Weekly', 'Monthly', 'Yearly'].includes(planType) && <Clock className="w-5 h-5 text-white" />}
+                              </div>
+                            </div>
+                            <div className="text-center">
+                              <h3 className="text-xl font-bold text-gray-900 mb-1">{planType}</h3>
+                              <p className="text-sm text-gray-500">
+                                {planType === 'Custom' 
+                                  ? `Valid for ${plan.validityDays} days` 
+                                  : 'Perfect for getting started'
+                                }
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Tab Buttons */}
+                          <div className="px-5 pb-4">
+                            <div className="flex bg-gray-100 rounded-lg p-1">
+                              <button
+                                onClick={() => setActiveTab('regular')}
+                                className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all ${
+                                  activeTab === 'regular'
+                                    ? 'bg-white text-gray-900 shadow-sm'
+                                    : 'text-gray-600 hover:text-gray-900'
+                                }`}
+                              >
+                                Regular
+                              </button>
+                              {plan.bufferDays && plan.bufferFee && (
+                                <button
+                                  onClick={() => setActiveTab('buffer')}
+                                  className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all ${
+                                    activeTab === 'buffer'
+                                      ? 'bg-white text-gray-900 shadow-sm'
+                                      : 'text-gray-600 hover:text-gray-900'
+                                  }`}
+                                >
+                                  Buffer
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Content based on active tab */}
+                          {activeTab === 'regular' ? (
+                            <div className="px-5 pb-5">
+                              {/* Features Section */}
+                              <div className="mb-6">
+                                <h4 className="text-sm font-semibold text-gray-900 mb-3">Features</h4>
+                                <div className="space-y-2">
+                                  {plan.features && plan.features.length > 0 ? (
+                                    plan.features
+                                      .slice()
+                                      .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0))
+                                      .slice(0, 4)
+                                      .map((feature, featureIndex) => (
+                                        <div key={featureIndex} className="flex items-center space-x-3">
+                                          <Check className="w-4 h-4 text-orange-500 flex-shrink-0" />
+                                          <span className="text-sm text-gray-700">{feature.title}</span>
+                                        </div>
+                                      ))
+                                  ) : (
+                                    <>
+                                      <div className="flex items-center space-x-3">
+                                        <Check className="w-4 h-4 text-orange-500 flex-shrink-0" />
+                                        <span className="text-sm text-gray-700">Gym access for {plan.validityDays} days</span>
+                                      </div>
+                                      <div className="flex items-center space-x-3">
+                                        <Check className="w-4 h-4 text-orange-500 flex-shrink-0" />
+                                        <span className="text-sm text-gray-700">Basic equipment access</span>
+                                      </div>
+                                      <div className="flex items-center space-x-3">
+                                        <Check className="w-4 h-4 text-orange-500 flex-shrink-0" />
+                                        <span className="text-sm text-gray-700">Mobile app access</span>
+                                      </div>
+                                      <div className="flex items-center space-x-3">
+                                        <Check className="w-4 h-4 text-orange-500 flex-shrink-0" />
+                                        <span className="text-sm text-gray-700">Basic support</span>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Pricing Section */}
+                              <div className="border-t border-gray-100 pt-4">
+                                <div className="flex justify-between items-center mb-1">
+                                  <span className="text-sm text-gray-600">Billed</span>
+                                  <div className="text-right">
+                                    {plan.discountPercent && savings > 0 ? (
+                                      <div>
+                                        <span className="text-lg text-gray-400 line-through">₹{plan.price.toLocaleString()}</span>
+                                        <span className="text-2xl font-bold text-gray-900 ml-2">₹{regularPrice.toLocaleString()}</span>
+                                      </div>
+                                    ) : (
+                                      <span className="text-2xl font-bold text-gray-900">₹{regularPrice.toLocaleString()}</span>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm text-gray-500">{plan.validityDays} days {period}</span>
+                                  {plan.discountPercent && savings > 0 && (
+                                    <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-bold">
+                                      {Math.round(plan.discountPercent)}% OFF
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="px-5 pb-5">
+                              {/* Buffer Plan Benefits */}
+                              <div className="mb-4">
+                                <h4 className="text-sm font-semibold text-gray-900 mb-3">Buffer Plan Benefits</h4>
+                                <div className="space-y-2 text-sm">
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">Regular {plan.validityDays}-day access</span>
+                                    <span className="text-gray-900 font-medium">₹{regularPrice}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-orange-600">+ {plan.bufferDays} extra buffer days</span>
+                                    <span className="text-orange-600 font-medium">₹{plan.bufferFee}</span>
+                                  </div>
+                                  <div className="flex justify-between text-xs text-gray-500">
+                                    <span>Regular price for extra days</span>
+                                    <span className="line-through">₹{Math.round((regularPrice / plan.validityDays) * (plan.bufferDays || 0))}</span>
+                                  </div>
+                                  <hr className="border-gray-200" />
+                                  <div className="flex justify-between font-semibold">
+                                    <span className="text-gray-900">Total: {plan.validityDays + (plan.bufferDays || 0)} days</span>
+                                    <span className="text-green-600">Save ₹{Math.round((regularPrice / plan.validityDays) * (plan.bufferDays || 0)) - (plan.bufferFee || 0)}</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Features Section */}
+                              <div className="mb-6">
+                                <h4 className="text-sm font-semibold text-gray-900 mb-3">Features</h4>
+                                <div className="space-y-2">
+                                  {plan.features && plan.features.length > 0 ? (
+                                    plan.features
+                                      .slice()
+                                      .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0))
+                                      .slice(0, 4)
+                                      .map((feature, featureIndex) => (
+                                        <div key={featureIndex} className="flex items-center space-x-3">
+                                          <Check className="w-4 h-4 text-orange-500 flex-shrink-0" />
+                                          <span className="text-sm text-gray-700">{feature.title}</span>
+                                        </div>
+                                      ))
+                                  ) : (
+                                    <>
+                                      <div className="flex items-center space-x-3">
+                                        <Check className="w-4 h-4 text-orange-500 flex-shrink-0" />
+                                        <span className="text-sm text-gray-700">Gym access for {plan.validityDays + (plan.bufferDays || 0)} days</span>
+                                      </div>
+                                      <div className="flex items-center space-x-3">
+                                        <Check className="w-4 h-4 text-orange-500 flex-shrink-0" />
+                                        <span className="text-sm text-gray-700">Basic equipment access</span>
+                                      </div>
+                                      <div className="flex items-center space-x-3">
+                                        <Check className="w-4 h-4 text-orange-500 flex-shrink-0" />
+                                        <span className="text-sm text-gray-700">Mobile app access</span>
+                                      </div>
+                                      <div className="flex items-center space-x-3">
+                                        <Check className="w-4 h-4 text-orange-500 flex-shrink-0" />
+                                        <span className="text-sm text-gray-700">Basic support</span>
+                                      </div>
+                                      <div className="flex items-center space-x-3">
+                                        <Sparkles className="w-4 h-4 text-orange-500 flex-shrink-0" />
+                                        <span className="text-sm text-orange-700 font-medium">+ {plan.bufferDays} extra flexibility days</span>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Pricing Section */}
+                              <div className="border-t border-gray-100 pt-4">
+                                <div className="flex justify-between items-center mb-1">
+                                  <span className="text-sm text-gray-600">Billed</span>
+                                  <span className="text-2xl font-bold text-gray-900">₹{bufferPrice.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-end">
+                                  <span className="text-sm text-gray-500">{plan.validityDays} days + {plan.bufferDays} buffer days {period}</span>
+                                </div>
                               </div>
                             </div>
                           )}
 
-                          <div className="py-5 px-2">
-                            {/* Plan Header */}
-                            <div className="text-center mb-4 flex justify-start items-center px-2 pt-2">
-                              <div className={`w-8 h-8 bg-gradient-to-br ${getPlanGradient(planType, plan.isMostPopular)} rounded-xl flex items-center justify-center mb-3 shadow-lg`}>
-                                {planType === 'Daily' && <Zap className="w-4 h-4 text-white" />}
-                                {planType === 'Weekly' && <Award className="w-4 h-4 text-white" />}
-                                {planType === 'Monthly' && <Crown className="w-4 h-4 text-white" />}
-                                {planType === 'Yearly' && <Shield className="w-4 h-4 text-white" />}
-                                {!['Daily', 'Weekly', 'Monthly', 'Yearly'].includes(planType) && <Star className="w-4 h-4 text-white" />}
-                              </div>
-                              <h3 className="text-base font-semibold text-gray-800 mb-2 ml-2">{planType} Plan</h3>
-                            </div>
-
-                            {/* Features */}
-                            <div className="space-y-3 mb-5">
-                              {plan.features && plan.features
-                                .slice()
-                                .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0))
-                                .slice(0, 5)
-                                .map((feature, featureIndex) => (
-                                  <div key={featureIndex} className={`flex items-start space-x-3 ${feature.isHighlighted ? 'bg-orange-50 border border-orange-200 rounded-lg p-2' : ''
-                                    }`}>
-                                    <div className="flex-shrink-0">
-                                      <Check className={`w-5 h-5 mt-0.5 ${feature.isHighlighted ? 'text-orange-500' : 'text-green-500'
-                                        }`} />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <div className={`text-sm font-medium ${feature.isHighlighted ? 'text-orange-900' : 'text-gray-900'
-                                        }`}>
-                                        {feature.title}
-                                      </div>
-                                      {feature.description && (
-                                        <p className={`text-xs mt-1 ${feature.isHighlighted ? 'text-orange-700' : 'text-gray-500'
-                                          }`}>
-                                          {feature.description}
-                                        </p>
-                                      )}
-                                    </div>
-                                  </div>
-                                ))}
-
-                              {/* Enhanced Default features if none specified */}
-                              {(!plan.features || plan.features.length === 0) && (
-                                <>
-                                  <div className="flex items-start space-x-3">
-                                    <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                                    <div>
-                                      <div className="text-sm font-medium text-gray-900">Full Gym Access</div>
-                                      <p className="text-xs text-gray-500 mt-0.5">24/7 access to all gym facilities and equipment</p>
-                                    </div>
-                                  </div>
-                                  <div className="flex items-start space-x-3">
-                                    <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                                    <div>
-                                      <div className="text-sm font-medium text-gray-900">Modern Equipment</div>
-                                      <p className="text-xs text-gray-500 mt-0.5">Latest cardio machines, weights, and functional training gear</p>
-                                    </div>
-                                  </div>
-                                  <div className="flex items-start space-x-3">
-                                    <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                                    <div>
-                                      <div className="text-sm font-medium text-gray-900">Locker & Shower</div>
-                                      <p className="text-xs text-gray-500 mt-0.5">Secure lockers and clean shower facilities</p>
-                                    </div>
-                                  </div>
-                                  {planType !== 'Daily' && (
-                                    <div className="flex items-start space-x-3">
-                                      <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                                      <div>
-                                        <div className="text-sm font-medium text-gray-900">Group Classes</div>
-                                        <p className="text-xs text-gray-500 mt-0.5">Join yoga, aerobics, and fitness classes</p>
-                                      </div>
-                                    </div>
-                                  )}
-                                  {(planType === 'Monthly' || planType === 'Yearly') && (
-                                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-2 flex items-start space-x-3">
-                                      <Check className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
-                                      <div>
-                                        <div className="text-sm font-medium text-orange-900">Personal Training Session</div>
-                                        <p className="text-xs text-orange-700 mt-0.5">Free consultation with certified trainers</p>
-                                      </div>
-                                    </div>
-                                  )}
-                                  {planType === 'Yearly' && (
-                                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-2 flex items-start space-x-3">
-                                      <Gift className="w-5 h-5 text-purple-500 flex-shrink-0 mt-0.5" />
-                                      <div>
-                                        <div className="text-sm font-medium text-purple-900">Exclusive Benefits</div>
-                                        <p className="text-xs text-purple-700 mt-0.5">Guest passes, priority booking, and nutrition guidance</p>
-                                      </div>
-                                    </div>
-                                  )}
-                                </>
-                              )}
-                            </div>
-
-                            {/* Discount Badge */}
-                            {/* {plan.discountPercent && savings > 0 && (
-                              <div className="mb-3">
-                                <div className="bg-red-50 border border-red-200 rounded-lg p-2">
-                                  <div className="text-center">
-                                    <span className="text-red-800 text-xs font-medium">
-                                      Save ₹{savings.toLocaleString()} • {Math.round(plan.discountPercent)}% off
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            )} */}
-
-                            {/* Payment Options */}
-                            <div className="space-y-3 flex">
-                              {/* Regular Payment Button */}
-                              <button
-                                onClick={() => handleSubscribe(plan, 'regular')}
-                                disabled={hasActiveSubscription}
-                                className={`w-full py-4 rounded-xl font-semibold text-white transition-all text-sm shadow-lg hover:shadow-xl transform hover:scale-[1.02] ${hasActiveSubscription
+                          {/* Subscribe Button */}
+                          <div className="px-5 pb-5">
+                            <button
+                              onClick={() => handleSubscribe(plan, activeTab)}
+                              disabled={hasActiveSubscription}
+                              className={`w-full py-3 rounded-lg font-semibold text-white transition-all ${
+                                hasActiveSubscription
                                   ? 'bg-gray-300 cursor-not-allowed'
-                                  : plan.isMostPopular
-                                    ? 'bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600'
-                                    : 'bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-800 hover:to-gray-900'
-                                  }`}
-                              >
-                                {hasActiveSubscription ? 'Already Subscribed' : (
-                                  <div className="flex items-center justify-center space-x-2">
-                                    <Calendar className="w-5 h-5" />
-                                    <span>Start {planType} Plan</span>
-                                    <span className="bg-white bg-opacity-20 px-2 py-1 rounded-full text-xs font-bold">
-                                      ₹{regularPrice.toLocaleString()}
-                                    </span>
-                                  </div>
-                                )}
-                              </button>
-
-                              {/* Buffer Payment Button - More Prominent */}
-                              {plan.bufferDays && plan.bufferFee && (
-                                <div className="relative">
-                                  {/* Popular Badge for Buffer */}
-                                  <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 z-10">
-                                    <div className="flex items-center space-x-1">
-                                      <TrendingUp className="w-3 h-3 text-white" />
-                                      <span className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
-                                        RECOMMENDED
-                                      </span>
-                                    </div>
-                                  </div>
-                                  <button
-                                    onClick={() => handleSubscribe(plan, 'buffer')}
-                                    disabled={hasActiveSubscription}
-                                    className={`w-full py-4 rounded-xl font-semibold text-white transition-all text-sm shadow-lg hover:shadow-xl transform hover:scale-[1.02] mt-2 ${hasActiveSubscription
-                                      ? 'bg-gray-300 cursor-not-allowed'
-                                      : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'
-                                      }`}
-                                  >
-                                    {hasActiveSubscription ? 'Already Subscribed' : (
-                                      <div>
-                                        <div className="flex items-center justify-center space-x-2">
-                                          <Sparkles className="w-5 h-5" />
-                                          <span>Buffer Plan</span>
-                                          <span className="bg-white bg-opacity-20 px-2 py-1 rounded-full text-xs font-bold">
-                                            ₹{bufferPrice.toLocaleString()}
-                                          </span>
-                                        </div>
-                                        <div className="text-xs mt-1 opacity-90 flex items-center justify-center space-x-1">
-                                          <Clock className="w-3 h-3" />
-                                          <span>{plan.bufferDays} days extra grace period • Peace of mind</span>
-                                        </div>
-                                      </div>
-                                    )}
-                                  </button>
-                                </div>
+                                  : 'bg-orange-500 hover:bg-orange-600 shadow-md hover:shadow-lg'
+                              }`}
+                            >
+                              {hasActiveSubscription ? 'Already Subscribed' : (
+                                `Get Started - ₹${activeTab === 'regular' ? regularPrice.toLocaleString() : bufferPrice.toLocaleString()}`
                               )}
-                            </div>
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -548,17 +571,17 @@ export const SubscriptionPlansPage: React.FC<SubscriptionPlansPageProps> = ({
                   <button
                     key={index}
                     onClick={() => goToSlide(index)}
-                    className={`w-2 h-2 rounded-full transition-colors ${index === currentSlide
-                      ? 'bg-pink-500'
-                      : 'bg-gray-300 hover:bg-gray-400'
-                      }`}
+                    className={`w-2 h-2 rounded-full transition-colors ${
+                      index === currentSlide
+                        ? 'bg-pink-500'
+                        : 'bg-gray-300 hover:bg-gray-400'
+                    }`}
                   />
                 ))}
               </div>
             )}
           </>
         )}
-
         {/* Active Subscription Warning */}
         {hasActiveSubscription && (
           <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mt-4">
