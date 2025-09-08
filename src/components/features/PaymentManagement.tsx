@@ -140,6 +140,10 @@ export function PaymentManagement() {
       }
     } catch (error) {
       console.error('Failed to load vendor configs:', error);
+      // Show a user-friendly error message
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load vendor configurations. Please try again.';
+      // You could also show a toast notification here
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -266,7 +270,7 @@ export function PaymentManagement() {
         if (subscriptionSearchTerm.includes('@')) {
           filters.userEmail = subscriptionSearchTerm;
         } else {
-          filters.title = subscriptionSearchTerm;
+          filters.userEmail = subscriptionSearchTerm; // Backend searches by userEmail, not title
         }
       }
       if (subscriptionStatusFilter) filters.status = subscriptionStatusFilter;
@@ -350,7 +354,7 @@ export function PaymentManagement() {
         }
       }
       if (refundStatusFilter) filters.status = refundStatusFilter;
-      if (refundTypeFilter) filters.type = refundTypeFilter;
+      if (refundTypeFilter) filters.refundType = refundTypeFilter;
 
       const response = await adminPaymentService.getRefunds(
         resetPage ? 1 : page,

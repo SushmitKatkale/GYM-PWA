@@ -7,18 +7,15 @@ import { useGymStore } from '../../stores/gymStore';
 import { useAuthStore } from '../../stores/authStore';
 import { GymDiscoveryMap } from '../common/GymDiscoveryMap';
 import { GymFilters } from '../../services/gymService';
-import { useGeolocation } from '../../hooks/useGeolocation';
 import { subscriptionService } from '../../services/subscriptionService';
 import { paymentService } from '../../services/paymentService';
-import SubscriptionPurchaseModal from '../ui/SubscriptionPurchaseModal';
 import { PaymentGatewayModal } from '../payments/PaymentGatewayModal';
 import SuccessModal from '../ui/SuccessModal';
 import ErrorModal from '../ui/ErrorModal';
-import { BRAND } from '../../constants/branding';
 import { formatOperatingHours } from '../../utils/timeFormat';
 
 export function GymDiscovery() {
-  const { gyms, selectedGym, setSelectedGym, fetchGymsWithFilters, isLoading, error, clearError } = useGymStore();
+  const { gyms, selectedGym, setSelectedGym, fetchGymsWithFilters, error } = useGymStore();
   const { user } = useAuthStore();
   const [filter, setFilter] = useState('all');
   const [sortBy, setSortBy] = useState('distance');
@@ -45,6 +42,7 @@ export function GymDiscovery() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [currentGym, setCurrentGym] = useState<any>(null);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
+  const [selectedFullPlan, setSelectedFullPlan] = useState<any>(null);
 
   // Detailed view state
   const [showDetailedView, setShowDetailedView] = useState(false);
@@ -205,6 +203,7 @@ export function GymDiscovery() {
     setSuccessMessage(`Payment successful! Your subscription has been activated.`);
     setShowSuccessModal(true);
     setSelectedPlan(null);
+    setSelectedFullPlan(null);
     setCurrentGym(null);
   };
 
@@ -319,6 +318,7 @@ export function GymDiscovery() {
       amount: plan.price,
       gymName: gym.name
     });
+    setSelectedFullPlan(plan);
     setShowPaymentModal(true);
   };
 
@@ -518,35 +518,6 @@ export function GymDiscovery() {
 
     // Go back in browser history
     window.history.back();
-  };
-
-  // Handle subscription plan selection
-  const handleSubscriptionPlanSelect = (subscriptionId: string) => {
-    setSelectedPlanId(subscriptionId);
-  };
-
-  // Handle make payment button
-  const handleMakePayment = () => {
-    if (!selectedPlanId) return;
-
-    // Find the selected subscription
-    const selectedSub = selectedSubscriptions.find(sub => sub.id === selectedPlanId);
-    if (selectedSub && currentGym) {
-      setSelectedPlan({
-        subscriptionId: selectedSub.subscriptionId,
-        planType: selectedSub.planType,
-        amount: selectedSub.discountPercent ? Math.round(selectedSub.price - (selectedSub.discountPercent * selectedSub.price / 100)) : selectedSub.price,
-        gymName: selectedSub.gymName
-      });
-      setShowPaymentModal(true);
-
-      // Add payment step to browser history
-      window.history.pushState(
-        { view: 'payment', gymId: currentGym.id, subscriptionId: selectedPlanId },
-        `Payment - ${selectedSub.gymName}`,
-        `/discover/gym/${currentGym.id}/subscribe/payment`
-      );
-    }
   };
 
   // Show subscription plans view if a gym is selected for subscription
@@ -944,20 +915,22 @@ export function GymDiscovery() {
           onClose={() => {
             setShowPaymentModal(false);
             setSelectedPlan(null);
+            setSelectedFullPlan(null);
             // Go back to subscription plans
             window.history.back();
           }}
           gymId={currentGym.id}
           subscriptionId={selectedPlan.subscriptionId}
-          amount={selectedPlan.amount}
+          amount={selectedPlan.paymentType === 'buffer' ? Math.round(parseFloat(selectedFullPlan.price) - ((selectedFullPlan.discountPercent || 0) * parseFloat(selectedFullPlan.price) / 100) + (selectedFullPlan.bufferFee || 0))
+            : Math.round(parseFloat(selectedFullPlan.price) - ((selectedFullPlan.discountPercent || 0) * parseFloat(selectedFullPlan.price) / 100))}
           gymName={selectedPlan.gymName}
           planType={selectedPlan.planType}
           onSuccess={(paymentId) => {
             handlePaymentSuccess(paymentId);
-            // Navigate back to gym list after success
-            window.history.go(-2); // Go back 2 steps to gym list
+            window.history.go(-2);
           }}
           onError={handlePaymentError}
+          isBuffer={false}
         />
       )}
       {showSuccessModal && (

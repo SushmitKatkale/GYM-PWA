@@ -26,8 +26,8 @@ export interface PaymentInitiationRequest {
   gymId: number;
   subscriptionId: number;
   amount: number;
+  isBuffer?: boolean;
 }
-
 export interface PaymentInitiationResponse {
   success: boolean;
   gateway: 'razorpay' | 'phonepe';

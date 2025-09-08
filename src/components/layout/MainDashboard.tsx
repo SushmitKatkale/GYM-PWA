@@ -10,7 +10,7 @@ import { GymDiscovery } from '../features/GymDiscovery';
 import { QRCodePage } from '../features/QRCodePage';
 import { NotificationsPage } from '../features/NotificationsPage';
 import { CalendarBooking } from '../features/CalendarBooking';
-import { MySubscriptions } from '../features/MySubscriptions';
+import { ModernMySubscriptions } from '../features/ModernMySubscriptions';
 import { AttendanceReports } from '../features/AttendanceReports';
 import { WalletPage } from '../features/WalletPage';
 import { ProfileSettings } from '../features/ProfileSettings';
@@ -84,7 +84,7 @@ export const MainDashboard: React.FC = () => {
       case 'calendar':
         return <CalendarBooking />;
       case 'my-subscriptions':
-        return <MySubscriptions />;
+        return <ModernMySubscriptions onNavigate={handleViewChange} />;
       case 'attendance':
         return <AttendanceReports />;
       case 'analytics':

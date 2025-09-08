@@ -21,7 +21,17 @@ export function CreateOrderModal({ isOpen, onClose, onSuccess }: CreateOrderModa
     setForm({ ...form, subscriptionId });
     // Auto-populate total amount from subscription price if available
     if (subscription?.price) {
-      const price = parseInt(subscription.price.replace(',', ''));
+      // Handle both string and number types for price
+      let price = subscription.price;
+      if (typeof price === 'string') {
+        // Remove commas and parse as number
+        price = parseFloat(price.replace(/,/g, ''));
+      } else if (typeof price === 'number') {
+        // Already a number, use as-is
+        price = price;
+      } else {
+        price = 0;
+      }
       setForm(prev => ({ ...prev, subscriptionId, totalAmount: price }));
     }
   };

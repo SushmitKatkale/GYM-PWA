@@ -71,6 +71,7 @@ export const SubscriptionPlansPage: React.FC<SubscriptionPlansPageProps> = ({
   const [activeTab, setActiveTab] = useState<'regular' | 'buffer'>('buffer');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
+  const [selectedFullPlan, setSelectedFullPlan] = useState<any>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -194,6 +195,9 @@ export const SubscriptionPlansPage: React.FC<SubscriptionPlansPageProps> = ({
       paymentType,
       bufferDays: paymentType === 'buffer' ? (plan.bufferDays || 0) : 0
     });
+    setSelectedFullPlan(plan);
+    console.log("MY Plan", plan);
+    
     setShowPaymentModal(true);
   };
 
@@ -203,6 +207,7 @@ export const SubscriptionPlansPage: React.FC<SubscriptionPlansPageProps> = ({
     setSuccessMessage(`Payment successful! Your ${selectedPlan?.planType} subscription has been activated.`);
     setShowSuccessModal(true);
     setSelectedPlan(null);
+    setSelectedFullPlan(null);
   };
 
   const handlePaymentError = (error: string) => {
@@ -671,14 +676,18 @@ export const SubscriptionPlansPage: React.FC<SubscriptionPlansPageProps> = ({
           onClose={() => {
             setShowPaymentModal(false);
             setSelectedPlan(null);
+            setSelectedFullPlan(null);
           }}
           gymId={gym.id}
+          selectedPlan={selectedPlan}
           subscriptionId={selectedPlan.subscriptionId}
-          amount={selectedPlan.amount}
+          amount={selectedPlan.paymentType === 'buffer' ? Math.round(parseFloat(selectedFullPlan.price) - ((parseFloat(selectedFullPlan.discountPercent) || 0) * parseFloat(selectedFullPlan.price) / 100) + (parseFloat(selectedFullPlan.bufferFee) || 0)) 
+            :  Math.round(parseFloat(selectedFullPlan.price) - ((parseFloat(selectedFullPlan.discountPercent) || 0) * parseFloat(selectedFullPlan.price) / 100))}
           gymName={selectedPlan.gymName}
           planType={selectedPlan.planType}
           onSuccess={handlePaymentSuccess}
           onError={handlePaymentError}
+          isBuffer={selectedPlan.paymentType === 'buffer'}
         />
       )}
 

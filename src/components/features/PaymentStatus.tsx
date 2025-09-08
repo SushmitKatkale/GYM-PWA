@@ -10,7 +10,11 @@ import {
   CreditCard,
   Building,
   Calendar,
-  User
+  User,
+  IndianRupee,
+  Banknote,
+  DoorOpen,
+  BookCheck
 } from 'lucide-react';
 import { paymentStatusService, PaymentStatusResponse } from '../../services/paymentStatusService';
 
@@ -148,7 +152,7 @@ export const PaymentStatus: React.FC = () => {
   };
 
   return (
-    <div className={`min-h-screen ${getBackgroundColor()} flex items-center justify-center p-4`}>
+    <div className={`min-h-screen ${getBackgroundColor()} flex items-center justify-center p-4 font-poppins`}>
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6">
         {/* Status Icon */}
         <div className="text-center mb-6 flex justify-center">
@@ -185,12 +189,12 @@ export const PaymentStatus: React.FC = () => {
               </div>
               
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-500">Amount</span>
+                <span className="text-sm text-gray-500 flex"><Banknote className="w-4 h-4 mr-1" /> Amount</span>
                 <span className="text-sm font-medium">₹{paymentData.amount}</span>
               </div>
               
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-500">Gateway</span>
+                <span className="text-sm text-gray-500 flex"><DoorOpen className="w-4 h-4 mr-1" /> Gateway</span>
                 <span className="text-sm font-medium capitalize">{paymentData.gateway}</span>
               </div>
 
@@ -209,8 +213,8 @@ export const PaymentStatus: React.FC = () => {
 
               {paymentData.subscription && (
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">Subscription</span>
-                  <span className="text-sm font-medium">{paymentData.subscription.title}</span>
+                  <span className="text-sm text-gray-500 flex"><BookCheck className="w-4 h-4 mr-1" /> Subscription</span>
+                  <span className="text-sm font-medium">{paymentData.subscription.name}</span>
                 </div>
               )}
 
@@ -222,8 +226,8 @@ export const PaymentStatus: React.FC = () => {
                   </span>
                   <div className="text-right">
                     <div className="text-sm font-medium">
-                      {new Date(paymentData.userSubscription.validFrom).toLocaleDateString()} - 
-                      {new Date(paymentData.userSubscription.validTo).toLocaleDateString()}
+                      {new Date(paymentData.userSubscription.startDate).toLocaleDateString()} - 
+                      {new Date(paymentData.userSubscription.endDate).toLocaleDateString()}
                     </div>
                   </div>
                 </div>

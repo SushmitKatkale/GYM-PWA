@@ -13,6 +13,8 @@ interface PaymentGatewayModalProps {
   amount: number;
   gymName: string;
   planType: string;
+  isBuffer?: boolean;
+  selectedPlan: any;
 }
 
 export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
@@ -24,7 +26,9 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
   subscriptionId,
   amount,
   gymName,
-  planType
+  planType,
+  isBuffer,
+  selectedPlan
 }) => {
   const { user } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
@@ -33,6 +37,8 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
   const [step, setStep] = useState<'init' | 'processing' | 'success' | 'error'>('init');
 
   useEffect(() => {
+    console.log("selectedPlan", selectedPlan);
+    
     if (isOpen && user) {
       initiatePayment();
     }
@@ -45,7 +51,7 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
       return;
     }
 
-    setIsLoading(true);
+    setIsLoading(false);
     setError('');
     
     try {
@@ -53,9 +59,8 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
         gymId,
         subscriptionId: parseInt(subscriptionId),
         amount,
-        userId: user.id
+        isBuffer: isBuffer
       };
-
       const response = await paymentService.initiatePayment(paymentRequest);
 
       if (response.success && response.data) {
@@ -110,7 +115,7 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-sm max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
