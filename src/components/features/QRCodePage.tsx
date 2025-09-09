@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import QRCode from 'react-qr-code';
-import { QrCode, Scan, Clock, MapPin, Calendar } from 'lucide-react';
+import { QrCode, Scan, Clock, MapPin, Calendar, LucideQrCode } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { useAttendanceStore } from '../../stores/attendanceStore';
 import { useGymStore } from '../../stores/gymStore';
@@ -15,8 +15,8 @@ export function QRCodePage() {
   const [showScanner, setShowScanner] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
 
-  const activeSession = user ? getActiveSession(user.email || user.id) : null;
-  const userAttendance = user ? getUserAttendance(user.email || user.id) : [];
+  const activeSession = user ? getActiveSession(parseInt(user.id)) : null;
+  const userAttendance = user ? getUserAttendance(parseInt(user.id)) : [];
 
   // Get current location
   useEffect(() => {
@@ -39,7 +39,7 @@ export function QRCodePage() {
   useEffect(() => {
     if (user?.email) {
       loadUserAttendance(user.email);
-      loadActiveSession(user.email);
+      loadActiveSession(user.id);
     }
   }, [user?.email, loadUserAttendance, loadActiveSession]);
 
@@ -47,8 +47,8 @@ export function QRCodePage() {
   useEffect(() => {
     const generateQR = () => {
       const timestamp = Date.now();
-      const userId = user?.email || user?.id || '';
-      const code = `USER_${userId}_${timestamp}`;
+      const userId = user?.id;
+      const code = `${timestamp * 0.12}_${userId}_${timestamp}`;
       setQrCode(code);
     };
 
@@ -60,27 +60,21 @@ export function QRCodePage() {
 
   const handleQuickCheckIn = async () => {
     if (user && !activeSession && gyms.length > 0) {
-      // Use the first gym for quick check-in, or you can implement gym selection
-      const defaultGymId = gyms[0]?.id || '1';
-      const success = await quickCheckIn(defaultGymId, currentLocation || undefined);
+      const success = await handleCheckIn('quick_checkin');
       if (success) {
-        updateGymOccupancy(defaultGymId, 1);
-        // Reload data to show updated state
-        if (user.email) {
-          loadActiveSession(user.email);
+        if (user.id) {
+          loadActiveSession(user.id);
         }
       }
     }
   };
 
-  const handleCheckIn = async (gymId: string = '1') => {
+  const handleCheckIn = async (checkInType: 'quick_checkin' | 'gym_qr_scan' | 'gym_code' | 'owner_scan_user' | 'fingerprint' | 'face_scan') => {
     if (user && !activeSession) {
-      const success = await checkIn(user.email || user.id, gymId, 'manual', currentLocation || undefined, qrCode);
+      const success = await checkIn(checkInType, currentLocation || undefined, qrCode);
       if (success) {
-        updateGymOccupancy(gymId, 1);
-        // Reload data to show updated state
-        if (user.email) {
-          loadActiveSession(user.email);
+        if (user.id) {
+          loadActiveSession(user.id);
         }
       }
     }
@@ -88,10 +82,7 @@ export function QRCodePage() {
 
   const handleCheckOut = async () => {
     if (activeSession) {
-      const success = await checkOut(activeSession.id);
-      if (success) {
-        updateGymOccupancy(activeSession.gymId, -1);
-      }
+      await checkOut(activeSession.id);
     }
   };
 
@@ -100,7 +91,7 @@ export function QRCodePage() {
       if (activeSession) {
         await handleCheckOut();
       } else {
-        await handleCheckIn();
+        await handleCheckIn('gym_code');
       }
       setManualCode('');
     }
@@ -112,7 +103,7 @@ export function QRCodePage() {
     if (activeSession) {
       await handleCheckOut();
     } else {
-      await handleCheckIn();
+      await handleCheckIn('gym_qr_scan');
     }
     setShowScanner(false);
   };
@@ -125,33 +116,25 @@ export function QRCodePage() {
   const currentGym = getCurrentGym();
 
   return (
-    <div className="p-4 space-y-4">
-
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-          {error}
-        </div>
-      )}
-
+    <div className="p-4 space-y-4 font-poppins">
       {/* Status Card */}
-      <div className={`rounded-xl p-4 sm:p-6 text-white ${
-        activeSession 
-          ? 'bg-gradient-to-r from-green-500 to-teal-600' 
-          : 'bg-gradient-to-r from-blue-500 to-indigo-600'
-      }`}>
+      <div className={`rounded-sm p-4 text-white ${activeSession
+        ? 'bg-gradient-to-br from-pink-400 to-red-500'
+        : 'bg-gradient-to-br from-blue-400 to-indigo-500'
+        }`}>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
           <div className="flex-1">
             <h3 className="text-base sm:text-lg font-semibold">
               {activeSession ? 'Active Session' : 'Ready to Check In'}
             </h3>
-            <p className="text-xs sm:text-sm opacity-90 mt-1">
+            <p className="text-xs opacity-90 mt-1">
               {activeSession ? 'You are currently checked in' : 'Use QR code or enter gym code'}
             </p>
           </div>
-          <div className="text-left sm:text-right">
+          <div className={`text-left sm:text-right ${activeSession ? "" : "hidden"}`}>
             {activeSession && (
               <>
-                <div className="flex items-center text-xs sm:text-sm opacity-90 mb-1">
+                <div className="flex items-center text-xs opacity-90 mb-1">
                   <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                   <span>Since {new Date(activeSession.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
@@ -166,11 +149,12 @@ export function QRCodePage() {
       </div>
 
       {/* QR Code Display */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
+      <div className="bg-white rounded-sm shadow-sm border border-gray-200 p-4 sm:p-6">
         <div className="text-center">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Your QR Code</h3>
-          <div className="inline-block p-4 sm:p-6 bg-gray-50 rounded-xl">
-            <div className="w-40 h-40 sm:w-48 sm:h-48 bg-white border-2 border-gray-200 rounded-lg flex items-center justify-center mx-auto p-3 sm:p-4">
+          <LucideQrCode className="w-6 h-6 text-gray-900 mx-auto mb-2" />
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900">Your QR Code</h3>
+          <div className="inline-block px-4 py-2 rounded-xl">
+            <div className="w-40 h-40 sm:w-48 sm:h-48 bg-white flex items-center justify-center mx-auto p-3 sm:p-4 ">
               <div className="text-center w-full">
                 <div className="mb-2">
                   <QRCode
@@ -180,11 +164,10 @@ export function QRCodePage() {
                     includeMargin={false}
                   />
                 </div>
-                <p className="text-xs text-gray-500 font-mono">{qrCode.slice(-8)}</p>
               </div>
             </div>
           </div>
-          <p className="text-xs sm:text-sm text-gray-600 mt-4">
+          <p className="text-xs sm:text-sm text-gray-600 mt-2">
             Show this QR code to the gym scanner or scan a gym's QR code
           </p>
           <p className="text-xs text-gray-500 mt-2">
@@ -194,21 +177,21 @@ export function QRCodePage() {
       </div>
 
       {/* Action Buttons */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+      <div className={`grid ${activeSession ? "grid-cols-1" : "grid-cols-2"} gap-2`}>
         {!activeSession ? (
           <>
             <button
               disabled={isLoading}
               onClick={() => setShowScanner(true)}
-              className="flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 sm:py-4 px-4 sm:px-6 rounded-xl transition-colors disabled:opacity-50 text-sm sm:text-base"
+              className="flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 sm:py-4 px-4 sm:px-6 rounded-sm transition-colors disabled:opacity-50 text-sm sm:text-base"
             >
               <Scan className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span>Scan Gym QR Code</span>
+              <span>Scan Gym QR</span>
             </button>
             <button
               disabled={isLoading}
               onClick={handleQuickCheckIn}
-              className="flex items-center justify-center space-x-2 bg-green-600 hover:bg-green-700 text-white font-medium py-3 sm:py-4 px-4 sm:px-6 rounded-xl transition-colors disabled:opacity-50 text-sm sm:text-base"
+              className="flex items-center justify-center space-x-2 bg-green-600 hover:bg-green-700 text-white font-medium py-3 sm:py-4 px-4 sm:px-6 rounded-sm transition-colors disabled:opacity-50 text-sm sm:text-base"
             >
               <QrCode className="w-4 h-4 sm:w-5 sm:h-5" />
               <span>{isLoading ? 'Checking In...' : 'Quick Check In'}</span>
@@ -219,7 +202,7 @@ export function QRCodePage() {
             <button
               disabled={isLoading}
               onClick={handleCheckOut}
-              className="w-full flex items-center justify-center space-x-2 bg-red-600 hover:bg-red-700 text-white font-medium py-3 sm:py-4 px-4 sm:px-6 rounded-xl transition-colors disabled:opacity-50 text-sm sm:text-base"
+              className="w-full flex items-center justify-center space-x-2 bg-red-600 hover:bg-red-700 text-white font-medium py-3 sm:py-4 px-4 sm:px-6 rounded-sm transition-colors disabled:opacity-50 text-sm sm:text-base"
             >
               <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
               <span>{isLoading ? 'Checking Out...' : 'Check Out'}</span>
@@ -229,68 +212,68 @@ export function QRCodePage() {
       </div>
 
       {/* Manual Code Entry */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
-        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Manual Entry</h3>
+      <div className="bg-white rounded-sm shadow-sm border border-gray-200 p-4">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Manual Entry</h3>
         <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
           <input
             type="text"
             value={manualCode}
             onChange={(e) => setManualCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
             placeholder="Enter 6-digit gym code"
-            className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-base sm:text-lg tracking-widest"
+            className="flex-1 px-4 py-3 border border-gray-300 rounded-sm text-center text-base sm:text-lg tracking-widest outline-1 outline-pink-500"
             maxLength={6}
           />
           <button
             onClick={handleManualEntry}
             disabled={manualCode.length !== 6}
-            className="bg-gray-600 hover:bg-gray-700 text-white font-medium px-6 py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+            className="bg-gray-600 hover:bg-gray-700 text-white font-medium px-6 py-3 rounded-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
           >
             {activeSession ? 'Check Out' : 'Check In'}
           </button>
         </div>
-        <p className="text-xs sm:text-sm text-gray-500 mt-2">
+        <p className="text-xs sm:text-sm text-gray-500 mt-2 text-center">
           Ask gym staff for the 6-digit code if QR scanning is not available
         </p>
       </div>
 
       {/* Recent Activity */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
+      <div className="bg-white rounded-sm shadow-sm border border-gray-200 p-4 sm:p-6">
         <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Recent Check-ins</h3>
         <div className="space-y-3">
           {userAttendance
             .slice(0, 5)
             .map((session) => (
-            <div key={session.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center space-x-3 flex-1 min-w-0">
-                <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 flex-shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium text-gray-900 text-sm sm:text-base">
-                    {new Date(session.date).toLocaleDateString()}
-                  </p>
-                  <p className="text-xs sm:text-sm text-gray-500">
-                    {new Date(session.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    {session.checkOut && (
-                      ` - ${new Date(session.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-                    )}
-                  </p>
+              <div key={session.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center space-x-3 flex-1 min-w-0">
+                  <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-gray-900 text-sm sm:text-base">
+                      {new Date(session.date).toLocaleDateString()}
+                    </p>
+                    <p className="text-xs sm:text-sm text-gray-500">
+                      {new Date(session.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {session.checkOut && (
+                        ` - ${new Date(session.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                      )}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  {session.duration ? (
+                    <span className="text-xs sm:text-sm font-medium text-gray-900">
+                      {Math.round(session.duration / 60)} mins
+                    </span>
+                  ) : (
+                    <span className="text-xs sm:text-sm text-green-600 font-medium">Active</span>
+                  )}
                 </div>
               </div>
-              <div className="text-right flex-shrink-0">
-                {session.duration ? (
-                  <span className="text-xs sm:text-sm font-medium text-gray-900">
-                    {Math.round(session.duration / 60)} mins
-                  </span>
-                ) : (
-                  <span className="text-xs sm:text-sm text-green-600 font-medium">Active</span>
-                )}
-              </div>
-            </div>
-          ))}
+            ))}
         </div>
       </div>
 
       {/* QR Scanner Modal */}
-      <QrScanner 
+      <QrScanner
         isOpen={showScanner}
         onScan={handleQRScan}
         onClose={() => setShowScanner(false)}

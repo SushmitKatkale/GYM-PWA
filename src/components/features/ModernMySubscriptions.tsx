@@ -59,7 +59,7 @@ interface ModernMySubscriptionsProps {
 
 export function ModernMySubscriptions({ onNavigate }: ModernMySubscriptionsProps = {}) {
   const { user, getAccessToken } = useAuthStore();
-  
+
   // Navigation function to handle page changes
   const handleNavigateToDiscover = () => {
     if (onNavigate) {
@@ -344,12 +344,12 @@ export function ModernMySubscriptions({ onNavigate }: ModernMySubscriptionsProps
 
         {/* Your subscriptions section */}
         <div className="mb-8">
-        <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-lg font-medium text-gray-900">Your subscriptions</h1>
-          <button className='text-sm text-gray-700'>
-            <span>View All</span>
-          </button>
-        </div>
+          <div className="mb-6 flex items-center justify-between">
+            <h1 className="text-lg font-medium text-gray-900">Your subscriptions</h1>
+            <button className='text-sm text-gray-700'>
+              <span>View All</span>
+            </button>
+          </div>
           {subscriptions.length === 0 ? (
             <div className="text-center py-12">
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -357,7 +357,7 @@ export function ModernMySubscriptions({ onNavigate }: ModernMySubscriptionsProps
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">No subscriptions yet</h3>
               <p className="text-gray-500 mb-4">Start your fitness journey by subscribing to a gym</p>
-              <button 
+              <button
                 onClick={handleNavigateToDiscover}
                 className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-colors"
               >
@@ -367,18 +367,18 @@ export function ModernMySubscriptions({ onNavigate }: ModernMySubscriptionsProps
           ) : (
             /* Horizontal Carousel */
             <div className="relative">
-              <div 
+              <div
                 className="overflow-x-auto scrollbar-hide pb-4"
-                style={{ 
-                  scrollbarWidth: 'none', 
+                style={{
+                  scrollbarWidth: 'none',
                   msOverflowStyle: 'none',
                   WebkitScrollbar: { display: 'none' }
                 }}
               >
                 <div className="flex space-x-6 px-1" style={{ width: 'max-content' }}>
                   {subscriptions.map((subscription, index) => (
-                    <div 
-                      key={subscription.id} 
+                    <div
+                      key={subscription.id}
                       className="flex-shrink-0 w-80"
                     >
                       <GymSubscriptionCard
@@ -386,18 +386,18 @@ export function ModernMySubscriptions({ onNavigate }: ModernMySubscriptionsProps
                         onViewDetails={handleViewDetails}
                         onDownloadInvoice={handleDownloadInvoice}
                         onOpenMaps={handleOpenGoogleMaps}
-                        gradientIndex={index*3}
+                        gradientIndex={index * 3}
                       />
                     </div>
                   ))}
                 </div>
               </div>
-              
+
               {/* Scroll indicator */}
               {subscriptions.length > 1 && (
                 <div className="flex justify-center mt-4 space-x-2">
                   {subscriptions.map((_, index) => (
-                    <div 
+                    <div
                       key={index}
                       className="w-2 h-2 rounded-full bg-gray-300"
                     />
@@ -417,17 +417,17 @@ export function ModernMySubscriptions({ onNavigate }: ModernMySubscriptionsProps
 
       {/* Details Modal - Keep the existing detailed modal from the original component */}
       {showDetailsModal && selectedSubscription && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 animate-in fade-in duration-300">
-          <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl transform animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-300">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 animate-in fade-in duration-300 mb-16 ">
+          <div className="bg-white rounded-t-xl w-full sm:max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl transform animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-300">
             {/* Modal Header */}
-            <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-purple-600 text-white z-10 rounded-t-2xl">
-              <div className="sm:hidden w-12 h-1.5 bg-white bg-opacity-30 rounded-full mx-auto pt-3 mb-2"></div>
-              <div className="flex items-center justify-between p-4 sm:p-6">
+            <div className="sticky top-0 bg-gradient-to-br from-pink-500 to-red-400 text-white z-10 rounded-t-xl">
+              {/* <div className="sm:hidden w-12 h-1.5 bg-white bg-opacity-30 rounded-full mx-auto pt-3 mb-2"></div> */}
+              <div className="flex items-center justify-between px-4 py-6">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
                     <Eye className="w-4 h-4 text-white" />
                   </div>
-                  <h2 className="text-lg sm:text-xl font-bold text-white">Subscription Details</h2>
+                  <h2 className="text-lg font-medium text-white">Subscription Details</h2>
                 </div>
                 <button
                   onClick={() => setShowDetailsModal(false)}
@@ -439,55 +439,112 @@ export function ModernMySubscriptions({ onNavigate }: ModernMySubscriptionsProps
             </div>
 
             {/* Modal Content - Simplified for space */}
-            <div className="p-4 sm:p-6">
-              <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-4 sm:p-6 border border-blue-100">
+            <div className="p-4">
+              <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-md p-4 sm:p-6 border border-blue-100">
                 <div className="flex items-center space-x-4 mb-4">
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center text-white font-bold text-xl">
+                  <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-red-400 rounded-md flex items-center justify-center text-white font-bold text-xl">
                     {selectedSubscription.subscription.gym.name.charAt(0)}
                   </div>
                   <div className="flex-1">
                     <h3 className="text-lg font-bold text-gray-900">{selectedSubscription.subscription.gym.name}</h3>
                     <p className="text-sm text-gray-600">{selectedSubscription.subscription.gym.address}, {selectedSubscription.subscription.gym.city}</p>
-                    <div className="flex items-center mt-1">
+                    {/* <div className="flex items-center mt-1">
                       <Star className="w-4 h-4 text-yellow-500 fill-current mr-1" />
                       <span className="text-sm font-medium">{selectedSubscription.subscription.gym.rating}</span>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <p className="text-gray-600">Plan</p>
-                    <p className="font-semibold">{selectedSubscription.subscription.title}</p>
+                    <p className="font-medium">{selectedSubscription.subscription.name}</p>
                   </div>
                   <div>
                     <p className="text-gray-600">Amount</p>
-                    <p className="font-semibold">₹{selectedSubscription.payment.paymentAmount}</p>
+                    <p className="font-medium">₹{selectedSubscription.payment.amount}</p>
                   </div>
                   <div>
                     <p className="text-gray-600">Valid From</p>
-                    <p className="font-semibold">{new Date(selectedSubscription.validFrom).toLocaleDateString()}</p>
+                    <p className="font-medium">{new Date(selectedSubscription.startDate).toLocaleDateString('en-GB', {
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric'
+                    })}</p>
                   </div>
                   <div>
                     <p className="text-gray-600">Valid To</p>
-                    <p className="font-semibold">{new Date(selectedSubscription.validTo).toLocaleDateString()}</p>
+                    <p className="font-medium">{new Date(selectedSubscription.endDate).toLocaleDateString('en-GB', {
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric'
+                    })}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-4 pb-4 241425125">
+              <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-md p-4 border border-blue-100">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-gray-600">Gym Phone</p>
+                    <p className="font-medium"><a className='text-blue-500' target='_blank' href={`tel:+91${selectedSubscription.subscription.gym.phone}`}>{selectedSubscription.subscription.gym.phone}</a></p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600">Gym Email</p>
+                    <p className="font-medium truncate"><a className='text-blue-500' target='_blank' href={`mailto:${selectedSubscription.subscription.gym.email}`}>{selectedSubscription.subscription.gym.email}</a></p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600">Gym Website</p>
+                    <p className="font-medium truncate"><a className='text-blue-500' target='_blank' href={`${selectedSubscription.subscription.gym.websiteUrl}`}>{selectedSubscription.subscription.gym.websiteUrl}</a></p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600">Gym Opening</p>
+                    <p className="font-medium truncate">
+                      {`${selectedSubscription.subscription.gym.daysOpen} (${selectedSubscription.subscription.gym.openingTime.substring(0, 5)} - ${selectedSubscription.subscription.gym.closingTime.substring(0, 5)})`}
+                    </p>
+
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-4 pb-4 241425125">
+              <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-md p-4 border border-blue-100">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-gray-600">Payment Id</p>
+                    <p className="font-medium">{selectedSubscription.payment.id}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600">Payment Reference</p>
+                    <p className="font-medium truncate">{selectedSubscription.payment.paymentRefNo}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600">Buffer Enabled</p>
+                    <p className="font-medium">{selectedSubscription.payment.isBuffer ? "Yes" : "No"}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600">Payment Gateway</p>
+                    <p className="font-medium">{selectedSubscription.payment.gateway.toUpperCase()}</p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Modal Footer */}
-            <div className="sticky bottom-0 bg-gray-50 border-t p-4 sm:p-6 rounded-b-2xl">
+            <div className="sticky bottom-0 bg-gray-50 border-t p-4 sm:p-6 rounded-b-xl">
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowDetailsModal(false)}
-                  className="flex-1 px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors text-center hover:bg-gray-100 rounded-lg"
+                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-600 hover:text-gray-800 font-medium transition-colors text-center hover:bg-gray-100 rounded-sm"
                 >
                   Close
                 </button>
                 <button
                   onClick={() => handleOpenGoogleMaps(selectedSubscription.subscription.gym)}
-                  className="flex-1 px-4 py-3 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors font-medium flex items-center justify-center"
+                  className="flex-1 px-4 py-3 bg-gradient-to-br from-pink-400 to-red-500 text-white rounded-sm hover:bg-red-600 transition-colors font-medium flex items-center justify-center"
                 >
                   <Navigation className="w-4 h-4 mr-2" />
                   Open Maps

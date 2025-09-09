@@ -2,7 +2,6 @@ import { buildApiUrl, API_CONFIG } from '../config/api';
 import { apiClient, ApiResponse } from './apiClient';
 
 export interface CheckInData {
-  gymId: string;
   method: 'quick_checkin' | 'gym_qr_scan' | 'gym_code' | 'owner_scan_user' | 'fingerprint' | 'face_scan';
   location?: {
     latitude: number;
@@ -51,9 +50,8 @@ class AttendanceService {
     return apiClient.get<Attendance[]>(`${API_CONFIG.ENDPOINTS.ATTENDANCE}/user/${userEmail}`);
   }
 
-  async getActiveSession(userEmail: string): Promise<ApiResponse<Attendance | null>> {
-    // return apiClient.get<Attendance | null>(`${API_CONFIG.ENDPOINTS.ATTENDANCE}/user/${userEmail}/active`);
-    return apiClient.get<Attendance | null>(`/attendance/active-session/${userEmail}`);
+  async getActiveSession(userId: Number): Promise<ApiResponse<Attendance | null>> {
+    return apiClient.get<Attendance | null>(`/attendance/active-session/${userId}`);
   }
 
   async checkIn(checkInData: CheckInData): Promise<ApiResponse<AttendanceResponse>> {

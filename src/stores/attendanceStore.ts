@@ -46,10 +46,10 @@ interface AttendanceState {
   error: string | null;
   
   // Actions
-  checkIn: (userId: string, gymId: string, method: 'qr' | 'code' | 'manual', location?: { latitude: number; longitude: number }, qrCode?: string) => Promise<boolean>;
+  checkIn: (method: 'quick_checkin' | 'gym_qr_scan' | 'gym_code' | 'owner_scan_user' | 'fingerprint' | 'face_scan', location?: { latitude: number; longitude: number }, qrCode?: string) => Promise<boolean>;
   checkOut: (sessionId: string) => Promise<boolean>;
   getUserAttendance: (userId: string) => Attendance[];
-  getActiveSession: (userId: string) => Attendance | null;
+  getActiveSession: (userId: Number) => Attendance | null;
   loadUserAttendance: (userEmail: string) => Promise<void>;
   loadActiveSession: (userEmail: string) => Promise<void>;
   quickCheckIn: (gymId: string, location?: { latitude: number; longitude: number }) => Promise<boolean>;
@@ -95,11 +95,11 @@ export const useAttendanceStore = create<AttendanceState>()(
         }
       },
 
-      loadActiveSession: async (userEmail: string) => {
+      loadActiveSession: async (userId: Number) => {
         set({ isLoading: true, error: null });
         
         try {
-          const response = await attendanceService.getActiveSession(userEmail);
+          const response = await attendanceService.getActiveSession(userId);
           
           if (response.success) {
             const sessionData = response.data ? {
@@ -158,14 +158,12 @@ export const useAttendanceStore = create<AttendanceState>()(
         }
       },
 
-      checkIn: async (userId, gymId, method, location, qrCode) => {
+      checkIn: async (method, location, qrCode) => {
         set({ isLoading: true, error: null });
         
         try {
           const checkInData: CheckInData = {
-            gymId,
-            method: method === 'manual' ? 'quick_checkin' : 
-                   method === 'qr' ? 'gym_qr_scan' : 'gym_code',
+            method,
             location,
             qrCode,
             deviceInfo: {
