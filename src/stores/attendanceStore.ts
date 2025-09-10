@@ -48,10 +48,10 @@ interface AttendanceState {
   // Actions
   checkIn: (method: 'quick_checkin' | 'gym_qr_scan' | 'gym_code' | 'owner_scan_user' | 'fingerprint' | 'face_scan', location?: { latitude: number; longitude: number }, qrCode?: string) => Promise<boolean>;
   checkOut: (sessionId: string) => Promise<boolean>;
-  getUserAttendance: (userId: string) => Attendance[];
+  getUserAttendance: (userId: Number) => Attendance[];
   getActiveSession: (userId: Number) => Attendance | null;
-  loadUserAttendance: (userEmail: string) => Promise<void>;
-  loadActiveSession: (userEmail: string) => Promise<void>;
+  loadUserAttendance: (userId: Number) => Promise<void>;
+  loadActiveSession: (userId: Number) => Promise<void>;
   quickCheckIn: (gymId: string, location?: { latitude: number; longitude: number }) => Promise<boolean>;
   getAttendanceByDateRange: (userId: string, startDate: string, endDate: string) => Attendance[];
   exportAttendance: (userId: string, format: 'csv' | 'json') => string;
@@ -66,11 +66,11 @@ export const useAttendanceStore = create<AttendanceState>()(
       isLoading: false,
       error: null,
 
-      loadUserAttendance: async (userEmail: string) => {
+      loadUserAttendance: async (userId: number) => {
         set({ isLoading: true, error: null });
         
         try {
-          const response = await attendanceService.getUserAttendance(userEmail);
+          const response = await attendanceService.getUserAttendance(userId);
           
           if (response.success && response.data) {
             const attendanceData = response.data?.attendance?.map((a: ApiAttendance) => ({
@@ -172,16 +172,18 @@ export const useAttendanceStore = create<AttendanceState>()(
             }
           };
           
+          //  TO Test 
+          checkInData.location = { latitude: 12.836436, longitude: 77.664825 }; // Example coordinates
           const response = await attendanceService.checkIn(checkInData);
           
           if (response.success && response.data) {
             const attendanceData = {
-              ...response.data.data,
+              ...response.data,
               // Add legacy fields for backward compatibility
-              userId: userId,
-              checkIn: response.data.data.checkInTime,
-              date: new Date(response.data.data.checkInTime).toISOString().split('T')[0],
-              qrCode: response.data.data.qrCodeUsed,
+              userId: response.data?.user?.id,
+              checkIn: response.data?.attendance?.checkInTime,
+              date: new Date(response.data?.attendance?.checkInTime).toISOString().split('T')[0],
+              qrCode: response.data?.qrCodeUsed,
               method
             };
             

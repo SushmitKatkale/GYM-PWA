@@ -46,8 +46,8 @@ export interface AttendanceResponse {
 }
 
 class AttendanceService {
-  async getUserAttendance(userEmail: string): Promise<ApiResponse<Attendance[]>> {
-    return apiClient.get<Attendance[]>(`${API_CONFIG.ENDPOINTS.ATTENDANCE}/user/${userEmail}`);
+  async getUserAttendance(userId: Number): Promise<ApiResponse<Attendance[]>> {
+    return apiClient.get<Attendance[]>(`${API_CONFIG.ENDPOINTS.ATTENDANCE}/user/${userId}`);
   }
 
   async getActiveSession(userId: Number): Promise<ApiResponse<Attendance | null>> {

@@ -8,8 +8,7 @@ import { QrScanner } from './QrScanner';
 
 export function QRCodePage() {
   const { user } = useAuthStore();
-  const { checkIn, checkOut, quickCheckIn, getUserAttendance, getActiveSession, loadUserAttendance, loadActiveSession, isLoading, error } = useAttendanceStore();
-  const { gyms, updateGymOccupancy } = useGymStore();
+  const { checkIn, checkOut, getUserAttendance, getActiveSession, loadUserAttendance, loadActiveSession, isLoading } = useAttendanceStore();
   const [qrCode, setQrCode] = useState('');
   const [manualCode, setManualCode] = useState('');
   const [showScanner, setShowScanner] = useState(false);
@@ -37,11 +36,11 @@ export function QRCodePage() {
 
   // Load user data on mount
   useEffect(() => {
-    if (user?.email) {
-      loadUserAttendance(user.email);
-      loadActiveSession(user.id);
+    if (user?.id) {
+      loadUserAttendance(parseInt(user.id));
+      loadActiveSession(parseInt(user.id));
     }
-  }, [user?.email, loadUserAttendance, loadActiveSession]);
+  }, [user?.id, loadUserAttendance, loadActiveSession]);
 
   // Generate dynamic QR code
   useEffect(() => {
@@ -59,12 +58,10 @@ export function QRCodePage() {
   }, [user?.email, user?.id]);
 
   const handleQuickCheckIn = async () => {
-    if (user && !activeSession && gyms.length > 0) {
-      const success = await handleCheckIn('quick_checkin');
-      if (success) {
-        if (user.id) {
-          loadActiveSession(user.id);
-        }
+    const success = await handleCheckIn('quick_checkin');
+    if (success) {
+      if (user.id) {
+        loadActiveSession(user.id);
       }
     }
   };
@@ -108,13 +105,6 @@ export function QRCodePage() {
     setShowScanner(false);
   };
 
-  const getCurrentGym = () => {
-    if (!activeSession) return null;
-    return gyms.find(gym => gym.id === activeSession.gymId);
-  };
-
-  const currentGym = getCurrentGym();
-
   return (
     <div className="p-4 space-y-4 font-poppins">
       {/* Status Card */}
@@ -140,7 +130,15 @@ export function QRCodePage() {
                 </div>
                 <div className="flex items-center text-xs sm:text-sm opacity-90">
                   <MapPin className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                  <span className="truncate max-w-32 sm:max-w-none">{currentGym?.name || 'Unknown Gym'}</span>
+                  {/* <span className="truncate max-w-32 sm:max-w-none">{currentGym?.name || 'Unknown Gym'}</span> */}
+                  <p>{`${[
+                    activeSession?.gym?.name,
+                    activeSession?.gym?.address,
+                    activeSession?.gym?.city,
+                    activeSession?.gym?.state,
+                    activeSession?.gym?.zipCode
+                  ].filter(Boolean).join(' ')}`}</p>
+
                 </div>
               </>
             )}
