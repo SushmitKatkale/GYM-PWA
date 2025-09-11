@@ -13,9 +13,8 @@ export function QRCodePage() {
   const [manualCode, setManualCode] = useState('');
   const [showScanner, setShowScanner] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-
-  const activeSession = user ? getActiveSession(parseInt(user.id)) : null;
-  const userAttendance = user ? getUserAttendance(parseInt(user.id)) : [];
+  const [activeSession, setActiveSession] = useState<any>(null);
+  const [userAttendance, setUserAttendance] = useState<any[]>([]);
 
   // Get current location
   useEffect(() => {
@@ -37,10 +36,33 @@ export function QRCodePage() {
   // Load user data on mount
   useEffect(() => {
     if (user?.id) {
-      loadUserAttendance(parseInt(user.id));
-      loadActiveSession(parseInt(user.id));
+      // Load attendance
+      const loadAttendence = async () => {
+        try {
+          const data = await loadUserAttendance(parseInt(user.id));
+          console.log("Loaded attendance data:", data);
+
+          setUserAttendance(data);
+        } catch (error) {
+          console.error("Failed to load active session:", error);
+        }
+      };
+
+      // Load active session
+      const fetchSession = async () => {
+        try {
+          const session = await loadActiveSession(parseInt(user.id));
+          setActiveSession(session);
+        } catch (error) {
+          console.error("Failed to load active session:", error);
+        }
+      };
+
+      loadAttendence();
+      fetchSession();
     }
   }, [user?.id, loadUserAttendance, loadActiveSession]);
+
 
   // Generate dynamic QR code
   useEffect(() => {
@@ -52,7 +74,7 @@ export function QRCodePage() {
     };
 
     generateQR();
-    const interval = setInterval(generateQR, 30000); // Refresh every 30 seconds
+    const interval = setInterval(generateQR, 300000); // Refresh every 3 minutes
 
     return () => clearInterval(interval);
   }, [user?.email, user?.id]);
@@ -61,7 +83,7 @@ export function QRCodePage() {
     const success = await handleCheckIn('quick_checkin');
     if (success) {
       if (user.id) {
-        loadActiveSession(user.id);
+        setActiveSession(await loadActiveSession(user.id));
       }
     }
   };
@@ -71,7 +93,7 @@ export function QRCodePage() {
       const success = await checkIn(checkInType, currentLocation || undefined, qrCode);
       if (success) {
         if (user.id) {
-          loadActiveSession(user.id);
+          setActiveSession(await loadActiveSession(user.id));
         }
       }
     }
@@ -79,7 +101,15 @@ export function QRCodePage() {
 
   const handleCheckOut = async () => {
     if (activeSession) {
-      await checkOut(activeSession.id);
+      let isDone = await checkOut(activeSession.id);
+      if (isDone) {
+        setActiveSession(null);
+
+        if (user?.id) {
+          const data = await loadUserAttendance(parseInt(user.id));
+          setUserAttendance(data);
+        }
+      }
     }
   };
 
@@ -130,14 +160,7 @@ export function QRCodePage() {
                 </div>
                 <div className="flex items-center text-xs sm:text-sm opacity-90">
                   <MapPin className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                  {/* <span className="truncate max-w-32 sm:max-w-none">{currentGym?.name || 'Unknown Gym'}</span> */}
-                  <p>{`${[
-                    activeSession?.gym?.name,
-                    activeSession?.gym?.address,
-                    activeSession?.gym?.city,
-                    activeSession?.gym?.state,
-                    activeSession?.gym?.zipCode
-                  ].filter(Boolean).join(' ')}`}</p>
+                  <span className="truncate max-w-32 sm:max-w-none">{activeSession?.gymName || 'Unknown Gym'}</span>
 
                 </div>
               </>

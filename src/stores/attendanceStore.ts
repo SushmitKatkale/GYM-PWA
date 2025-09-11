@@ -44,14 +44,14 @@ interface AttendanceState {
   activeSession: Attendance | null;
   isLoading: boolean;
   error: string | null;
-  
+
   // Actions
   checkIn: (method: 'quick_checkin' | 'gym_qr_scan' | 'gym_code' | 'owner_scan_user' | 'fingerprint' | 'face_scan', location?: { latitude: number; longitude: number }, qrCode?: string) => Promise<boolean>;
   checkOut: (sessionId: string) => Promise<boolean>;
   getUserAttendance: (userId: Number) => Attendance[];
   getActiveSession: (userId: Number) => Attendance | null;
-  loadUserAttendance: (userId: Number) => Promise<void>;
-  loadActiveSession: (userId: Number) => Promise<void>;
+  loadUserAttendance: (userId: Number) => Promise<any[]>;
+  loadActiveSession: (userId: Number) => Promise<any>;
   quickCheckIn: (gymId: string, location?: { latitude: number; longitude: number }) => Promise<boolean>;
   getAttendanceByDateRange: (userId: string, startDate: string, endDate: string) => Attendance[];
   exportAttendance: (userId: string, format: 'csv' | 'json') => string;
@@ -68,85 +68,93 @@ export const useAttendanceStore = create<AttendanceState>()(
 
       loadUserAttendance: async (userId: number) => {
         set({ isLoading: true, error: null });
-        
+
         try {
           const response = await attendanceService.getUserAttendance(userId);
-          
+
           if (response.success && response.data) {
-            const attendanceData = response.data?.attendance?.map((a: ApiAttendance) => ({
+            const attendanceData = response.data?.attendance?.map((a: any) => ({
               ...a,
-              // Add legacy fields for backward compatibility
-              userId: userEmail,
-              checkIn: a.checkInTime,
-              checkOut: a.checkOutTime,
-              date: a.checkInTime ? new Date(a.checkInTime).toISOString().split('T')[0] : '',
-              duration: a.durationMinutes ? a.durationMinutes * 60 : undefined,
+              userId: userId,
+              checkIn: a.checkIn,
+              checkOut: a.checkOut,
+              date: a.date  ? new Date(a.date ).toISOString().split('T')[0] : '',
+              duration: a.duration  ? a.duration  * 60 : undefined,
               qrCode: a.qrCodeUsed,
-              method: (a.checkInMethod === 'quick_checkin' ? 'manual' : 
-                      a.checkInMethod === 'gym_qr_scan' ? 'qr' : 'code') as 'qr' | 'code' | 'manual'
+              gymName : a.gymName
             }));
-            
+
             set({ attendance: attendanceData, isLoading: false });
+            return attendanceData;
           } else {
             set({ error: response.message || 'Failed to load attendance', isLoading: false });
           }
         } catch (error: any) {
           set({ error: error.message || 'Failed to load attendance', isLoading: false });
         }
+        return [];
       },
 
       loadActiveSession: async (userId: Number) => {
         set({ isLoading: true, error: null });
-        
+
         try {
           const response = await attendanceService.getActiveSession(userId);
-          
+          console.log("loadActiveSession response", response);
+
           if (response.success) {
+            if (response.message == "No active session found") {
+              set({ activeSession: null, isLoading: false });
+              return null;
+            }
             const sessionData = response.data ? {
               ...response.data,
               // Add legacy fields for backward compatibility
-              userId: userEmail,
+              userId: userId,
               checkIn: response.data.checkInTime,
               checkOut: response.data.checkOutTime,
               date: response.data.checkInTime ? new Date(response.data.checkInTime).toISOString().split('T')[0] : '',
               duration: response.data.durationMinutes ? response.data.durationMinutes * 60 : undefined,
               qrCode: response.data.qrCodeUsed,
-              method: (response.data.checkInMethod === 'quick_checkin' ? 'manual' : 
-                      response.data.checkInMethod === 'gym_qr_scan' ? 'qr' : 'code') as 'qr' | 'code' | 'manual'
+              method: (response.data.checkInMethod === 'quick_checkin' ? 'manual' :
+                response.data.checkInMethod === 'gym_qr_scan' ? 'qr' : 'code') as 'qr' | 'code' | 'manual'
             } : null;
-            
-            set({ activeSession: sessionData, isLoading: false });
+
+            set({ activeSession: sessionData?.activeSession, isLoading: false });
+            return sessionData?.activeSession;
           } else {
             set({ error: response.message || 'Failed to load active session', isLoading: false });
+            return null;
           }
         } catch (error: any) {
           set({ error: error.message || 'Failed to load active session', isLoading: false });
+          return null;
         }
       },
 
       quickCheckIn: async (gymId: string, location?: { latitude: number; longitude: number }) => {
         set({ isLoading: true, error: null });
-        
+
         try {
           const response = await attendanceService.quickCheckIn(gymId, location);
-          
+
           if (response.success && response.data) {
             const attendanceData = {
               ...response.data.data,
               // Add legacy fields for backward compatibility
-              userId: response.data.data.userEmail,
+              userId: response.data.data.userId,
               checkIn: response.data.data.checkInTime,
               date: new Date(response.data.data.checkInTime).toISOString().split('T')[0],
               qrCode: response.data.data.qrCodeUsed,
               method: 'manual' as const
             };
-            
+
             set(state => ({
               attendance: [...state.attendance, attendanceData],
               activeSession: attendanceData,
               isLoading: false
             }));
-            
+
             return true;
           } else {
             set({ error: response.message || 'Check-in failed', isLoading: false });
@@ -160,7 +168,7 @@ export const useAttendanceStore = create<AttendanceState>()(
 
       checkIn: async (method, location, qrCode) => {
         set({ isLoading: true, error: null });
-        
+
         try {
           const checkInData: CheckInData = {
             method,
@@ -171,11 +179,11 @@ export const useAttendanceStore = create<AttendanceState>()(
               userAgent: navigator.userAgent.substring(0, 200)
             }
           };
-          
+
           //  TO Test 
           checkInData.location = { latitude: 12.836436, longitude: 77.664825 }; // Example coordinates
           const response = await attendanceService.checkIn(checkInData);
-          
+
           if (response.success && response.data) {
             const attendanceData = {
               ...response.data,
@@ -186,13 +194,13 @@ export const useAttendanceStore = create<AttendanceState>()(
               qrCode: response.data?.qrCodeUsed,
               method
             };
-            
+
             set(state => ({
               attendance: [...state.attendance, attendanceData],
-              activeSession: attendanceData,
+              activeSession: attendanceData?.attendance,
               isLoading: false
             }));
-            
+
             return true;
           } else {
             set({ error: response.message || 'Check-in failed', isLoading: false });
@@ -206,28 +214,28 @@ export const useAttendanceStore = create<AttendanceState>()(
 
       checkOut: async (sessionId) => {
         set({ isLoading: true, error: null });
-        
+
         try {
           const response = await attendanceService.checkOut(sessionId);
-          
+
           if (response.success && response.data) {
             const updatedAttendance = {
               ...response.data.data,
               // Add legacy fields for backward compatibility
-              userId: response.data.data.userEmail,
-              checkIn: response.data.data.checkInTime,
-              checkOut: response.data.data.checkOutTime,
-              duration: response.data.data.durationMinutes ? response.data.data.durationMinutes * 60 : 0
+              userId: response.data?.attendance?.userId,
+              checkIn: response.data?.attendance?.checkInTime,
+              checkOut: response.data?.attendance?.checkOutTime,
+              duration: response.data?.attendance?.durationMinutes  ? response.data?.attendance?.durationMinutes : 0
             };
-            
+
             set(state => ({
-              attendance: state.attendance.map(a => 
+              attendance: state.attendance.map(a =>
                 a.id === sessionId ? updatedAttendance : a
               ),
               activeSession: null,
               isLoading: false
             }));
-            
+
             return true;
           } else {
             set({ error: response.message || 'Check-out failed', isLoading: false });
@@ -244,20 +252,21 @@ export const useAttendanceStore = create<AttendanceState>()(
       },
 
       getActiveSession: (userId) => {
+        console.log("getActiveSession", get().attendance);
         return get().attendance.find(a => a.userId === userId && !a.checkOut) || null;
       },
 
       getAttendanceByDateRange: (userId, startDate, endDate) => {
-        return get().attendance.filter(a => 
-          a.userId === userId && 
-          a.date >= startDate && 
+        return get().attendance.filter(a =>
+          a.userId === userId &&
+          a.date >= startDate &&
           a.date <= endDate
         );
       },
 
       exportAttendance: (userId, format) => {
         const userAttendance = get().getUserAttendance(userId);
-        
+
         if (format === 'csv') {
           const headers = ['Date', 'Check In', 'Check Out', 'Duration (mins)', 'Method'];
           const rows = userAttendance.map(a => [
@@ -267,7 +276,7 @@ export const useAttendanceStore = create<AttendanceState>()(
             a.duration ? Math.round(a.duration / 60).toString() : '0',
             a.method
           ]);
-          
+
           return [headers, ...rows].map(row => row.join(',')).join('\n');
         } else {
           return JSON.stringify(userAttendance, null, 2);
@@ -278,9 +287,9 @@ export const useAttendanceStore = create<AttendanceState>()(
     }),
     {
       name: 'attendance-storage',
-      partialize: (state) => ({ 
+      partialize: (state) => ({
         attendance: state.attendance,
-        activeSession: state.activeSession 
+        activeSession: state.activeSession
       })
     }
   )

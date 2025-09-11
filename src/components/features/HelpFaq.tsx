@@ -94,9 +94,9 @@ export function HelpFaq() {
   };
 
   return (
-    <div className="space-y-8 px-4 md:px-8 max-w-full mx-auto">
+    <div className="space-y-4 px-4 md:px-8 max-w-full mx-auto mt-4">
       {/* Search */}
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-xl mx-auto">
         <div className="relative">
           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
           <input
@@ -104,7 +104,7 @@ export function HelpFaq() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search for answers..."
-            className="w-full pl-12 pr-4 py-4 text-lg border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-12 pr-2 py-2 text-lg border border-gray-300 rounded-sm"
           />
         </div>
       </div>
@@ -115,7 +115,7 @@ export function HelpFaq() {
           <button
             key={category}
             onClick={() => setSelectedCategory(category)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-sm text-sm font-medium transition-colors ${
               selectedCategory === category
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -129,14 +129,14 @@ export function HelpFaq() {
       {/* FAQ Items */}
       <div className="max-w-4xl mx-auto space-y-4">
         {filteredFAQs.map(faq => (
-          <div key={faq.id} className="bg-white rounded-xl shadow-sm border border-gray-200">
+          <div key={faq.id} className="bg-white rounded-sm shadow-sm border border-gray-200">
             <button
               onClick={() => toggleExpanded(faq.id)}
               className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
             >
               <div>
-                <h3 className="text-lg font-medium text-gray-900">{faq.question}</h3>
                 <span className="text-sm text-blue-600 font-medium">{faq.category}</span>
+                <h3 className="text-lg font-medium text-gray-900">{faq.question}</h3>
               </div>
               {expandedItems.includes(faq.id) ? (
                 <ChevronUp className="w-5 h-5 text-gray-400" />
@@ -147,7 +147,7 @@ export function HelpFaq() {
             
             {expandedItems.includes(faq.id) && (
               <div className="px-6 pb-4">
-                <div className="border-t border-gray-100 pt-4">
+                <div className="border-t border-gray-100 pt-1">
                   <p className="text-gray-700 leading-relaxed">{faq.answer}</p>
                 </div>
               </div>
@@ -169,42 +169,42 @@ export function HelpFaq() {
       )}
 
       {/* Contact Support */}
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-8">
+      <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-sm p-8">
         <div className="text-center mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Still need help?</h2>
           <p className="text-gray-600">Our support team is here to assist you</p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-xl p-6 text-center">
+          <div className="bg-white rounded-sm p-6 text-center">
             <div className="bg-blue-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
               <MessageCircle className="w-6 h-6 text-blue-600" />
             </div>
             <h3 className="font-semibold text-gray-900 mb-2">Live Chat</h3>
             <p className="text-gray-600 text-sm mb-4">Get instant help from our support team</p>
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-sm text-sm font-medium transition-colors">
               Start Chat
             </button>
           </div>
           
-          <div className="bg-white rounded-xl p-6 text-center">
+          <div className="bg-white rounded-sm p-6 text-center">
             <div className="bg-green-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
               <Phone className="w-6 h-6 text-green-600" />
             </div>
             <h3 className="font-semibold text-gray-900 mb-2">Phone Support</h3>
             <p className="text-gray-600 text-sm mb-4">Call us Mon-Fri, 9AM-6PM</p>
-            <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-sm text-sm font-medium transition-colors">
               Call Now
             </button>
           </div>
           
-          <div className="bg-white rounded-xl p-6 text-center">
+          <div className="bg-white rounded-sm p-6 text-center">
             <div className="bg-purple-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
               <Mail className="w-6 h-6 text-purple-600" />
             </div>
             <h3 className="font-semibold text-gray-900 mb-2">Email Support</h3>
             <p className="text-gray-600 text-sm mb-4">We'll respond within 24 hours</p>
-            <button className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            <button className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-sm text-sm font-medium transition-colors">
               Send Email
             </button>
           </div>
