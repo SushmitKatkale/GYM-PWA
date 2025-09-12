@@ -154,7 +154,7 @@ export function MobileBottomNav({ activeMenu, setActiveMenu }: MobileBottomNavPr
                   <button
                     key={item.id}
                     onClick={() => handleNavClick(item)}
-                    className={`flex flex-col items-center justify-center p-4 rounded-xl transition-all duration-200 relative ${
+                    className={`flex flex-col items-center justify-center p-4 rounded-sm transition-all duration-200 relative ${
                       isActive
                         ? 'bg-blue-50 text-blue-600 border-2 border-blue-200'
                         : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-2 border-transparent'

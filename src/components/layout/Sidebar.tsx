@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   Home, Users, Building, Calendar, QrCode, CreditCard, 
-  BarChart3, Settings, MapPin, Bell, Clock, Wallet, UserCheck, Package, Megaphone, MessageCircle
+  BarChart3, Settings, MapPin, Bell, Clock, Wallet, UserCheck, Package, Megaphone, MessageCircle, HelpCircle
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { useNotificationCount } from '../../hooks/useNotificationCount';
@@ -33,6 +33,7 @@ export function Sidebar({ activeView, onViewChange, isOpen }: SidebarProps) {
           // { id: 'subscription-management', label: 'Subscription Management', icon: Package },
           { id: 'users', label: 'User Management', icon: Users },
           { id: 'advertisements', label: 'Advertisement Management', icon: Megaphone },
+          { id: 'faq-management', label: 'FAQ Management', icon: HelpCircle },
           { id: 'payment-management', label: 'Payment Management', icon: CreditCard },
           { id: 'analytics', label: 'Analytics', icon: BarChart3 },
           ...commonItems.slice(1)

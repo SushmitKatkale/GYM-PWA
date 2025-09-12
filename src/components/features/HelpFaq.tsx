@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { Search, ChevronDown, ChevronUp, MessageCircle, Phone, Mail, Book } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, ChevronDown, ChevronUp, MessageCircle, Phone, Mail, Book, AlertCircle } from 'lucide-react';
+import { buildApiUrl } from '../../config/api';
+import { useAuthStore } from '../../stores/authStore';
 
 interface FAQItem {
   id: string;
@@ -8,82 +10,109 @@ interface FAQItem {
   category: string;
 }
 
-const faqData: FAQItem[] = [
-  {
-    id: '1',
-    question: 'How do I sign up for a gym membership?',
-    answer: 'You can sign up for a membership by visiting any of our gym locations, using our mobile app, or through our website. Simply choose your preferred plan, provide your personal information, and complete the payment process.',
-    category: 'Membership'
-  },
-  {
-    id: '2',
-    question: 'What payment methods do you accept?',
-    answer: 'We accept all major credit cards (Visa, MasterCard, American Express), debit cards, PayPal, and cash payments at our physical locations. Auto-pay options are available for monthly and yearly subscriptions.',
-    category: 'Payment'
-  },
-  {
-    id: '3',
-    question: 'Can I freeze or cancel my membership?',
-    answer: 'Yes, you can freeze your membership for up to 3 months per year or cancel with 30 days notice. Freezing is available for medical reasons, travel, or other circumstances. Contact our support team to process these requests.',
-    category: 'Membership'
-  },
-  {
-    id: '4',
-    question: 'How do I use the QR code check-in?',
-    answer: 'Open the app, go to "QR Check-in" from the menu, and scan the QR code at the gym entrance. The system will automatically log your visit and update your attendance record.',
-    category: 'App Usage'
-  },
-  {
-    id: '5',
-    question: 'What should I do if I forgot my login credentials?',
-    answer: 'Click "Forgot Password" on the login screen and enter your email address. You\'ll receive a reset link within a few minutes. If you forgot your email, contact our support team with your membership details.',
-    category: 'Account'
-  },
-  {
-    id: '6',
-    question: 'Are there any age restrictions?',
-    answer: 'Members must be at least 16 years old. Those aged 16-17 require parental consent and supervision during their first few visits. We offer special youth programs for younger fitness enthusiasts.',
-    category: 'Membership'
-  },
-  {
-    id: '7',
-    question: 'What equipment is available at the gyms?',
-    answer: 'Our gyms feature cardio machines, free weights, resistance machines, functional training areas, and group class studios. Specific equipment varies by location - check individual gym pages for detailed amenity lists.',
-    category: 'Facilities'
-  },
-  {
-    id: '8',
-    question: 'How do I book group classes?',
-    answer: 'Group classes can be booked through the app under "My Schedule" or at the gym reception. Most classes can be booked up to 7 days in advance. Some popular classes may have waiting lists.',
-    category: 'Classes'
-  },
-  {
-    id: '9',
-    question: 'Is there a mobile app available?',
-    answer: 'Yes! Our mobile app is available for both iOS and Android devices. It includes features like QR check-in, class booking, workout tracking, and membership management.',
-    category: 'App Usage'
-  },
-  {
-    id: '10',
-    question: 'What are your operating hours?',
-    answer: 'Operating hours vary by location. Most gyms are open from 5:00 AM to 11:00 PM on weekdays, with slightly reduced weekend hours. Check the specific gym location page for exact hours.',
-    category: 'General'
-  }
-];
+interface APIResponse {
+  success: boolean;
+  message: string;
+  data: {
+    faqs: FAQItem[];
+    total: number;
+  };
+  timestamp: string;
+}
 
-const categories = ['All', 'Membership', 'Payment', 'App Usage', 'Account', 'Facilities', 'Classes', 'General'];
+interface CategoriesResponse {
+  success: boolean;
+  message: string;
+  data: {
+    categories: string[];
+  };
+  timestamp: string;
+}
 
 export function HelpFaq() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const [faqs, setFaqs] = useState<FAQItem[]>([]);
+  const [categories, setCategories] = useState<string[]>(['All']);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const filteredFAQs = faqData.filter(faq => {
-    const matchesSearch = faq.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         faq.answer.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'All' || faq.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  // Fetch FAQs from API
+  const fetchFAQs = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const params = new URLSearchParams();
+      if (selectedCategory !== 'All') {
+        params.append('category', selectedCategory);
+      }
+      if (searchTerm.trim()) {
+        params.append('search', searchTerm.trim());
+      }
+      
+      const url = buildApiUrl(`/faqs?${params}`);
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result: APIResponse = await response.json();
+      
+      if (result.success) {
+        setFaqs(result.data.faqs);
+      } else {
+        throw new Error(result.message || 'Failed to fetch FAQs');
+      }
+    } catch (err) {
+      console.error('Error fetching FAQs:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch FAQs');
+      setFaqs([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch categories from API
+  const fetchCategories = async () => {
+    try {
+      const url = buildApiUrl('/faqs/categories');
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result: CategoriesResponse = await response.json();
+      
+      if (result.success) {
+        setCategories(result.data.categories);
+      } else {
+        console.error('Failed to fetch categories:', result.message);
+        // Keep default categories if API fails
+      }
+    } catch (err) {
+      console.error('Error fetching categories:', err);
+      // Keep default categories if API fails
+    }
+  };
+
+  // Initial load
+  useEffect(() => {
+    fetchCategories();
+    fetchFAQs();
+  }, []);
+
+  // Fetch FAQs when search term or category changes (with debounce)
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchFAQs();
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, selectedCategory]);
 
   const toggleExpanded = (id: string) => {
     setExpandedItems(prev => 
@@ -92,6 +121,39 @@ export function HelpFaq() {
         : [...prev, id]
     );
   };
+
+  // Show loading state
+  if (loading && faqs.length === 0) {
+    return (
+      <div className="space-y-4 px-4 md:px-8 max-w-full mx-auto mt-4">
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-500">Loading FAQs...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error && faqs.length === 0) {
+    return (
+      <div className="space-y-4 px-4 md:px-8 max-w-full mx-auto mt-4">
+        <div className="text-center py-12">
+          <div className="text-red-400 mb-4">
+            <AlertCircle className="w-16 h-16 mx-auto" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Unable to load FAQs</h3>
+          <p className="text-gray-500 mb-4">{error}</p>
+          <button 
+            onClick={fetchFAQs}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-sm text-sm font-medium transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 px-4 md:px-8 max-w-full mx-auto mt-4">
@@ -126,9 +188,17 @@ export function HelpFaq() {
         ))}
       </div>
 
+      {/* Loading indicator for search/filter */}
+      {loading && faqs.length > 0 && (
+        <div className="text-center py-4">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
+          <p className="text-gray-500 text-sm">Updating results...</p>
+        </div>
+      )}
+
       {/* FAQ Items */}
       <div className="max-w-4xl mx-auto space-y-4">
-        {filteredFAQs.map(faq => (
+        {faqs.map(faq => (
           <div key={faq.id} className="bg-white rounded-sm shadow-sm border border-gray-200">
             <button
               onClick={() => toggleExpanded(faq.id)}
@@ -156,7 +226,7 @@ export function HelpFaq() {
         ))}
       </div>
 
-      {filteredFAQs.length === 0 && (
+      {!loading && faqs.length === 0 && (
         <div className="text-center py-12">
           <div className="text-gray-400 mb-4">
             <Book className="w-16 h-16 mx-auto" />

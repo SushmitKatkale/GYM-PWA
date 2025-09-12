@@ -25,6 +25,7 @@ import { UserManagement } from '../features/UserManagement';
 import { HelpFaq } from '../features/HelpFaq';
 import { AdvertisementManagement } from '../features/advertisements/AdvertisementManagement';
 import { AdminNotifications } from '../features/AdminNotifications';
+import { AdminFaqManager } from '../admin/AdminFaqManager';
 import { PushNotificationBanner } from '../features/PushNotificationBanner';
 import { Bell, User, Shield, Settings, Lock, LogOut, X, CalendarHeart, CalendarRange } from 'lucide-react';
 import { getAvatarImage } from '../../constants/images';
@@ -115,6 +116,8 @@ export const MainDashboard: React.FC = () => {
         return <AdvertisementManagement />;
       case 'help':
         return <HelpFaq />;
+      case 'faq-management':
+        return <AdminFaqManager />;
       case 'admin-notifications':
         return <AdminNotifications isOpen={true} onClose={() => setActiveView('dashboard')} />;
       default:
