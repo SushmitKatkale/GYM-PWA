@@ -31,6 +31,7 @@ import { Bell, User, Shield, Settings, Lock, LogOut, X, CalendarHeart, CalendarR
 import { getAvatarImage } from '../../constants/images';
 import { userService } from '../../services/userService';
 import { useNotificationCount } from '../../hooks/useNotificationCount';
+import { UserAttendance } from '../features/UserAttendance';
 
 export const MainDashboard: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -87,7 +88,8 @@ export const MainDashboard: React.FC = () => {
       case 'my-subscriptions':
         return <ModernMySubscriptions onNavigate={handleViewChange} />;
       case 'attendance':
-        return <AttendanceReports />;
+        // return <AttendanceReports />;
+         return <UserAttendance />;
       case 'analytics':
         return <AnalyticsPage />;
       case 'settings':
