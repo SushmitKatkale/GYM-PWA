@@ -33,6 +33,8 @@ export function UserAttendance() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'calendar' | 'list' | 'expanded'>('calendar');
   const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date());
+  const [selectedAttendanceDate, setSelectedAttendanceDate] = useState<Date | null>(null);
+  const [showAttendanceInfo, setShowAttendanceInfo] = useState(false);
 
   // Helper function to format duration
   const formatDuration = (minutes: number): string => {
@@ -150,6 +152,21 @@ export function UserAttendance() {
 
   const calendarDays = generateCalendarDays();
 
+  // Handle calendar date click
+  const handleDateClick = (date: Date) => {
+    const dayAttendance = getAttendanceForDate(date);
+    if (dayAttendance) {
+      setSelectedAttendanceDate(date);
+      setShowAttendanceInfo(true);
+    }
+  };
+
+  // Close attendance info popup
+  const closeAttendanceInfo = () => {
+    setShowAttendanceInfo(false);
+    setSelectedAttendanceDate(null);
+  };
+
   // Generate attendance chart data for the last 7 days
   const generateChartData = () => {
     const last7Days = [];
@@ -238,7 +255,7 @@ export function UserAttendance() {
               </div>
               <div>
                 <h1 className="text-lg font-medium text-gray-900">Hey, {user.username}!</h1>
-                <p className="text-xs text-gray-500">Ready for new wins? <span>Crush it!</span></p>
+                <p className="text-xs text-gray-500">Track your progress, <span>stay consistent!</span></p>
               </div>
             </div>
           </div>
@@ -518,10 +535,11 @@ export function UserAttendance() {
                 return (
                   <div
                     key={day.toISOString()}
-                    className={`aspect-square flex flex-col items-center justify-center p-2 rounded-lg text-xs ${isCurrentDay
+                    onClick={() => handleDateClick(day)}
+                    className={`aspect-square flex flex-col items-center justify-center p-2 rounded-lg text-xs transition-all duration-200 ${isCurrentDay
                       ? 'bg-purple-100 border border-purple-300'
                       : 'hover:bg-gray-50'
-                      }`}
+                      } ${dayAttendance ? 'cursor-pointer hover:shadow-md' : 'cursor-default'}`}
                   >
                     <span className={`font-medium ${isCurrentDay
                       ? 'text-purple-700'
@@ -753,9 +771,9 @@ export function UserAttendance() {
                     )}
 
                     {/* Metadata Footer */}
-                    <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center text-xs text-gray-500">
+                    <div className="mt-4 pt-4 border-t border-gray-200 flex justify-end items-center text-xs text-gray-500">
                       <span>Session #{session.id ? String(session.id).slice(-8) : `temp-${index + 1}`}</span>
-                      <span>Recorded {sessionDate ? format(new Date(sessionDate), 'PPpp') : 'recently'}</span>
+                      {/* <span>Recorded {sessionDate ? format(new Date(sessionDate), 'PPpp') : 'recently'}</span> */}
                     </div>
                   </div>
                 );
@@ -764,6 +782,173 @@ export function UserAttendance() {
           </div>
         )}
       </div>
+
+      {/* Attendance Info Popup */}
+      {showAttendanceInfo && selectedAttendanceDate && (() => {
+        const selectedAttendance = getAttendanceForDate(selectedAttendanceDate);
+        if (!selectedAttendance) return null;
+        
+        const gym = gyms.find(g => g.id === selectedAttendance.gymId);
+        const checkInTime = selectedAttendance.checkIn || selectedAttendance.checkInTime;
+        const checkOutTime = selectedAttendance.checkOut || selectedAttendance.checkOutTime;
+        const duration = (selectedAttendance.duration || selectedAttendance.durationMinutes || 0) / 60;
+        const sessionDate = selectedAttendance.date || (checkInTime ? new Date(checkInTime).toISOString().split('T')[0] : null);
+        
+        // Calculate additional metrics like extended card
+        const sessionTime = checkInTime && checkOutTime
+          ? new Date(checkOutTime).getTime() - new Date(checkInTime).getTime()
+          : 0;
+        const sessionHours = sessionTime > 0 ? sessionTime / (1000 * 60 * 60) : 0;
+        const isLongSession = duration > 120; // More than 2 hours
+        const isRecentSession = sessionDate && new Date(sessionDate) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+        return (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            onClick={closeAttendanceInfo}
+          >
+            <div 
+              className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-sm shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header - Same as expanded card */}
+              <div className="flex items-start justify-between p-6">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center">
+                    <Pyramid className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-900">{selectedAttendance?.gymName || 'Gym Session'}</h3>
+                    <p className="text-sm text-gray-600 mb-1">
+                      {sessionDate ? format(new Date(sessionDate), 'EE, dd MMM yyyy') : 'Recent Session'}
+                    </p>
+                    {gym?.address && (
+                      <p className="text-xs text-gray-500 flex items-center">
+                        <MapPin className="w-3 h-3 mr-1" />
+                        {gym.address}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-col items-end space-y-2">
+                  <button
+                    onClick={closeAttendanceInfo}
+                    className="text-gray-400 hover:text-gray-600 transition-colors mb-2"
+                  >
+                    <XCircle className="w-6 h-6" />
+                  </button>
+                  {/* <div className={`px-3 py-1 rounded-full text-xs font-medium ${checkOutTime
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                    {checkOutTime ? 'Completed' : 'Active'}
+                  </div>
+                  {isLongSession && (
+                    <div className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+                      Long Session
+                    </div>
+                  )} */}
+                  {/* {isRecentSession && (
+                    <div className="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded-full">
+                      Recent
+                    </div>
+                  )} */}
+                </div>
+              </div>
+
+              {/* Additional Information - Same as expanded card */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-6">
+
+                <div className="bg-white rounded-sm p-4">
+                  <h5 className="font-semibold text-gray-900 mb-3 flex items-center">
+                    <ShieldCheck className="w-4 h-4 mr-2" />
+                    Activity Details
+                  </h5>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Duration:</span>
+                      <span className={`font-medium ${checkOutTime ? 'text-green-600' : 'text-yellow-600'}`}> {duration > 0 ? formatDuration(duration) : '0 min'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Check In:</span>
+                      <span className="font-medium">{checkInTime ? format(new Date(checkInTime), 'h:mm a') : '--:--'} <span className='text-xs'>({checkInTime ? format(new Date(checkInTime), 'dd MMM, yyyy') : 'No check-in'})</span></span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Check out:</span>
+                      <span className="font-medium">{checkOutTime ? format(new Date(checkOutTime), 'h:mm a') : '--:--'} <span className='text-xs'>( {checkOutTime ? format(new Date(checkOutTime), 'dd MMM, yyyy') : 'Still active'})</span></span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Session Details */}
+                <div className="bg-white rounded-sm p-4">
+                  <h5 className="font-semibold text-gray-900 mb-3 flex items-center">
+                    <Clock className="w-4 h-4 mr-2" />
+                    Session Details
+                  </h5>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Date:</span>
+                      <span className="font-medium">{sessionDate ? format(new Date(sessionDate), 'PPP') : 'Unknown'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Day of Week:</span>
+                      <span className="font-medium">{sessionDate ? format(new Date(sessionDate), 'EEEE') : 'Unknown'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Status:</span>
+                      <span className={`font-medium ${checkOutTime ? 'text-green-600' : 'text-yellow-600'
+                        }`}>
+                        {checkOutTime ? 'Completed' : 'In Progress'}
+                      </span>
+                    </div>
+                    {selectedAttendance.method && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Check-in Method:</span>
+                        <span className="font-medium">
+                          {selectedAttendance.method === 'qr' ? 'QR Code' : selectedAttendance.method === 'manual' ? 'Manual' : 'Code Entry'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Gym Information */}
+                <div className="bg-white rounded-sm p-4">
+                  <h5 className="font-semibold text-gray-900 mb-3 flex items-center">
+                    <MapPin className="w-4 h-4 mr-2" />
+                    Location Details
+                  </h5>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Gym Name:</span>
+                      <span className="font-medium">{gym?.name || selectedAttendance.gymName || 'Unknown Gym'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Session Notes - Same as expanded card */}
+              {selectedAttendance.sessionNotes && (
+                <div className="mt-4 mx-6 bg-white rounded-lg p-4">
+                  <h5 className="font-semibold text-gray-900 mb-2 flex items-center">
+                    <FileText className="w-4 h-4 mr-2" />
+                    Session Notes
+                  </h5>
+                  <p className="text-sm text-gray-600 leading-relaxed">{selectedAttendance.sessionNotes}</p>
+                </div>
+              )}
+
+              {/* Metadata Footer - Same as expanded card */}
+              <div className="mt-4 pt-4 mx-6 pb-6 border-t border-gray-200 flex justify-end items-center text-xs text-gray-500">
+                <span>Session #{selectedAttendance.id ? String(selectedAttendance.id).slice(-8) : 'N/A'}</span>
+                {/* <span>Recorded {sessionDate ? format(new Date(sessionDate), 'PPpp') : 'recently'}</span> */}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
     </div>
   );
