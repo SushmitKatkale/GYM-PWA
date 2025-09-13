@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  Search, Filter, Clock, Flame, Users, Star, 
-  Play, ArrowLeft, ChevronDown, X, Loader2, 
-  Target, Zap, Heart, Dumbbell 
+import {
+  Search, Filter, Clock, Flame,
+  Play, ArrowLeft, X, Loader2,
+  Target
 } from 'lucide-react';
 import { exerciseService, Exercise, ExerciseFilters, ExerciseService } from '../../services/exerciseService';
-import { VideoPlayer } from '../common/VideoPlayer';
 
 interface ExerciseListProps {
   onBack: () => void;
@@ -31,7 +30,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onBack, onExerciseSe
   const [categories, setCategories] = useState<{ category: string; count: number }[]>([]);
   const [muscleGroups, setMuscleGroups] = useState<string[]>([]);
   const [equipmentList, setEquipmentList] = useState<string[]>([]);
-  
+
   const [filters, setFilters] = useState<FilterState>({
     category: '',
     difficulty: '',
@@ -93,7 +92,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onBack, onExerciseSe
       if (filters.search) exerciseFilters.search = filters.search;
 
       const response = await exerciseService.getExercises(exerciseFilters);
-      
+
       if (response.success) {
         setExercises(response.data.exercises);
         setCurrentPage(response.data.pagination.currentPage);
@@ -184,11 +183,10 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onBack, onExerciseSe
             </div>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`p-2 rounded-full transition-colors ${
-                showFilters || hasActiveFilters 
-                  ? 'bg-purple-100 text-purple-600' 
+              className={`p-2 rounded-full transition-colors ${showFilters || hasActiveFilters
+                  ? 'bg-purple-100 text-purple-600'
                   : 'hover:bg-gray-100 text-gray-600'
-              }`}
+                }`}
             >
               <Filter className="w-5 h-5" />
             </button>
@@ -364,8 +362,8 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onBack, onExerciseSe
             <Target className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2 font-poppins">No exercises found</h3>
             <p className="text-gray-600 mb-4 font-poppins">
-              {hasActiveFilters 
-                ? 'Try adjusting your filters to see more results.' 
+              {hasActiveFilters
+                ? 'Try adjusting your filters to see more results.'
                 : 'No exercises are available at the moment.'
               }
             </p>
@@ -387,14 +385,14 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onBack, onExerciseSe
 // Exercise Card Component
 const ExerciseCard: React.FC<{ exercise: Exercise; onClick: () => void }> = ({ exercise, onClick }) => {
   // Prioritize uploaded media over YouTube
-  const thumbnailUrl = exercise.media?.primaryThumbnail?.fullUrl || 
-                      exercise.media?.primaryThumbnail?.url || 
-                      exercise.youtubeThumbnail || 
-                      exercise.thumbnailUrl;
-  
+  const thumbnailUrl = exercise.media?.primaryThumbnail?.fullUrl ||
+    exercise.media?.primaryThumbnail?.url ||
+    exercise.youtubeThumbnail ||
+    exercise.thumbnailUrl;
+
   // Check if we have any video content (uploaded or YouTube)
   const hasVideo = exercise.media?.primaryVideo || exercise.youtubeUrl;
-  
+
   return (
     <div
       onClick={onClick}
@@ -417,7 +415,7 @@ const ExerciseCard: React.FC<{ exercise: Exercise; onClick: () => void }> = ({ e
               <Play className="w-6 h-6 text-gray-400" />
             </div>
           )}
-          
+
           {/* Video indicator - show if we have any video */}
           {hasVideo && (
             <div className="absolute bottom-1 right-1 bg-black bg-opacity-75 rounded px-1 py-0.5">
@@ -433,7 +431,7 @@ const ExerciseCard: React.FC<{ exercise: Exercise; onClick: () => void }> = ({ e
               <h3 className="font-medium text-gray-900 font-poppins line-clamp-2 mb-1">
                 {exercise.exerciseTitle}
               </h3>
-              
+
               {/* Meta information */}
               <div className="flex items-center space-x-3 text-xs text-gray-500 mb-2">
                 {exercise.duration && (
@@ -442,7 +440,7 @@ const ExerciseCard: React.FC<{ exercise: Exercise; onClick: () => void }> = ({ e
                     <span>{ExerciseService.formatDuration(exercise.duration)}</span>
                   </div>
                 )}
-                
+
                 {exercise.calories && (
                   <div className="flex items-center space-x-1">
                     <Flame className="w-3 h-3" />
@@ -456,7 +454,7 @@ const ExerciseCard: React.FC<{ exercise: Exercise; onClick: () => void }> = ({ e
                 <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${ExerciseService.getDifficultyColor(exercise.difficulty)}`}>
                   {exercise.difficulty}
                 </span>
-                
+
                 <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${ExerciseService.getCategoryColor(exercise.category)}`}>
                   {exercise.category}
                 </span>

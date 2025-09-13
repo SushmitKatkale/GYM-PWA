@@ -7,6 +7,7 @@ export interface MediaItem {
   mimeType: string;
   altText: string;
   createdAt: string;
+  fullUrl?: string;
 }
 
 export interface ExerciseMedia {

@@ -363,6 +363,29 @@ export const ExerciseManagement: React.FC<ExerciseManagementProps> = ({ classNam
     }
   };
 
+  const deleteMedia = async (exerciseId: number, mediaId: number, mediaType: 'video' | 'thumbnail') => {
+    if (!confirm(`Are you sure you want to delete this ${mediaType}? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      setError(null);
+      await exerciseService.deleteExerciseMedia(mediaId);
+      setSuccess(`${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)} deleted successfully`);
+      await loadExercises();
+      
+      // If we're in the media modal, refresh the selected exercise
+      if (selectedExercise && selectedExercise.id === exerciseId) {
+        const updatedExercise = await exerciseService.getExerciseById(exerciseId);
+        if (updatedExercise.success) {
+          setSelectedExercise(updatedExercise.data);
+        }
+      }
+    } catch (err: any) {
+      setError(err.message || `Failed to delete ${mediaType}`);
+    }
+  };
+
   // Clear messages after 3 seconds
   useEffect(() => {
     if (success) {
@@ -502,7 +525,7 @@ export const ExerciseManagement: React.FC<ExerciseManagementProps> = ({ classNam
                             {exercise.media?.primaryThumbnail ? (
                               <img
                                 className="h-10 w-10 rounded-lg object-cover"
-                                src={exercise.media.primaryThumbnail.url}
+                                src={exercise.media.primaryThumbnail.fullUrl || exercise.media.primaryThumbnail.url}
                                 alt={exercise.exerciseTitle}
                               />
                             ) : exercise.thumbnailUrl ? (
@@ -552,15 +575,24 @@ export const ExerciseManagement: React.FC<ExerciseManagementProps> = ({ classNam
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center space-x-2">
                           {exercise.media?.primaryVideo && (
-                            <FileVideo className="w-4 h-4 text-blue-500" title="Has video" />
+                            <div className="flex items-center space-x-1">
+                              <FileVideo className="w-4 h-4 text-blue-500" title="Has uploaded video" />
+                              <span className="text-xs text-blue-600 font-medium">Video</span>
+                            </div>
                           )}
                           {exercise.media?.primaryThumbnail && (
-                            <ImageIcon className="w-4 h-4 text-green-500" title="Has thumbnail" />
+                            <div className="flex items-center space-x-1">
+                              <ImageIcon className="w-4 h-4 text-green-500" title="Has uploaded thumbnail" />
+                              <span className="text-xs text-green-600 font-medium">Thumb</span>
+                            </div>
                           )}
                           {exercise.youtubeUrl && (
-                            <Play className="w-4 h-4 text-red-500" title="YouTube video" />
+                            <div className="flex items-center space-x-1">
+                              <Play className="w-4 h-4 text-red-500" title="YouTube video" />
+                              <span className="text-xs text-red-600 font-medium">YT</span>
+                            </div>
                           )}
-                          {!exercise.media?.primaryVideo && !exercise.youtubeUrl && (
+                          {!exercise.media?.primaryVideo && !exercise.media?.primaryThumbnail && !exercise.youtubeUrl && (
                             <span className="text-gray-400 text-xs">No media</span>
                           )}
                         </div>
@@ -969,7 +1001,7 @@ export const ExerciseManagement: React.FC<ExerciseManagementProps> = ({ classNam
                     <div className="flex-shrink-0">
                       {selectedExercise.media?.primaryThumbnail ? (
                         <img
-                          src={selectedExercise.media.primaryThumbnail.url}
+                          src={selectedExercise.media.primaryThumbnail.fullUrl || selectedExercise.media.primaryThumbnail.url}
                           alt={selectedExercise.exerciseTitle}
                           className="w-32 h-32 object-cover rounded-lg"
                         />
@@ -1182,16 +1214,26 @@ export const ExerciseManagement: React.FC<ExerciseManagementProps> = ({ classNam
                           <FileVideo className="w-4 h-4 mr-2" />
                           Video
                         </h5>
-                        {selectedExercise.media?.primaryVideo ? (
+                          {selectedExercise.media?.primaryVideo ? (
                           <div className="space-y-2">
                             <video
-                              src={selectedExercise.media.primaryVideo.url}
+                              src={selectedExercise.media.primaryVideo.fullUrl || selectedExercise.media.primaryVideo.url}
                               className="w-full h-32 object-cover rounded"
                               controls
+                              preload="metadata"
                             />
-                            <p className="text-xs text-gray-500">
-                              {selectedExercise.media.primaryVideo.mimeType}
-                            </p>
+                            <div className="flex justify-between items-center">
+                              <p className="text-xs text-gray-500">
+                                {selectedExercise.media.primaryVideo.mimeType}
+                              </p>
+                              <button
+                                onClick={() => deleteMedia(selectedExercise.id, selectedExercise.media?.primaryVideo?.id!, 'video')}
+                                className="text-red-500 hover:text-red-700 p-1 rounded"
+                                title="Delete video"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
                           </div>
                         ) : selectedExercise.youtubeUrl ? (
                           <div className="space-y-2">
@@ -1213,16 +1255,25 @@ export const ExerciseManagement: React.FC<ExerciseManagementProps> = ({ classNam
                           <ImageIcon className="w-4 h-4 mr-2" />
                           Thumbnail
                         </h5>
-                        {selectedExercise.media?.primaryThumbnail ? (
+                          {selectedExercise.media?.primaryThumbnail ? (
                           <div className="space-y-2">
                             <img
-                              src={selectedExercise.media.primaryThumbnail.url}
+                              src={selectedExercise.media.primaryThumbnail.fullUrl || selectedExercise.media.primaryThumbnail.url}
                               alt="Thumbnail"
                               className="w-full h-32 object-cover rounded"
                             />
-                            <p className="text-xs text-gray-500">
-                              {selectedExercise.media.primaryThumbnail.mimeType}
-                            </p>
+                            <div className="flex justify-between items-center">
+                              <p className="text-xs text-gray-500">
+                                {selectedExercise.media.primaryThumbnail.mimeType}
+                              </p>
+                              <button
+                                onClick={() => deleteMedia(selectedExercise.id, selectedExercise.media?.primaryThumbnail?.id!, 'thumbnail')}
+                                className="text-red-500 hover:text-red-700 p-1 rounded"
+                                title="Delete thumbnail"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
                           </div>
                         ) : selectedExercise.thumbnailUrl ? (
                           <div className="space-y-2">
