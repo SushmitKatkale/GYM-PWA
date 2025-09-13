@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { 
+import {
   Home, 
   Calendar, 
   QrCode, 
@@ -15,7 +15,8 @@ import {
   HelpCircle,
   MapPin,
   UserCheck,
-  CreditCard as Subscription
+  CreditCard as Subscription,
+  Apple
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { useNotificationCount } from '../../hooks/useNotificationCount';
@@ -102,6 +103,7 @@ export function MobileBottomNav({ activeMenu, setActiveMenu }: MobileBottomNavPr
 
     // Regular User
     return [
+      { id: 'diet-plans', label: 'Diet Plans', icon: Apple },
       { id: 'settings', label: 'Settings', icon: Settings },
       // { id: 'wallet', label: 'Wallet', icon: Wallet },
       { id: 'my-subscriptions', label: 'Subscriptions', icon: Subscription },

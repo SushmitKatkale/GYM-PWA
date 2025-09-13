@@ -32,6 +32,9 @@ import { getAvatarImage } from '../../constants/images';
 import { userService } from '../../services/userService';
 import { useNotificationCount } from '../../hooks/useNotificationCount';
 import { UserAttendance } from '../features/UserAttendance';
+import { UserDietPlans } from '../features/UserDietPlans';
+import { DietPlanDetails } from '../features/DietPlanDetails';
+import { DietChangeRequest } from '../features/DietChangeRequest';
 
 export const MainDashboard: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -122,6 +125,32 @@ export const MainDashboard: React.FC = () => {
         return <AdminFaqManager />;
       case 'admin-notifications':
         return <AdminNotifications isOpen={true} onClose={() => setActiveView('dashboard')} />;
+      case 'diet-plans':
+        return <UserDietPlans onNavigate={(view, data) => {
+          if (view === 'diet-plan-details') {
+            setActiveView('diet-plan-details');
+          } else if (view === 'change-request') {
+            setActiveView('diet-change-request');
+          }
+        }} />;
+      case 'diet-plan-details':
+        return <DietPlanDetails 
+          onBack={() => setActiveView('diet-plans')}
+          onNavigate={(view, data) => {
+            if (view === 'change-request') {
+              setActiveView('diet-change-request');
+            }
+          }}
+        />;
+      case 'diet-change-request':
+        return <DietChangeRequest 
+          onBack={() => setActiveView('diet-plans')}
+          onNavigate={(view, data) => {
+            if (view === 'diet-plan-details') {
+              setActiveView('diet-plan-details');
+            }
+          }}
+        />;
       default:
         return (
           <div className="text-center py-12">

@@ -90,10 +90,10 @@ export function Sidebar({ activeView, onViewChange, isOpen }: SidebarProps) {
       
       {/* Sidebar */}
       <div className={`
-        fixed inset-y-0 left-0 z-50 w-80 ${getRoleColor()} transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-0 h-full
+        absolute inset-y-0 left-0 z-50 w-80 ${getRoleColor()} transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-0
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col min-h-fit">
           {/* Brand Header */}
           <div className="px-4 py-6 border-b border-white/10">
             <BrandLogoLight size="lg" variant="full" showTagline={true} />

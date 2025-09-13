@@ -24,7 +24,9 @@ export const API_CONFIG = {
     QR_CODES: '/qr-codes',
     UNIQUE_CODES: '/unique-codes',
     CHECKIN_METHODS: '/checkin-methods',
-    ATTENDANCE_ANALYTICS: '/attendance-analytics'
+    ATTENDANCE_ANALYTICS: '/attendance-analytics',
+    // Diet management endpoints
+    DIET_PLANS: '/diet-plans'
   }
 };
 
