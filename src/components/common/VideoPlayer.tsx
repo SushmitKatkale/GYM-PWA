@@ -9,6 +9,8 @@ interface VideoPlayerProps {
   autoplay?: boolean;
   muted?: boolean;
   controls?: boolean;
+  lazyLoad?: boolean; // Enable lazy loading
+  preload?: 'none' | 'metadata' | 'auto'; // Video preload strategy
 }
 
 export const VideoPlayer: React.FC<VideoPlayerProps> = ({
@@ -18,7 +20,9 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   className = '',
   autoplay = false,
   muted = false,
-  controls = true
+  controls = true,
+  lazyLoad = true,
+  preload = 'metadata'
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -29,6 +33,8 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [shouldLoad, setShouldLoad] = useState(!lazyLoad);
+  const [hasStartedPlaying, setHasStartedPlaying] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -62,11 +68,21 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   // Handle video events
   const handlePlay = () => {
-    if (videoRef.current) {
+    if (!shouldLoad) {
+      setShouldLoad(true);
+      setHasStartedPlaying(true);
+      // Wait for video to load before playing
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.play();
+        }
+      }, 100);
+    } else if (videoRef.current) {
       if (isPlaying) {
         videoRef.current.pause();
       } else {
         videoRef.current.play();
+        setHasStartedPlaying(true);
       }
     }
   };
@@ -236,25 +252,48 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     >
       <div className="aspect-video relative">
         {/* Video Element */}
-        <video
-          ref={videoRef}
-          className="w-full h-full object-cover"
-          poster={thumbnailUrl}
-          muted={isMuted}
-          autoPlay={autoplay}
-          onPlay={() => setIsPlaying(true)}
-          onPause={() => setIsPlaying(false)}
-          onTimeUpdate={handleTimeUpdate}
-          onLoadedMetadata={handleLoadedMetadata}
-          onLoadStart={() => setIsLoading(true)}
-          onCanPlay={() => setIsLoading(false)}
-          onError={() => setError('Failed to load video')}
-        >
-          <source src={videoSource.url} type="video/mp4" />
-          <source src={videoSource.url} type="video/webm" />
-          <source src={videoSource.url} type="video/ogg" />
-          Your browser does not support the video tag.
-        </video>
+        {shouldLoad ? (
+          <video
+            ref={videoRef}
+            className="w-full h-full object-cover"
+            poster={thumbnailUrl}
+            muted={isMuted}
+            autoPlay={autoplay && hasStartedPlaying}
+            preload={preload}
+            playsInline
+            onPlay={() => setIsPlaying(true)}
+            onPause={() => setIsPlaying(false)}
+            onTimeUpdate={handleTimeUpdate}
+            onLoadedMetadata={handleLoadedMetadata}
+            onLoadStart={() => setIsLoading(true)}
+            onCanPlay={() => setIsLoading(false)}
+            onError={() => setError('Failed to load video')}
+            onWaiting={() => setIsLoading(true)}
+            onCanPlayThrough={() => setIsLoading(false)}
+          >
+            <source src={videoSource.url} type="video/mp4" />
+            <source src={videoSource.url} type="video/webm" />
+            <source src={videoSource.url} type="video/ogg" />
+            Your browser does not support the video tag.
+          </video>
+        ) : (
+          // Show poster/thumbnail until user starts playing
+          <div 
+            className="w-full h-full object-cover bg-gray-900 flex items-center justify-center"
+            style={{
+              backgroundImage: thumbnailUrl ? `url(${thumbnailUrl})` : 'none',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }}
+          >
+            {!thumbnailUrl && (
+              <div className="text-gray-500 text-center">
+                <div className="text-lg mb-2">🎬</div>
+                <div className="text-sm">Video ready to play</div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Loading Indicator */}
         {isLoading && (

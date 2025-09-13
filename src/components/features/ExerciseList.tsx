@@ -386,7 +386,14 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onBack, onExerciseSe
 
 // Exercise Card Component
 const ExerciseCard: React.FC<{ exercise: Exercise; onClick: () => void }> = ({ exercise, onClick }) => {
-  const thumbnailUrl = exercise.youtubeThumbnail || exercise.thumbnailUrl;
+  // Prioritize uploaded media over YouTube
+  const thumbnailUrl = exercise.media?.primaryThumbnail?.fullUrl || 
+                      exercise.media?.primaryThumbnail?.url || 
+                      exercise.youtubeThumbnail || 
+                      exercise.thumbnailUrl;
+  
+  // Check if we have any video content (uploaded or YouTube)
+  const hasVideo = exercise.media?.primaryVideo || exercise.youtubeUrl;
   
   return (
     <div
@@ -411,8 +418,8 @@ const ExerciseCard: React.FC<{ exercise: Exercise; onClick: () => void }> = ({ e
             </div>
           )}
           
-          {/* Video indicator */}
-          {exercise.youtubeUrl && (
+          {/* Video indicator - show if we have any video */}
+          {hasVideo && (
             <div className="absolute bottom-1 right-1 bg-black bg-opacity-75 rounded px-1 py-0.5">
               <Play className="w-3 h-3 text-white" />
             </div>

@@ -198,7 +198,7 @@ export function UserDashboard({ onNavigateToSettings, onNavigate }: UserDashboar
                 <img src={user.profileImage} alt={user.username} />
               </div>
               <div>
-                <h1 className="text-lg font-medium text-gray-900 font-poppins">Hey, {user.username}!</h1>
+                <h1 className="text-lg font-medium text-gray-900 font-poppins">Hey, {user.username || `${user.firstName || ""} ${user.lastName || ""}`}!</h1>
                 <p className="text-xs text-gray-500 font-poppins">Ready for new wins? <span>Crush it!</span></p>
               </div>
             </div>

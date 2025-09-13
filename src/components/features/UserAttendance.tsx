@@ -254,7 +254,7 @@ export function UserAttendance() {
                 <img src={user.profileImage} alt={user.username} />
               </div>
               <div>
-                <h1 className="text-lg font-medium text-gray-900">Hey, {user.username}!</h1>
+                <h1 className="text-lg font-medium text-gray-900">Hey, {user.username || `${user.firstName || ""} ${user.lastName || ""}`}!</h1>
                 <p className="text-xs text-gray-500">Track your progress, <span>stay consistent!</span></p>
               </div>
             </div>

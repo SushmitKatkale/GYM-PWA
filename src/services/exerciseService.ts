@@ -1,6 +1,21 @@
 import { API_CONFIG } from '../config/api';
 import { apiClient, ApiResponse } from './apiClient';
 
+export interface MediaItem {
+  id: number;
+  url: string;
+  mimeType: string;
+  altText: string;
+  createdAt: string;
+}
+
+export interface ExerciseMedia {
+  videos: MediaItem[];
+  thumbnails: MediaItem[];
+  primaryVideo: MediaItem | null;
+  primaryThumbnail: MediaItem | null;
+}
+
 export interface Exercise {
   id: number;
   exerciseTitle: string;
@@ -39,6 +54,7 @@ export interface Exercise {
   formattedDuration?: string;
   youtubeThumbnail?: string;
   youtubeVideoId?: string;
+  media?: ExerciseMedia;
 }
 
 export interface ExerciseFilters {
@@ -86,6 +102,21 @@ export interface EquipmentResponse {
 
 class ExerciseService {
   private baseUrl = API_CONFIG.ENDPOINTS.EXERCISES;
+  private mediaBaseUrl = API_CONFIG.BASE_URL + '/exercise-media';
+
+  // Helper method to get auth token (same as apiClient)
+  private getAuthToken(): string | null {
+    try {
+      const authStorage = localStorage.getItem('auth-storage');
+      if (authStorage) {
+        const parsed = JSON.parse(authStorage);
+        return parsed.state?.tokens?.accessToken;
+      }
+    } catch (error) {
+      console.warn('Failed to get auth token:', error);
+    }
+    return null;
+  }
 
   // Get all exercises with filtering and pagination
   async getExercises(filters: ExerciseFilters = {}): Promise<ExerciseResponse> {
@@ -195,6 +226,137 @@ class ExerciseService {
     const response = await apiClient.patch<{ success: boolean; data: { id: number; isPublic: boolean } }>(
       `${this.baseUrl}/${id}/visibility`
     );
+    return response;
+  }
+
+  // Media-related methods
+
+  // Upload exercise video
+  async uploadExerciseVideo(
+    exerciseId: number, 
+    videoFile: File, 
+    altText?: string
+  ): Promise<{ success: boolean; data: MediaItem }> {
+    const formData = new FormData();
+    formData.append('video', videoFile);
+    if (altText) {
+      formData.append('altText', altText);
+    }
+
+    const token = this.getAuthToken();
+    const headers: HeadersInit = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${this.mediaBaseUrl}/exercises/${exerciseId}/video`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.message || 'Failed to upload video');
+    }
+    return result;
+  }
+
+  // Upload exercise thumbnail
+  async uploadExerciseThumbnail(
+    exerciseId: number, 
+    thumbnailFile: File, 
+    altText?: string
+  ): Promise<{ success: boolean; data: MediaItem }> {
+    const formData = new FormData();
+    formData.append('thumbnail', thumbnailFile);
+    if (altText) {
+      formData.append('altText', altText);
+    }
+
+    const token = this.getAuthToken();
+    const headers: HeadersInit = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${this.mediaBaseUrl}/exercises/${exerciseId}/thumbnail`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.message || 'Failed to upload thumbnail');
+    }
+    return result;
+  }
+
+  // Upload both video and thumbnail simultaneously
+  async uploadExerciseMedia(
+    exerciseId: number, 
+    files: { video?: File; thumbnail?: File }, 
+    altTexts: { video?: string; thumbnail?: string } = {}
+  ): Promise<{ success: boolean; data: { video?: MediaItem; thumbnail?: MediaItem } }> {
+    const formData = new FormData();
+    
+    if (files.video) {
+      formData.append('video', files.video);
+      if (altTexts.video) {
+        formData.append('videoAltText', altTexts.video);
+      }
+    }
+    
+    if (files.thumbnail) {
+      formData.append('thumbnail', files.thumbnail);
+      if (altTexts.thumbnail) {
+        formData.append('thumbnailAltText', altTexts.thumbnail);
+      }
+    }
+
+    const token = this.getAuthToken();
+    const headers: HeadersInit = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${this.mediaBaseUrl}/exercises/${exerciseId}/media`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.message || 'Failed to upload media');
+    }
+    return result;
+  }
+
+  // Get exercise media
+  async getExerciseMedia(
+    exerciseId: number, 
+    mediaType?: 'video' | 'image'
+  ): Promise<{ success: boolean; data: ExerciseMedia | MediaItem[] }> {
+    const url = new URL(`${this.mediaBaseUrl}/exercises/${exerciseId}/media`);
+    if (mediaType) {
+      url.searchParams.set('mediaType', mediaType);
+    }
+
+    const response = await apiClient.get<{ success: boolean; data: ExerciseMedia | MediaItem[] }>(url.toString());
+    return response;
+  }
+
+  // Delete exercise media
+  async deleteExerciseMedia(mediaId: number): Promise<{ success: boolean }> {
+    const response = await apiClient.delete<{ success: boolean }>(`${this.mediaBaseUrl}/${mediaId}`);
+    return response;
+  }
+
+  // Get media by ID
+  async getMediaById(mediaId: number): Promise<{ success: boolean; data: MediaItem }> {
+    const response = await apiClient.get<{ success: boolean; data: MediaItem }>(`${this.mediaBaseUrl}/${mediaId}`);
     return response;
   }
 

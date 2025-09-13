@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   Home, Users, Building, Calendar, QrCode, CreditCard, 
-  BarChart3, Settings, MapPin, Bell, Clock, Wallet, UserCheck, Package, Megaphone, MessageCircle, HelpCircle
+  BarChart3, Settings, MapPin, Bell, Clock, Wallet, UserCheck, Package, Megaphone, MessageCircle, HelpCircle, Dumbbell
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { useNotificationCount } from '../../hooks/useNotificationCount';
@@ -30,6 +30,7 @@ export function Sidebar({ activeView, onViewChange, isOpen }: SidebarProps) {
           { id: 'dashboard', label: 'Dashboard', icon: Home },
           { id: 'admin-notifications', label: 'Notification Management', icon: MessageCircle },
           { id: 'gym-management', label: 'Gym Management', icon: Building },
+          { id: 'exercise-management', label: 'Exercise Management', icon: Dumbbell },
           // { id: 'subscription-management', label: 'Subscription Management', icon: Package },
           { id: 'users', label: 'User Management', icon: Users },
           { id: 'advertisements', label: 'Advertisement Management', icon: Megaphone },

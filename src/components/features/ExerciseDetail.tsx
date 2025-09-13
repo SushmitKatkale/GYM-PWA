@@ -198,13 +198,16 @@ export const ExerciseDetail: React.FC<ExerciseDetailProps> = ({ exerciseId, onBa
       </div>
 
       {/* Video Player */}
-      {exercise.youtubeUrl && (
+      {(exercise.media?.primaryVideo || exercise.youtubeUrl) && (
         <div className="p-4">
           <VideoPlayer
-            videoUrl={exercise.youtubeUrl}
-            thumbnailUrl={exercise.thumbnailUrl}
+            videoUrl={exercise.media?.primaryVideo?.fullUrl || exercise.media?.primaryVideo?.url || exercise.youtubeUrl!}
+            thumbnailUrl={exercise.media?.primaryThumbnail?.fullUrl || exercise.media?.primaryThumbnail?.url || exercise.youtubeThumbnail || exercise.thumbnailUrl}
             title={exercise.exerciseTitle}
             className="w-full"
+            lazyLoad={true}
+            preload="metadata"
+            muted={true}
           />
         </div>
       )}

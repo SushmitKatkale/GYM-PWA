@@ -37,6 +37,7 @@ import { DietPlanDetails } from '../features/DietPlanDetails';
 import { DietChangeRequest } from '../features/DietChangeRequest';
 import { ExerciseList } from '../features/ExerciseList';
 import { ExerciseDetail } from '../features/ExerciseDetail';
+import ExerciseManagement from '../admin/ExerciseManagement';
 
 export const MainDashboard: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -108,6 +109,8 @@ export const MainDashboard: React.FC = () => {
       case 'gym-management':
       case 'my-gyms':
         return <GymManagement />;
+      case 'exercise-management':
+        return <ExerciseManagement />;
       case 'member-management':
         return <MemberManagement />;
       case 'owner-management':
