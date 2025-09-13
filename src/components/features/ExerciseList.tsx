@@ -52,6 +52,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onBack, onExerciseSe
 
   const [searchInput, setSearchInput] = useState('');
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [isInfiniteLoading, setIsInfiniteLoading] = useState(false);
 
   // Load initial data
   useEffect(() => {
@@ -89,6 +90,31 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onBack, onExerciseSe
       loadExercises(currentPage, true); // Append to existing exercises
     }
   }, [currentPage]);
+
+  // Infinite scroll functionality
+  useEffect(() => {
+    const handleScroll = () => {
+      // Check if we're near the bottom of the page
+      const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
+      const clientHeight = document.documentElement.clientHeight || window.innerHeight;
+      const scrolledToBottom = scrollTop + clientHeight >= scrollHeight - 100; // 100px threshold
+
+      // Load more if we're near bottom, not currently loading, and have more pages
+      if (scrolledToBottom && !loadingMore && !loading && currentPage < totalPages) {
+        setIsInfiniteLoading(true);
+        setCurrentPage(prev => prev + 1);
+      }
+    };
+
+    // Add scroll event listener
+    window.addEventListener('scroll', handleScroll);
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [loadingMore, loading, currentPage, totalPages]);
 
   const loadExercises = async (page: number = 1, append: boolean = false) => {
     try {
@@ -533,23 +559,22 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onBack, onExerciseSe
                 ))}
               </div>
 
-              {/* Load More Button */}
-              {currentPage < totalPages && (
-                <div className="flex justify-center mt-6">
-                  <button
-                    onClick={handleLoadMore}
-                    disabled={loadingMore}
-                    className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-poppins"
-                  >
-                    {loadingMore ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin inline-block mr-2" />
-                        Loading...
-                      </>
-                    ) : (
-                      'Load More'
-                    )}
-                  </button>
+              {/* Infinite Scroll Loading Indicator */}
+              {loadingMore && currentPage < totalPages && (
+                <div className="flex justify-center items-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-purple-600 mr-3" />
+                  <p className="text-gray-600 font-poppins">Loading more exercises...</p>
+                </div>
+              )}
+              
+              {/* End of List Indicator */}
+              {currentPage >= totalPages && exercises.length > 0 && (
+                <div className="flex justify-center items-center py-8">
+                  <div className="text-center">
+                    <div className="w-12 h-0.5 bg-gray-300 mx-auto mb-3 rounded-full"></div>
+                    <p className="text-gray-500 text-sm font-poppins">You've reached the end of the list</p>
+                    <p className="text-gray-400 text-xs font-poppins mt-1">{exercises.length} exercises loaded</p>
+                  </div>
                 </div>
               )}
             </>

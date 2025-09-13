@@ -195,7 +195,7 @@ export function UserDashboard({ onNavigateToSettings, onNavigate }: UserDashboar
           <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="w-12 h-12 bg-purple-100 border border-red-600 rounded-full flex items-center justify-center overflow-hidden mt-[2px]">
-                <img src={user.profileImage} alt={user.username} />
+                <img src={user.profileImage} alt={user.username} className='object-cover h-full w-full' />
               </div>
               <div>
                 <h1 className="text-lg font-medium text-gray-900 font-poppins">Hey, {user.username || `${user.firstName || ""} ${user.lastName || ""}`}!</h1>
