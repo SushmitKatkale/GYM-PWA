@@ -102,7 +102,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onBack, onExerciseSe
 
       const exerciseFilters: ExerciseFilters = {
         page: page,
-        limit: 20,
+        limit: 10,
         includePrivate: false // Only show public exercises for regular users
       };
 
@@ -566,7 +566,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({ onBack, onExerciseSe
               {hasActiveFilters && (
                 <button
                   onClick={clearFilters}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-poppins"
+                  className="px-4 py-2 bg-purple-600 text-white rounded-sm hover:bg-purple-700 transition-colors font-poppins"
                 >
                   Clear filters
                 </button>

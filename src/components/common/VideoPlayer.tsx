@@ -204,7 +204,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   if (!videoSource) {
     return (
-      <div className={`relative bg-gray-900 rounded-lg overflow-hidden ${className}`}>
+      <div className={`relative bg-gray-900 rounded-sm overflow-hidden ${className}`}>
         <div className="aspect-video flex items-center justify-center">
           <div className="text-white text-center">
             <div className="text-red-500 mb-2">Invalid video URL</div>
@@ -220,7 +220,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     return (
       <div 
         ref={containerRef}
-        className={`relative bg-gray-900 rounded-lg overflow-hidden ${className}`}
+        className={`relative bg-gray-900 rounded-sm overflow-hidden ${className}`}
         onMouseEnter={() => setShowControls(true)}
         onMouseLeave={() => setShowControls(false)}
       >
@@ -244,7 +244,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   return (
     <div 
       ref={containerRef}
-      className={`relative bg-gray-900 rounded-lg overflow-hidden group ${className}`}
+      className={`relative bg-gray-900 rounded-sm overflow-hidden group ${className}`}
       onMouseEnter={showControlsTemporarily}
       onMouseMove={showControlsTemporarily}
       onMouseLeave={() => setShowControls(isPlaying ? false : true)}

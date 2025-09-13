@@ -161,21 +161,21 @@ export const ExerciseDetail: React.FC<ExerciseDetailProps> = ({ exerciseId, onBa
                 <ArrowLeft className="w-5 h-5 text-gray-600" />
               </button>
               <div className="flex-1">
-                <h1 className="text-lg font-semibold text-gray-900 font-poppins line-clamp-1">
+                <h1 className="text-lg font-medium text-gray-900 font-poppins line-clamp-1">
                   {exercise.exerciseTitle}
                 </h1>
                 <div className="flex items-center space-x-2 mt-1">
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${ExerciseService.getDifficultyColor(exercise.difficulty)}`}>
+                  <span className={`px-2 py-0.5 rounded-[0.5rem] text-xs font-medium ${ExerciseService.getDifficultyColor(exercise.difficulty)}`}>
                     {exercise.difficulty}
                   </span>
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${ExerciseService.getCategoryColor(exercise.category)}`}>
+                  <span className={`px-2 py-0.5 rounded-[0.5rem] text-xs font-medium ${ExerciseService.getCategoryColor(exercise.category)}`}>
                     {exercise.category}
                   </span>
                 </div>
               </div>
             </div>
             
-            <div className="flex items-center space-x-2">
+            {/* <div className="flex items-center space-x-2">
               <button
                 onClick={toggleBookmark}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -192,7 +192,7 @@ export const ExerciseDetail: React.FC<ExerciseDetailProps> = ({ exerciseId, onBa
               >
                 <Share2 className="w-5 h-5 text-gray-600" />
               </button>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
@@ -214,13 +214,13 @@ export const ExerciseDetail: React.FC<ExerciseDetailProps> = ({ exerciseId, onBa
 
       {/* Quick Stats */}
       <div className="px-4 pb-4">
-        <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+        <div className="bg-white rounded-sm p-4 shadow-sm border border-gray-200">
           <div className="grid grid-cols-4 gap-4 text-center">
             {exercise.duration && (
               <div>
                 <Clock className="w-5 h-5 text-purple-600 mx-auto mb-1" />
                 <p className="text-xs text-gray-500">Duration</p>
-                <p className="text-sm font-medium">{ExerciseService.formatDuration(exercise.duration)}</p>
+                <p className="text-sm font-medium truncate">{ExerciseService.formatDuration(exercise.duration)}</p>
               </div>
             )}
             
@@ -228,7 +228,7 @@ export const ExerciseDetail: React.FC<ExerciseDetailProps> = ({ exerciseId, onBa
               <div>
                 <Flame className="w-5 h-5 text-red-600 mx-auto mb-1" />
                 <p className="text-xs text-gray-500">Calories</p>
-                <p className="text-sm font-medium">{exercise.calories}</p>
+                <p className="text-sm font-medium truncate">{exercise.calories}</p>
               </div>
             )}
             
@@ -236,7 +236,7 @@ export const ExerciseDetail: React.FC<ExerciseDetailProps> = ({ exerciseId, onBa
               <div>
                 <Target className="w-5 h-5 text-green-600 mx-auto mb-1" />
                 <p className="text-xs text-gray-500">Sets</p>
-                <p className="text-sm font-medium">{exercise.sets}</p>
+                <p className="text-sm font-medium truncate">{exercise.sets}</p>
               </div>
             )}
             
@@ -244,7 +244,7 @@ export const ExerciseDetail: React.FC<ExerciseDetailProps> = ({ exerciseId, onBa
               <div>
                 <RotateCcw className="w-5 h-5 text-blue-600 mx-auto mb-1" />
                 <p className="text-xs text-gray-500">Reps</p>
-                <p className="text-sm font-medium">{exercise.reps}</p>
+                <p className="text-sm font-medium truncate">{exercise.reps}</p>
               </div>
             )}
           </div>
@@ -256,7 +256,7 @@ export const ExerciseDetail: React.FC<ExerciseDetailProps> = ({ exerciseId, onBa
         <div className="px-4 pb-4">
           <button
             onClick={handleStartWorkout}
-            className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg hover:bg-purple-700 transition-colors font-poppins font-medium flex items-center justify-center space-x-2"
+            className="w-full bg-purple-600 text-white py-3 px-4 rounded-sm hover:bg-purple-700 transition-colors font-poppins font-medium flex items-center justify-center space-x-2"
           >
             <Play className="w-5 h-5" />
             <span>Start Exercise</span>
@@ -264,7 +264,7 @@ export const ExerciseDetail: React.FC<ExerciseDetailProps> = ({ exerciseId, onBa
         </div>
       ) : (
         <div className="px-4 pb-4">
-          <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 space-y-4">
+          <div className="bg-white rounded-sm p-4 shadow-sm border border-gray-200 space-y-4">
             {/* Current Set Display */}
             <div className="text-center">
               <p className="text-lg font-semibold text-gray-900 font-poppins">
@@ -277,7 +277,7 @@ export const ExerciseDetail: React.FC<ExerciseDetailProps> = ({ exerciseId, onBa
 
             {/* Rest Timer */}
             {isResting && (
-              <div className="text-center p-4 bg-blue-50 rounded-lg">
+              <div className="text-center p-4 bg-blue-50 rounded-sm">
                 <Timer className="w-8 h-8 text-blue-600 mx-auto mb-2" />
                 <p className="text-blue-800 font-semibold font-poppins">Rest Time</p>
                 <p className="text-2xl font-bold text-blue-600 font-poppins">{formatTime(restTimer)}</p>
@@ -288,7 +288,7 @@ export const ExerciseDetail: React.FC<ExerciseDetailProps> = ({ exerciseId, onBa
             {!isResting ? (
               <button
                 onClick={handleCompleteSet}
-                className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-colors font-poppins font-medium flex items-center justify-center space-x-2"
+                className="w-full bg-green-600 text-white py-3 px-4 rounded-[0.5rem] hover:bg-green-700 transition-colors font-poppins font-medium flex items-center justify-center space-x-2"
               >
                 <CheckCircle className="w-5 h-5" />
                 <span>
@@ -301,7 +301,7 @@ export const ExerciseDetail: React.FC<ExerciseDetailProps> = ({ exerciseId, onBa
                   setIsResting(false);
                   setRestTimer(0);
                 }}
-                className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-poppins font-medium"
+                className="w-full bg-blue-600 text-white py-3 px-4 rounded-sm hover:bg-blue-700 transition-colors font-poppins font-medium"
               >
                 Skip Rest
               </button>
@@ -312,7 +312,7 @@ export const ExerciseDetail: React.FC<ExerciseDetailProps> = ({ exerciseId, onBa
 
       {/* Tabs */}
       <div className="px-4">
-        <div className="bg-white rounded-t-lg shadow-sm border border-gray-200">
+        <div className="bg-white rounded-t-sm shadow-sm border border-gray-200">
           <div className="flex border-b border-gray-200">
             {(['overview', 'instructions', 'details'] as const).map((tab) => (
               <button
@@ -333,7 +333,7 @@ export const ExerciseDetail: React.FC<ExerciseDetailProps> = ({ exerciseId, onBa
 
       {/* Tab Content */}
       <div className="px-4 pb-6">
-        <div className="bg-white rounded-b-lg shadow-sm border-l border-r border-b border-gray-200 p-4">
+        <div className="bg-white rounded-b-sm shadow-sm border-l border-r border-b border-gray-200 p-4">
           {activeTab === 'overview' && (
             <div className="space-y-4">
               {exercise.description && (
@@ -350,7 +350,7 @@ export const ExerciseDetail: React.FC<ExerciseDetailProps> = ({ exerciseId, onBa
                     {exercise.muscleGroups.map((muscle) => (
                       <span
                         key={muscle}
-                        className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium"
+                        className="px-3 py-1 bg-purple-100 text-purple-700 rounded-[0.25rem] text-sm font-medium"
                       >
                         {muscle.replace('_', ' ').charAt(0).toUpperCase() + muscle.replace('_', ' ').slice(1)}
                       </span>
@@ -366,7 +366,7 @@ export const ExerciseDetail: React.FC<ExerciseDetailProps> = ({ exerciseId, onBa
                     {exercise.equipmentNeeded.map((equipment) => (
                       <span
                         key={equipment}
-                        className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium flex items-center space-x-1"
+                        className="px-3 py-1 bg-gray-100 text-gray-700 rounded-[0.25rem] text-sm font-medium flex items-center space-x-1"
                       >
                         <Dumbbell className="w-3 h-3" />
                         <span>{equipment.replace('_', ' ').charAt(0).toUpperCase() + equipment.replace('_', ' ').slice(1)}</span>
@@ -386,7 +386,7 @@ export const ExerciseDetail: React.FC<ExerciseDetailProps> = ({ exerciseId, onBa
                     <Info className="w-5 h-5 text-blue-600" />
                     <span>How to Perform</span>
                   </h3>
-                  <div className="bg-blue-50 rounded-lg p-4">
+                  <div className="bg-blue-50 rounded-sm p-4">
                     <p className="text-gray-700 leading-relaxed whitespace-pre-wrap font-poppins">
                       {exercise.instructions}
                     </p>
@@ -400,7 +400,7 @@ export const ExerciseDetail: React.FC<ExerciseDetailProps> = ({ exerciseId, onBa
               )}
 
               {exercise.restTime && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-sm p-4">
                   <h4 className="font-medium text-yellow-800 mb-2 font-poppins">Rest Period</h4>
                   <p className="text-yellow-700 font-poppins">
                     Rest for {formatTime(exercise.restTime)} between sets for optimal recovery.
