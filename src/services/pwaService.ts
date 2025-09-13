@@ -221,6 +221,7 @@ class PWAService {
         justify-content: space-between;
         box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         z-index: 1000;
+        display: none;
       ">
         <div>
           <div style="font-weight: bold; margin-bottom: 4px;">Install FItEsperro</div>

@@ -491,10 +491,6 @@ class DietService {
     return apiClient.post<any>(`${API_CONFIG.ENDPOINTS.DIET_PLANS}/meals`, meal);
   }
 
-  async updateMeal(mealId: string, updates: any): Promise<ApiResponse<any>> {
-    return apiClient.put<any>(`${API_CONFIG.ENDPOINTS.DIET_PLANS}/meals/${mealId}`, updates);
-  }
-
   async verifyMeal(mealId: string): Promise<ApiResponse<void>> {
     return apiClient.put<void>(`${API_CONFIG.ENDPOINTS.DIET_PLANS}/meals/${mealId}/verify`, {});
   }

@@ -35,6 +35,8 @@ import { UserAttendance } from '../features/UserAttendance';
 import { UserDietPlans } from '../features/UserDietPlans';
 import { DietPlanDetails } from '../features/DietPlanDetails';
 import { DietChangeRequest } from '../features/DietChangeRequest';
+import { ExerciseList } from '../features/ExerciseList';
+import { ExerciseDetail } from '../features/ExerciseDetail';
 
 export const MainDashboard: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -45,6 +47,7 @@ export const MainDashboard: React.FC = () => {
   const [showProfileSidebar, setShowProfileSidebar] = useState(false);
   const [activeSettingsTab, setActiveSettingsTab] = useState('profile');
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(user?.profileImage ?? null);
+  const [selectedExerciseId, setSelectedExerciseId] = useState<number | null>(null);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -77,7 +80,7 @@ export const MainDashboard: React.FC = () => {
         switch (user.role) {
           case 'admin': return <AdminDashboard onNavigate={handleViewChange} />;
           case 'owner': return <OwnerDashboard />;
-          case 'user': return <UserDashboard onNavigateToSettings={handleNavigateToNotificationSettings} />;
+          case 'user': return <UserDashboard onNavigateToSettings={handleNavigateToNotificationSettings} onNavigate={handleViewChange} />;
           default: return <div>Invalid role</div>;
         }
       case 'discover':
@@ -151,6 +154,34 @@ export const MainDashboard: React.FC = () => {
             }
           }}
         />;
+      case 'exercises':
+        return <ExerciseList 
+          onExerciseSelect={(exerciseId) => {
+            setSelectedExerciseId(exerciseId);
+            setActiveView('exercise-detail');
+          }}
+        />;
+      case 'exercise-detail':
+        return selectedExerciseId ? (
+          <ExerciseDetail 
+            exerciseId={selectedExerciseId}
+            onBack={() => {
+              setActiveView('exercises');
+              setSelectedExerciseId(null);
+            }}
+          />
+        ) : (
+          <div className="text-center py-12">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">No Exercise Selected</h2>
+            <p className="text-gray-600">Please select an exercise to view details.</p>
+            <button 
+              onClick={() => setActiveView('exercises')}
+              className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-poppins"
+            >
+              Go to Exercises
+            </button>
+          </div>
+        );
       default:
         return (
           <div className="text-center py-12">

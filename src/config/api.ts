@@ -26,7 +26,9 @@ export const API_CONFIG = {
     CHECKIN_METHODS: '/checkin-methods',
     ATTENDANCE_ANALYTICS: '/attendance-analytics',
     // Diet management endpoints
-    DIET_PLANS: '/diet-plans'
+    DIET_PLANS: '/diet-plans',
+    // Exercise management endpoints
+    EXERCISES: '/exercises'
   }
 };
 

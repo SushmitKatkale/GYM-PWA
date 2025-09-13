@@ -30,6 +30,7 @@ import { DailyActivity } from '../common/DailyActivity';
 
 interface UserDashboardProps {
   onNavigateToSettings?: () => void;
+  onNavigate?: (view: string) => void;
 }
 
 ChartJS.register(
@@ -45,7 +46,7 @@ ChartJS.register(
   Filler
 );
 
-export function UserDashboard({ onNavigateToSettings }: UserDashboardProps = {}) {
+export function UserDashboard({ onNavigateToSettings, onNavigate }: UserDashboardProps = {}) {
   const { user } = useAuthStore();
   const {
     userDashboard,
@@ -219,6 +220,12 @@ export function UserDashboard({ onNavigateToSettings }: UserDashboardProps = {})
           className=""
           onCardClick={(collection) => {
             console.log('Clicked collection:', collection);
+            // Navigate to exercises for collections with exercises
+            if (collection.id === 'chest-abs-2' || collection.title.includes('exercises')) {
+              onNavigate?.('exercises');
+            } else if (collection.id === 'chest-abs' || collection.title.includes('Diet Plan')) {
+              onNavigate?.('diet-plans');
+            }
           }}
         />
 
