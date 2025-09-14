@@ -206,49 +206,64 @@ class PWAService {
     // Create and show custom install banner
     const banner = document.createElement('div');
     banner.id = 'install-banner';
-    banner.innerHTML = `
-      <div style="
-        position: fixed;
-        bottom: 20px;
-        left: 20px;
-        right: 20px;
-        background: #2563eb;
-        color: white;
-        padding: 16px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        z-index: 1000;
-        display: none;
-      ">
-        <div>
-          <div style="font-weight: bold; margin-bottom: 4px;">Install FItEsperro</div>
-          <div style="font-size: 14px; opacity: 0.9;">Get the full app experience</div>
-        </div>
-        <div>
-          <button id="install-button" style="
-            background: white;
-            color: #2563eb;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            margin-right: 8px;
-            font-weight: bold;
-            cursor: pointer;
-          ">Install</button>
-          <button id="dismiss-button" style="
-            background: transparent;
-            color: white;
-            border: 1px solid rgba(255,255,255,0.3);
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-          ">Later</button>
-        </div>
+banner.innerHTML = `
+  <div style="
+    position: fixed;
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    background: #2563eb;
+    color: white;
+    padding: 16px;
+    border-radius: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 1000;
+    display: none;
+    font-family: system-ui, sans-serif;
+  ">
+    <div style="flex: 1; min-width: 180px;">
+      <div style="font-weight: 600; font-size: 16px; margin-bottom: 2px;">
+        Install FitEsperro
       </div>
-    `;
+      <div style="font-size: 14px; opacity: 0.9;">
+        Get the full app experience
+      </div>
+    </div>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
+      <button id="install-button" style="
+        background: white;
+        color: #2563eb;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        flex: 1;
+        min-width: 100px;
+      ">
+        Install
+      </button>
+      <button id="dismiss-button" style="
+        background: transparent;
+        color: white;
+        border: 1px solid rgba(255,255,255,0.3);
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        flex: 1;
+        min-width: 100px;
+      ">
+        Later
+      </button>
+    </div>
+  </div>
+`;
+
 
     document.body.appendChild(banner);
 
