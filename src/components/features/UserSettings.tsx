@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { User, Mail, Phone, Lock, Bell, Shield, Camera, Save, Eye, EyeOff, Settings, Loader2, Plus, Trash2 } from 'lucide-react';
+import {
+  User, Mail, Phone, Lock, Bell, Shield, Camera, Save, Eye, EyeOff, Settings,
+  Loader2, Plus, Trash2, ChevronRight, ArrowLeft, LogOut, Smartphone,
+  Palette, Globe, HelpCircle, Info,
+  User2
+} from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { useApp } from '../../contexts/AppContext';
 import { PushNotificationManager } from './PushNotificationManager';
@@ -35,9 +40,10 @@ interface UserProfile {
 interface ProfileSettingsProps {
   activeSettingsTab?: string;
   onTabChange?: (tab: string) => void;
+  onBack?: () => void;
 }
 
-export function UserSettings({ activeSettingsTab = 'profile', onTabChange }: ProfileSettingsProps) {
+export function UserSettings({ activeSettingsTab = 'main', onTabChange, onBack }: ProfileSettingsProps) {
   const { user, logout } = useAuthStore();
   const { addNotification } = useApp();
 
@@ -140,17 +146,12 @@ export function UserSettings({ activeSettingsTab = 'profile', onTabChange }: Pro
             firstName: data.firstName || prev.firstName,
             lastName: data.lastName || prev.lastName,
             email: data.email || prev.email,
-            phone: data.phoneNumber || '',
-            dateOfBirth: data.profile?.dateOfBirth || '',
+            phone: data.phone || '',
+            dateOfBirth: data.profile?.dob || '',
             gender: data.profile?.gender || '',
-            height: data.profile?.height || '',
-            weight: data.profile?.weight || '',
-            emergencyContacts: data.emergencyContacts?.map(contact => ({
-              id: contact.id,
-              name: contact.name,
-              phone: contact.phoneNumber,
-              relationship: contact.relationship
-            })) || [],
+            height: data.profile?.heightCm || '',
+            weight: data.profile?.weightKg || '',
+            emergencyContacts: data.emergencyContacts || [],
             fitnessGoals: data.fitnessGoals?.map(fg => fg.goalName) || []
           }));
 
@@ -537,50 +538,249 @@ export function UserSettings({ activeSettingsTab = 'profile', onTabChange }: Pro
     }
   };
 
+  const settingsOptions = [
+    {
+      id: 'profile',
+      title: 'Profile Information',
+      description: 'Update your personal details and fitness goals',
+      icon: User,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-100'
+    },
+    {
+      id: 'security',
+      title: 'Security',
+      description: 'Password, two-factor authentication',
+      icon: Shield,
+      color: 'text-green-600',
+      bgColor: 'bg-green-100'
+    },
+    {
+      id: 'notifications',
+      title: 'Notifications',
+      description: 'Manage email, push, and SMS preferences',
+      icon: Bell,
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-100'
+    },
+    // {
+    //   id: 'privacy',
+    //   title: 'Privacy',
+    //   description: 'Control your profile visibility and data sharing',
+    //   icon: Lock,
+    //   color: 'text-purple-600',
+    //   bgColor: 'bg-purple-100'
+    // },
+    // {
+    //   id: 'preferences',
+    //   title: 'App Preferences',
+    //   description: 'Dark mode, language, units, and more',
+    //   icon: Palette,
+    //   color: 'text-indigo-600',
+    //   bgColor: 'bg-indigo-100'
+    // }
+  ];
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'main':
         return (
-          <div className="space-y-6">
-            {/* Profile Photo */}
-            <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
-              <div className="relative">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xl sm:text-2xl font-bold overflow-hidden">
-                  {profileImage ? (
-                    <img
-                      src={profileImage}
-                      alt="Profile"
-                      className="w-full h-full object-cover rounded-full"
-                    />
-                  ) : (
-                    <span>
-                      {profile.firstName[0]}{profile.lastName[0]}
-                    </span>
-                  )}
+          <div className="space-y-4">
+            {/* Profile Header Card */}
+            <div className="bg-white rounded-sm shadow-sm border border-gray-200 p-4">
+              <div className="flex items-center space-x-3">
+                <div className="relative">
+                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-medium overflow-hidden">
+                    {profileImage ? (
+                      <img
+                        src={profileImage}
+                        alt="Profile"
+                        className="w-full h-full object-cover rounded-full"
+                      />
+                    ) : (
+                      <span>
+                        {profile.firstName[0]}{profile.lastName[0]}
+                      </span>
+                    )}
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    id="profile-image-upload"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById('profile-image-upload')?.click()}
+                    className="absolute bottom-0 right-0 bg-white rounded-full p-1 shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                    disabled={isImageUploading}
+                  >
+                    {isImageUploading ? (
+                      <Loader2 className="w-2.5 h-2.5 animate-spin text-gray-600" />
+                    ) : (
+                      <Camera className="w-2.5 h-2.5 text-gray-600" />
+                    )}
+                  </button>
                 </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                  id="profile-image-upload"
-                />
-                <button
-                  type="button"
-                  onClick={() => document.getElementById('profile-image-upload')?.click()}
-                  className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-                  disabled={isImageUploading}
-                >
-                  {isImageUploading ? (
-                    <Loader2 className="w-4 h-4 animate-spin text-gray-600" />
-                  ) : (
-                    <Camera className="w-4 h-4 text-gray-600" />
-                  )}
-                </button>
+                <div className="flex-1">
+                  <h3 className="font-medium text-gray-900 font-poppins line-clamp-2 mb-1">
+                    {profile.firstName} {profile.lastName}
+                  </h3>
+                  <p className="text-xs text-gray-500">{profile.email}</p>
+                </div>
               </div>
-              <div className="text-center sm:text-left">
-                <h3 className="text-lg font-semibold text-gray-900">Profile Photo</h3>
-                <p className="text-sm text-gray-600">Click the camera icon to upload a new photo (max 5MB)</p>
+            </div>
+
+            {/* Settings Section Title */}
+            <div className="px-1">
+              <h3 className="text-lg font-medium text-blue-600 mb-3 font-poppins">Settings</h3>
+            </div>
+
+            {/* Settings Cards */}
+            <div className="space-y-4">
+              <div
+                onClick={() => handleTabChange('profile')}
+                className="bg-white rounded-sm shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+              >
+                <div className="flex">
+                  <div className="w-24 h-auto flex-shrink-0 bg-gray-100 relative">
+                    <div className="w-full h-full flex items-center justify-center">
+                      <User2 className="w-6 h-6 text-gray-400" />
+                    </div>
+                  </div>
+                  <div className="flex-1 px-3 pt-3 pb-2">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className="font-medium text-gray-900 font-poppins line-clamp-2 mb-1">
+                          Profile
+                        </h3>
+                        <p className="text-xs text-gray-500 mb-2">Basic user information</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Other Settings Cards */}
+              <div
+                onClick={() => handleTabChange('security')}
+                className="bg-white rounded-sm shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+              >
+                <div className="flex">
+                  <div className="w-24 h-auto flex-shrink-0 bg-gray-100 relative">
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Shield className="w-6 h-6 text-gray-400" />
+                    </div>
+                  </div>
+                  <div className="flex-1 px-3 pt-3 pb-2">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className="font-medium text-gray-900 font-poppins line-clamp-2 mb-1">
+                          Security
+                        </h3>
+                        <p className="text-xs text-gray-500 mb-2">Password and account security</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                onClick={() => handleTabChange('notifications')}
+                className="bg-white rounded-sm shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+              >
+                <div className="flex">
+                  <div className="w-24 h-auto flex-shrink-0 bg-gray-100 relative">
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Bell className="w-6 h-6 text-gray-400" />
+                    </div>
+                  </div>
+                  <div className="flex-1 px-3 pt-3 pb-2">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className="font-medium text-gray-900 font-poppins line-clamp-2 mb-1">
+                          Notifications
+                        </h3>
+                        <p className="text-xs text-gray-500 mb-2">Email, push, and SMS preferences</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+{/* 
+              <div
+                onClick={() => handleTabChange('privacy')}
+                className="bg-white rounded-sm shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+              >
+                <div className="flex">
+                  <div className="w-24 h-auto flex-shrink-0 bg-gray-100 relative">
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Lock className="w-6 h-6 text-gray-400" />
+                    </div>
+                  </div>
+                  <div className="flex-1 px-3 pt-3 pb-2">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className="font-medium text-gray-900 font-poppins line-clamp-2 mb-1">
+                          Privacy
+                        </h3>
+                        <p className="text-xs text-gray-500 mb-2">Profile visibility and data sharing</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                onClick={() => handleTabChange('preferences')}
+                className="bg-white rounded-sm shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+              >
+                <div className="flex">
+                  <div className="w-24 h-auto flex-shrink-0 bg-gray-100 relative">
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Settings className="w-6 h-6 text-gray-400" />
+                    </div>
+                  </div>
+                  <div className="flex-1 px-3 pt-3 pb-2">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className="font-medium text-gray-900 font-poppins line-clamp-2 mb-1">
+                          App Preferences
+                        </h3>
+                        <p className="text-xs text-gray-500 mb-2">Language, units, and display settings</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div> */}
+
+              {/* Sign Out Card */}
+              <div
+                onClick={() => {
+                  if (window.confirm('Are you sure you want to logout?')) {
+                    logout();
+                  }
+                }}
+                className="bg-white rounded-sm shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+              >
+                <div className="flex">
+                  <div className="w-24 h-auto flex-shrink-0 bg-red-50 relative">
+                    <div className="w-full h-full flex items-center justify-center">
+                      <LogOut className="w-6 h-6 text-red-500" />
+                    </div>
+                  </div>
+                  <div className="flex-1 px-3 pt-3 pb-2">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className="font-medium text-red-600 font-poppins line-clamp-2 mb-1">
+                          Sign Out
+                        </h3>
+                        <p className="text-xs text-gray-500 mb-2">Sign out of your account</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -590,125 +790,133 @@ export function UserSettings({ activeSettingsTab = 'profile', onTabChange }: Pro
         return (
           <div className="space-y-6">
             {/* Profile Photo */}
-            <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
-              <div className="relative">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xl sm:text-2xl font-bold overflow-hidden">
-                  {profileImage ? (
-                    <img
-                      src={profileImage}
-                      alt="Profile"
-                      className="w-full h-full object-cover rounded-full"
-                    />
-                  ) : (
-                    <span>
-                      {profile.firstName[0]}{profile.lastName[0]}
-                    </span>
-                  )}
+            <div className="bg-white rounded-sm shadow-sm border border-gray-200 p-6">
+              <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
+                <div className="relative">
+                  <div className="w-20 h-20 sm:w-24 sm:h-auto bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xl sm:text-2xl font-medium overflow-hidden">
+                    {profileImage ? (
+                      <img
+                        src={profileImage}
+                        alt="Profile"
+                        className="w-full h-full object-cover rounded-full"
+                      />
+                    ) : (
+                      <span>
+                        {profile.firstName[0]}{profile.lastName[0]}
+                      </span>
+                    )}
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    id="profile-image-upload"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById('profile-image-upload')?.click()}
+                    className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                    disabled={isImageUploading}
+                  >
+                    {isImageUploading ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-gray-600" />
+                    ) : (
+                      <Camera className="w-4 h-4 text-gray-600" />
+                    )}
+                  </button>
                 </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                  id="profile-image-upload"
-                />
-                <button
-                  type="button"
-                  onClick={() => document.getElementById('profile-image-upload')?.click()}
-                  className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-                  disabled={isImageUploading}
-                >
-                  {isImageUploading ? (
-                    <Loader2 className="w-4 h-4 animate-spin text-gray-600" />
-                  ) : (
-                    <Camera className="w-4 h-4 text-gray-600" />
-                  )}
-                </button>
-              </div>
-              <div className="text-center sm:text-left">
-                <h3 className="text-lg font-semibold text-gray-900">Profile Photo</h3>
-                <p className="text-sm text-gray-600">Click the camera icon to upload a new photo (max 5MB)</p>
+                <div className="text-center sm:text-left">
+                  <h3 className="text-lg font-medium text-gray-900 font-poppins">Profile Photo</h3>
+                  <p className="text-sm text-gray-600 font-poppins">Click the camera icon to upload a new photo (max 5MB)</p>
+                </div>
               </div>
             </div>
 
             {/* Basic Information */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">First Name *</label>
-                <input
-                  type="text"
-                  value={profile.firstName}
-                  onChange={(e) => setProfile(prev => ({ ...prev, firstName: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Last Name *</label>
-                <input
-                  type="text"
-                  value={profile.lastName}
-                  onChange={(e) => setProfile(prev => ({ ...prev, lastName: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-                <input
-                  type="tel"
-                  value={profile.phone}
-                  onChange={(e) => setProfile(prev => ({ ...prev, phone: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Date of Birth</label>
-                <input
-                  type="date"
-                  value={profile.dateOfBirth}
-                  onChange={(e) => setProfile(prev => ({ ...prev, dateOfBirth: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
-                <select
-                  value={profile.gender}
-                  onChange={(e) => setProfile(prev => ({ ...prev, gender: e.target.value as any }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Select Gender</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="other">Other</option>
-                </select>
+            <div className="bg-white rounded-sm shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4 font-poppins">Basic Information</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 font-poppins">First Name *</label>
+                  <input
+                    type="text"
+                    value={profile.firstName}
+                    onChange={(e) => setProfile(prev => ({ ...prev, firstName: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent font-poppins"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 font-poppins">Last Name *</label>
+                  <input
+                    type="text"
+                    value={profile.lastName}
+                    onChange={(e) => setProfile(prev => ({ ...prev, lastName: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent font-poppins"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 font-poppins">Phone</label>
+                  <input
+                    type="tel"
+                    value={profile.phone}
+                    onChange={(e) => setProfile(prev => ({ ...prev, phone: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent font-poppins"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 font-poppins">Date of Birth</label>
+                  <input
+                    type="date"
+                    value={profile.dateOfBirth}
+                    onChange={(e) => setProfile(prev => ({ ...prev, dateOfBirth: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent font-poppins"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 font-poppins">Gender</label>
+                  <select
+                    value={profile.gender}
+                    onChange={(e) => setProfile(prev => ({ ...prev, gender: e.target.value as any }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent font-poppins"
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
               </div>
             </div>
 
             {/* Physical Information */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Height (cm)</label>
-                <input
-                  type="number"
-                  value={profile.height}
-                  onChange={(e) => setProfile(prev => ({ ...prev, height: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Weight (kg)</label>
-                <input
-                  type="number"
-                  value={profile.weight}
-                  onChange={(e) => setProfile(prev => ({ ...prev, weight: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+            <div className="bg-white rounded-sm shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4 font-poppins">Physical Information</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 font-poppins">Height (cm)</label>
+                  <input
+                    type="number"
+                    value={profile.height}
+                    onChange={(e) => setProfile(prev => ({ ...prev, height: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent font-poppins"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 font-poppins">Weight (kg)</label>
+                  <input
+                    type="number"
+                    value={profile.weight}
+                    onChange={(e) => setProfile(prev => ({ ...prev, weight: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent font-poppins"
+                  />
+                </div>
               </div>
             </div>
 
             {/* Fitness Goals */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Fitness Goals</label>
+            <div className="bg-white rounded-sm shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4 font-poppins">Fitness Goals</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 {fitnessGoalOptions.map((goal) => (
                   <label key={goal} className="flex items-center">
@@ -718,33 +926,33 @@ export function UserSettings({ activeSettingsTab = 'profile', onTabChange }: Pro
                       onChange={() => handleFitnessGoalToggle(goal)}
                       className="mr-2 text-blue-600 focus:ring-blue-500"
                     />
-                    <span className="text-sm text-gray-700">{goal}</span>
+                    <span className="text-sm text-gray-700 font-poppins">{goal}</span>
                   </label>
                 ))}
               </div>
             </div>
 
             {/* Emergency Contacts */}
-            <div className="border-t pt-6">
+            <div className="bg-white rounded-sm shadow-sm border border-gray-200 p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Emergency Contacts</h3>
+                <h3 className="text-lg font-medium text-gray-900 font-poppins">Emergency Contacts</h3>
                 <button
                   onClick={handleAddEmergencyContact}
                   className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 transition-colors"
                 >
                   <Plus className="w-4 h-4" />
-                  <span className="text-sm font-medium">Add Contact</span>
+                  <span className="text-sm font-medium font-poppins">Add Contact</span>
                 </button>
               </div>
 
               <div className="space-y-4">
                 {profile.emergencyContacts.length === 0 ? (
-                  <p className="text-gray-500 text-sm">No emergency contacts added yet.</p>
+                  <p className="text-gray-500 text-sm font-poppins">No emergency contacts added yet.</p>
                 ) : (
                   profile.emergencyContacts.map((contact, index) => (
-                    <div key={index} className="bg-gray-50 rounded-lg p-4">
+                    <div key={index} className="bg-gray-50 rounded-sm p-4">
                       <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-sm font-medium text-gray-900">Contact {index + 1}</h4>
+                        <h4 className="text-sm font-medium text-gray-900 font-poppins">Contact {index + 1}</h4>
                         {profile.emergencyContacts.length > 0 && (
                           <button
                             onClick={() => handleRemoveEmergencyContact(index)}
@@ -756,32 +964,32 @@ export function UserSettings({ activeSettingsTab = 'profile', onTabChange }: Pro
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                          <label className="block text-sm font-medium text-gray-700 mb-2 font-poppins">Name</label>
                           <input
                             type="text"
                             value={contact.name}
                             onChange={(e) => handleEmergencyContactChange(index, 'name', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent font-poppins"
                             placeholder="Full name"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                          <label className="block text-sm font-medium text-gray-700 mb-2 font-poppins">Phone</label>
                           <input
                             type="tel"
                             value={contact.phone}
                             onChange={(e) => handleEmergencyContactChange(index, 'phone', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent font-poppins"
                             placeholder="Phone number"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Relationship</label>
+                          <label className="block text-sm font-medium text-gray-700 mb-2 font-poppins">Relationship</label>
                           <input
                             type="text"
-                            value={contact.relationship}
+                            value={contact.relation}
                             onChange={(e) => handleEmergencyContactChange(index, 'relationship', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent font-poppins"
                             placeholder="e.g., Spouse, Parent, Friend"
                           />
                         </div>
@@ -792,27 +1000,19 @@ export function UserSettings({ activeSettingsTab = 'profile', onTabChange }: Pro
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3">
+            {/* Save Button */}
+            <div className="bg-white rounded-sm shadow-sm border border-gray-200 p-6">
               <button
                 onClick={handleProfileSave}
-                className="flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors font-medium"
+                disabled={isLoading}
+                className="flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-6 py-3 rounded-sm transition-colors font-medium font-poppins w-full"
               >
-                <Save className="w-4 h-4" />
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
                 <span>Save Changes</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  if (window.confirm('Are you sure you want to logout?')) {
-                    logout();
-                  }
-                }}
-                className="flex items-center justify-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors font-medium"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                <span>Logout</span>
               </button>
             </div>
           </div>
@@ -823,7 +1023,7 @@ export function UserSettings({ activeSettingsTab = 'profile', onTabChange }: Pro
           <div className="space-y-6">
             {/* Change Password */}
             <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Change Password</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Change Password</h3>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
@@ -892,7 +1092,7 @@ export function UserSettings({ activeSettingsTab = 'profile', onTabChange }: Pro
             {/* <div className="bg-gray-50 rounded-lg p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Two-Factor Authentication</h3>
+                  <h3 className="text-lg font-medium text-gray-900">Two-Factor Authentication</h3>
                   <p className="text-sm text-gray-600 mt-1">Add an extra layer of security to your account</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -909,7 +1109,7 @@ export function UserSettings({ activeSettingsTab = 'profile', onTabChange }: Pro
 
             {/* Account Disable */}
             <div className="bg-orange-50 border border-orange-200 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-orange-900 mb-2">Disable Account</h3>
+              <h3 className="text-lg font-medium text-orange-900 mb-2">Disable Account</h3>
               <p className="text-sm text-orange-700 mb-4">
                 Temporarily disable your account. You can reactivate it later by contacting support.
               </p>
@@ -933,7 +1133,7 @@ export function UserSettings({ activeSettingsTab = 'profile', onTabChange }: Pro
 
             {/* Email & SMS Notification Settings */}
             <div className="border-t pt-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6">Email & SMS Preferences</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-6">Email & SMS Preferences</h3>
               <div className="space-y-4">
                 {Object.entries(notificationSettings).filter(([key]) => key !== 'pushNotifications').map(([key, value]) => (
                   <div key={key} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
@@ -1115,42 +1315,60 @@ export function UserSettings({ activeSettingsTab = 'profile', onTabChange }: Pro
     return descriptions[key] || '';
   };
 
-  return (
-    <div className="space-y-4 md:space-y-6 px-4 md:px-6 max-w-full mx-auto">
-      {/* Desktop Tab Navigation */}
-      <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200">
-        <div className="border-b border-gray-200">
-          <nav className="flex space-x-8 px-6">
-            {[
-              { id: 'profile', label: 'Profile', icon: User },
-              { id: 'security', label: 'Security', icon: Shield },
-              { id: 'notifications', label: 'Notifications', icon: Bell },
-              { id: 'privacy', label: 'Privacy', icon: Lock },
-              { id: 'preferences', label: 'Preferences', icon: Settings }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => handleTabChange(tab.id)}
-                className={`flex items-center space-x-2 py-4 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-              >
-                <tab.icon className="w-4 h-4" />
-                <span>{tab.label}</span>
-              </button>
-            ))}
-          </nav>
+  if (isDataLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600 font-poppins">Loading settings...</p>
         </div>
+      </div>
+    );
+  }
 
-        <div className="p-6">
-          {renderTabContent()}
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm">
+        <div className="px-4 py-4">
+          {/* Top Header */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-3">
+              {activeTab !== 'main' ? (
+                <button
+                  onClick={() => handleTabChange('main')}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <ArrowLeft className="w-5 h-5 text-gray-600" />
+                </button>
+              ) : onBack ? (
+                <button
+                  onClick={onBack}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <ArrowLeft className="w-5 h-5 text-gray-600" />
+                </button>
+              ) : null}
+              <div>
+                <h1 className="text-lg font-medium text-gray-900 font-poppins">
+                  {activeTab === 'main' ? 'Settings' : settingsOptions.find(opt => opt.id === activeTab)?.title || 'Settings'}
+                </h1>
+                {activeTab !== 'main' && (
+                  <p className="text-sm text-gray-500">
+                    {settingsOptions.find(opt => opt.id === activeTab)?.description}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Mobile Content */}
-      <div className="md:hidden bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-        {renderTabContent()}
+      {/* Content */}
+      <div className="p-4 font-poppins">
+        <div className="max-w-2xl mx-auto">
+          {renderTabContent()}
+        </div>
       </div>
     </div>
   );

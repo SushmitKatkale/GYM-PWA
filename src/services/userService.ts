@@ -41,19 +41,19 @@ export interface FitnessGoal {
 }
 
 export interface NotificationSettings {
-  userEmail: string;
+  userId: string;
   emailNotifications: boolean;
   pushNotifications: boolean;
 }
 
 export interface PrivacySettings {
-  userEmail: string;
+  userId: string;
   showEmail: boolean;
   showProfilePicture: boolean;
 }
 
 export interface AppPreferences {
-  userEmail: string;
+  userId: string;
   theme: string;
   language: string;
 }
@@ -63,7 +63,7 @@ export interface EmergencyContact {
   name: string;
   relationship: string;
   phoneNumber: string;
-  userEmail?: string;
+  userId?: string;
 }
 
 export interface ProfileImageResponse {

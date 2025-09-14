@@ -118,7 +118,7 @@ export const MainDashboard: React.FC = () => {
             activeSettingsTab={activeSettingsTab}
             onTabChange={setActiveSettingsTab}
           />;
-          case 'user': return <UserSettings activeSettingsTab={"main"} onTabChange={setActiveSettingsTab} />;
+          case 'user': return <UserSettings onBack={() => setActiveView('dashboard')} activeSettingsTab={"main"} onTabChange={setActiveSettingsTab} />;
           default: return <div>Invalid role</div>;
         }
       case 'wallet':

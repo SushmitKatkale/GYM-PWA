@@ -181,7 +181,7 @@ export const useAttendanceStore = create<AttendanceState>()(
           };
 
           //  TO Test 
-          checkInData.location = { latitude: 12.836436, longitude: 77.664825 }; // Example coordinates
+          // checkInData.location = { latitude: 12.836436, longitude: 77.664825 }; // Example coordinates
           const response = await attendanceService.checkIn(checkInData);
 
           if (response.success && response.data) {
