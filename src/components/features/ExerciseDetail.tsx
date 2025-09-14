@@ -343,7 +343,7 @@ export const ExerciseDetail: React.FC<ExerciseDetailProps> = ({ exerciseId, onBa
                 </div>
               )}
 
-              {exercise.muscleGroups && exercise.muscleGroups.length > 0 && (
+              {Array.isArray(exercise.muscleGroups) && exercise.muscleGroups.length > 0 && (
                 <div>
                   <h3 className="font-medium text-gray-900 mb-2 font-poppins">Target Muscles</h3>
                   <div className="flex flex-wrap gap-2">
@@ -359,7 +359,7 @@ export const ExerciseDetail: React.FC<ExerciseDetailProps> = ({ exerciseId, onBa
                 </div>
               )}
 
-              {exercise.equipmentNeeded && exercise.equipmentNeeded.length > 0 && (
+              {Array.isArray(exercise.equipmentNeeded) && exercise.equipmentNeeded.length > 0 && (
                 <div>
                   <h3 className="font-medium text-gray-900 mb-2 font-poppins">Equipment Needed</h3>
                   <div className="flex flex-wrap gap-2">
@@ -440,7 +440,7 @@ export const ExerciseDetail: React.FC<ExerciseDetailProps> = ({ exerciseId, onBa
                 )}
               </div>
 
-              {exercise.tags && exercise.tags.length > 0 && (
+              {Array.isArray(exercise.tags) && exercise.tags.length > 0 && (
                 <div>
                   <h3 className="font-medium text-gray-900 mb-2 font-poppins">Tags</h3>
                   <div className="flex flex-wrap gap-2">
