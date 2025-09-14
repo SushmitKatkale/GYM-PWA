@@ -116,6 +116,65 @@ export function DietPlanDetails({
     }
   };
 
+  const formatHistoryChanges = (oldData: any) => {
+    const changes = [];
+    
+    if (!oldData || typeof oldData !== 'object') {
+      return [{ type: 'info', text: 'No specific change details available' }];
+    }
+
+    // Format basic fields
+    if (oldData.title) {
+      changes.push({ type: 'field', label: 'Title', value: oldData.title, icon: '📝' });
+    }
+    if (oldData.description) {
+      changes.push({ type: 'field', label: 'Description', value: oldData.description, icon: '📄' });
+    }
+    if (oldData.calories) {
+      changes.push({ type: 'field', label: 'Calories', value: `${oldData.calories} cal`, icon: '🔥' });
+    }
+    if (oldData.protein_g || oldData.protein) {
+      const protein = oldData.protein_g || oldData.protein;
+      changes.push({ type: 'field', label: 'Protein', value: `${protein}g`, icon: '💪' });
+    }
+    if (oldData.carbs_g || oldData.carbs) {
+      const carbs = oldData.carbs_g || oldData.carbs;
+      changes.push({ type: 'field', label: 'Carbohydrates', value: `${carbs}g`, icon: '🌾' });
+    }
+    if (oldData.fats_g || oldData.fat) {
+      const fat = oldData.fats_g || oldData.fat;
+      changes.push({ type: 'field', label: 'Fat', value: `${fat}g`, icon: '🥑' });
+    }
+    if (oldData.status) {
+      const statusColors = {
+        active: 'text-green-600',
+        inactive: 'text-gray-600',
+        completed: 'text-blue-600',
+        cancelled: 'text-red-600'
+      };
+      changes.push({ 
+        type: 'status', 
+        label: 'Status', 
+        value: oldData.status, 
+        icon: '📊',
+        color: statusColors[oldData.status as keyof typeof statusColors] || 'text-gray-600'
+      });
+    }
+    
+    // Format meals if present
+    if (oldData.meals && Array.isArray(oldData.meals)) {
+      changes.push({ 
+        type: 'meals', 
+        label: 'Meals', 
+        value: `${oldData.meals.length} meal${oldData.meals.length !== 1 ? 's' : ''}`, 
+        icon: '🍽️',
+        meals: oldData.meals 
+      });
+    }
+
+    return changes.length > 0 ? changes : [{ type: 'info', text: 'Previous state recorded' }];
+  };
+
   const groupMealsByType = (meals: DietPlanMeal[]) => {
     const grouped = meals.reduce((acc, meal) => {
       if (!acc[meal.meal_type]) {
@@ -461,12 +520,74 @@ export function DietPlanDetails({
                     
                     {historyItem.old_data && (
                       <div className="bg-gray-50 rounded-sm p-3">
-                        <h5 className="text-xs font-medium text-gray-700 mb-2">Changes Made:</h5>
-                        <div className="text-xs text-gray-600">
-                          {Object.entries(historyItem.old_data).map(([key, value]) => (
-                            <div key={key} className="mb-1">
-                              <span className="font-medium capitalize">{key.replace('_', ' ')}:</span>{' '}
-                              <span className="text-gray-500">{String(value)}</span>
+                        <h5 className="text-xs font-medium text-gray-700 mb-3 flex items-center space-x-1">
+                          <History className="w-3 h-3" />
+                          <span>Previous State:</span>
+                        </h5>
+                        <div className="space-y-2">
+                          {formatHistoryChanges(historyItem.old_data).map((change, changeIndex) => (
+                            <div key={changeIndex} className="flex items-start space-x-2">
+                              {change.type === 'field' && (
+                                <>
+                                  <span className="text-sm">{change.icon}</span>
+                                  <div className="flex-1">
+                                    <span className="text-xs font-medium text-gray-700">
+                                      {change.label}:
+                                    </span>
+                                    <span className="text-xs text-gray-600 ml-1">
+                                      {change.value}
+                                    </span>
+                                  </div>
+                                </>
+                              )}
+                              {change.type === 'status' && (
+                                <>
+                                  <span className="text-sm">{change.icon}</span>
+                                  <div className="flex-1">
+                                    <span className="text-xs font-medium text-gray-700">
+                                      {change.label}:
+                                    </span>
+                                    <span className={`text-xs ml-1 capitalize font-medium ${
+                                      change.color || 'text-gray-600'
+                                    }`}>
+                                      {change.value}
+                                    </span>
+                                  </div>
+                                </>
+                              )}
+                              {change.type === 'meals' && (
+                                <>
+                                  <span className="text-sm">{change.icon}</span>
+                                  <div className="flex-1">
+                                    <span className="text-xs font-medium text-gray-700">
+                                      {change.label}:
+                                    </span>
+                                    <span className="text-xs text-gray-600 ml-1">
+                                      {change.value}
+                                    </span>
+                                    {change.meals && Array.isArray(change.meals) && change.meals.length > 0 && (
+                                      <div className="mt-1 ml-4">
+                                        {change.meals.slice(0, 3).map((meal: any, mealIndex: number) => (
+                                          <div key={mealIndex} className="text-xs text-gray-500">
+                                            • {getMealTypeIcon(meal.meal_type)} {meal.meal_type}: {meal.meal_description || 'No description'}
+                                          </div>
+                                        ))}
+                                        {change.meals.length > 3 && (
+                                          <div className="text-xs text-gray-400 mt-1">
+                                            ... and {change.meals.length - 3} more meals
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                </>
+                              )}
+                              {change.type === 'info' && (
+                                <div className="flex items-center space-x-2">
+                                  <Info className="w-3 h-3 text-blue-500" />
+                                  <span className="text-xs text-gray-600">{change.text}</span>
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>
