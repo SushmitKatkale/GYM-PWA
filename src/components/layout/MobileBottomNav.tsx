@@ -16,7 +16,8 @@ import {
   MapPin,
   UserCheck,
   CreditCard as Subscription,
-  Apple
+  Apple,
+  Clock
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { useNotificationCount } from '../../hooks/useNotificationCount';
@@ -72,7 +73,7 @@ export function MobileBottomNav({ activeMenu, setActiveMenu }: MobileBottomNavPr
     // Regular User role - most common use case
     const baseItems = [
       { id: 'dashboard', label: 'Home', icon: Home },
-      { id: 'calendar', label: 'Classes', icon: Calendar },
+      { id: 'slot-booking', label: 'Book Slots', icon: Clock },
       { id: 'qr-code', label: 'Check-in', icon: QrCode },
       { id: 'discover', label: 'Discover', icon: MapPin }
     ];

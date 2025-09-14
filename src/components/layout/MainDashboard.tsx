@@ -42,6 +42,7 @@ import DietPlanManagement from '../admin/DietPlanManagement';
 import DietAnalytics from '../admin/DietAnalytics';
 import DietChangeRequestManagement from '../admin/DietChangeRequestManagement';
 import { DietList } from '../features/DietList';
+import { BookingManagement } from '../features/BookingManagement';
 
 export const MainDashboard: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -97,6 +98,8 @@ export const MainDashboard: React.FC = () => {
         return <NotificationsPage onNavigateToSettings={handleNavigateToNotificationSettings} />;
       case 'calendar':
         return <CalendarBooking />;
+      case 'slot-booking':
+        return <BookingManagement showGymSelection={true} />;
       case 'my-subscriptions':
         return <ModernMySubscriptions onNavigate={handleViewChange} />;
       case 'attendance':
