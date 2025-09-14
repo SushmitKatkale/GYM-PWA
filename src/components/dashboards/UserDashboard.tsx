@@ -240,7 +240,7 @@ export function UserDashboard({ onNavigateToSettings, onNavigate }: UserDashboar
           <div className="bg-white rounded-md shadow-sm border border-gray-200 p-4">
             <div className="grid grid-cols-2 gap-3">
               {/* Start Workout */}
-              <button className="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors group">
+              <button onClick={() => {onNavigate?.('exercises')}} className="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors group">
                 <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-purple-200 transition-colors">
                   <Play className="w-5 h-5 text-purple-600" />
                 </div>
@@ -251,7 +251,7 @@ export function UserDashboard({ onNavigateToSettings, onNavigate }: UserDashboar
               </button>
 
               {/* Book Class */}
-              <button className="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors group">
+              <button onClick={() => {onNavigate?.('calendar')}} className="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors group">
                 <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-blue-200 transition-colors">
                   <Calendar className="w-5 h-5 text-blue-600" />
                 </div>
@@ -262,18 +262,18 @@ export function UserDashboard({ onNavigateToSettings, onNavigate }: UserDashboar
               </button>
 
               {/* Set Goal */}
-              <button className="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors group">
+              <button onClick={() => {onNavigate?.('diet-browse')}} className="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors group">
                 <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-green-200 transition-colors">
                   <Target className="w-5 h-5 text-green-600" />
                 </div>
                 <div className="text-left">
-                  <h4 className="font-medium text-gray-900 text-sm">Set Goal</h4>
+                  <h4 className="font-medium text-gray-900 text-sm">Follow Diets</h4>
                   <p className="text-xs text-gray-500">Define targets</p>
                 </div>
               </button>
 
               {/* Challenges */}
-              <button className="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors group">
+              <button onClick={() => {onNavigate?.('exercises')}} className="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors group">
                 <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-orange-200 transition-colors">
                   <Trophy className="w-5 h-5 text-orange-600" />
                 </div>

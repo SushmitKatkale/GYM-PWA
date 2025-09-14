@@ -566,7 +566,7 @@ export function DietPlanDetails({
                                       {change.value}
                                     </span>
                                     {change.meals && Array.isArray(change.meals) && change.meals.length > 0 && (
-                                      <div className="mt-1 ml-4">
+                                      <div className="mt-1">
                                         {change.meals.slice(0, 3).map((meal: any, mealIndex: number) => (
                                           <div key={mealIndex} className="text-xs text-gray-500">
                                             • {getMealTypeIcon(meal.meal_type)} {meal.meal_type}: {meal.meal_description || 'No description'}
