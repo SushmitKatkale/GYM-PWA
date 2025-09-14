@@ -14,6 +14,7 @@ import { ModernMySubscriptions } from '../features/ModernMySubscriptions';
 import { AttendanceReports } from '../features/AttendanceReports';
 import { WalletPage } from '../features/WalletPage';
 import { ProfileSettings } from '../features/ProfileSettings';
+import { UserSettings } from '../features/UserSettings';
 import { AnalyticsPage } from '../features/AnalyticsPage';
 import { MobileBottomNav } from './MobileBottomNav';
 import GymManagement from '../features/GymManagement';
@@ -80,7 +81,7 @@ export const MainDashboard: React.FC = () => {
   const renderMainContent = () => {
     if (!user) return null;
     console.log('Rendering main content for role:', user, user.role, 'and view:', activeView);
-    
+
 
     switch (activeView) {
       case 'dashboard':
@@ -104,14 +105,22 @@ export const MainDashboard: React.FC = () => {
         return <ModernMySubscriptions onNavigate={handleViewChange} />;
       case 'attendance':
         // return <AttendanceReports />;
-         return <UserAttendance />;
+        return <UserAttendance />;
       case 'analytics':
         return <AnalyticsPage />;
       case 'settings':
-        return <ProfileSettings
-          activeSettingsTab={activeSettingsTab}
-          onTabChange={setActiveSettingsTab}
-        />;
+        switch (user.role) {
+          case 'admin': return <ProfileSettings
+            activeSettingsTab={activeSettingsTab}
+            onTabChange={setActiveSettingsTab}
+          />;
+          case 'owner': return <ProfileSettings
+            activeSettingsTab={activeSettingsTab}
+            onTabChange={setActiveSettingsTab}
+          />;
+          case 'user': return <UserSettings activeSettingsTab={"main"} onTabChange={setActiveSettingsTab} />;
+          default: return <div>Invalid role</div>;
+        }
       case 'wallet':
         return <WalletPage />;
       case 'gym-management':
@@ -126,7 +135,7 @@ export const MainDashboard: React.FC = () => {
       case 'diet-change-management':
         return <DietChangeRequestManagement />;
       case 'diet-browse':
-        return <DietList 
+        return <DietList
           onBack={() => setActiveView('dashboard')}
           onDietSelect={(diet) => {
             // Store the selected diet plan and navigate to details
@@ -163,7 +172,7 @@ export const MainDashboard: React.FC = () => {
           }
         }} />;
       case 'diet-plan-details':
-        return <DietPlanDetails 
+        return <DietPlanDetails
           onBack={() => setActiveView('diet-plans')}
           onNavigate={(view, data) => {
             if (view === 'change-request') {
@@ -172,7 +181,7 @@ export const MainDashboard: React.FC = () => {
           }}
         />;
       case 'diet-change-request':
-        return <DietChangeRequest 
+        return <DietChangeRequest
           onBack={() => setActiveView('diet-plans')}
           onNavigate={(view, data) => {
             if (view === 'diet-plan-details') {
@@ -182,7 +191,7 @@ export const MainDashboard: React.FC = () => {
         />;
       case 'diet-plan-browse-details':
         return selectedDietPlan ? (
-          <DietPlanDetails 
+          <DietPlanDetails
             plan={selectedDietPlan}
             onBack={() => {
               setActiveView('diet-browse');
@@ -198,7 +207,7 @@ export const MainDashboard: React.FC = () => {
           <div className="text-center py-12">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">No Diet Plan Selected</h2>
             <p className="text-gray-600">Please select a diet plan to view details.</p>
-            <button 
+            <button
               onClick={() => setActiveView('diet-browse')}
               className="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-poppins"
             >
@@ -208,7 +217,7 @@ export const MainDashboard: React.FC = () => {
         );
       case 'diet-change-request-browse':
         return selectedDietPlan ? (
-          <DietChangeRequest 
+          <DietChangeRequest
             planId={selectedDietPlan.id}
             trainerId={selectedDietPlan.trainer_id}
             plan={selectedDietPlan}
@@ -223,7 +232,7 @@ export const MainDashboard: React.FC = () => {
           <div className="text-center py-12">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">No Diet Plan Selected</h2>
             <p className="text-gray-600">Please select a diet plan first.</p>
-            <button 
+            <button
               onClick={() => setActiveView('diet-browse')}
               className="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-poppins"
             >
@@ -232,7 +241,7 @@ export const MainDashboard: React.FC = () => {
           </div>
         );
       case 'exercises':
-        return <ExerciseList 
+        return <ExerciseList
           onExerciseSelect={(exerciseId) => {
             setSelectedExerciseId(exerciseId);
             setActiveView('exercise-detail');
@@ -240,7 +249,7 @@ export const MainDashboard: React.FC = () => {
         />;
       case 'exercise-detail':
         return selectedExerciseId ? (
-          <ExerciseDetail 
+          <ExerciseDetail
             exerciseId={selectedExerciseId}
             onBack={() => {
               setActiveView('exercises');
@@ -251,7 +260,7 @@ export const MainDashboard: React.FC = () => {
           <div className="text-center py-12">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">No Exercise Selected</h2>
             <p className="text-gray-600">Please select an exercise to view details.</p>
-            <button 
+            <button
               onClick={() => setActiveView('exercises')}
               className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-poppins"
             >
