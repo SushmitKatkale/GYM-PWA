@@ -228,7 +228,35 @@ export function UserSettings({ activeSettingsTab = 'main', onTabChange, onBack }
     }));
   };
 
-  const handleRemoveEmergencyContact = (index: number) => {
+  const handleRemoveEmergencyContact = async (index: number) => {
+    const contactToDelete = profile.emergencyContacts[index];
+    
+    // If the contact has an ID, it exists in the backend and needs to be deleted
+    if (contactToDelete.id) {
+      try {
+        setIsLoading(true);
+        await userService.deleteEmergencyContact(parseInt(contactToDelete.id));
+        
+        addNotification({
+          title: 'Contact Deleted',
+          message: 'Emergency contact has been successfully deleted',
+          type: 'success'
+        });
+      } catch (error) {
+        console.error('Error deleting emergency contact:', error);
+        addNotification({
+          title: 'Delete Failed',
+          message: 'Failed to delete emergency contact. Please try again.',
+          type: 'error'
+        });
+        setIsLoading(false);
+        return; // Don't update local state if API call failed
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    // Update local state
     setProfile((prev) => ({
       ...prev,
       emergencyContacts: prev.emergencyContacts.filter((_, i) => i !== index)
