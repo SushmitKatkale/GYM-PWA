@@ -181,15 +181,15 @@ export function PushNotificationManager() {
 
   return (
     <div className="w-full space-y-4 sm:space-y-6">
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+      <div className="bg-white rounded-sm shadow-sm border border-gray-200 p-4 sm:p-6">
         <div className="flex items-center space-x-3 mb-4 sm:mb-6">
           <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
-          <h2 className="text-lg sm:text-xl font-bold text-gray-900">Push Notifications</h2>
+          <h2 className="text-lg sm:text-xl font-medium text-gray-900">Push Notifications</h2>
         </div>
 
         {/* Status Message */}
         {message && (
-          <div className={`mb-4 sm:mb-6 p-3 sm:p-4 rounded-lg flex items-start space-x-2 ${
+          <div className={`mb-4 sm:mb-6 p-3 sm:p-4 rounded-sm flex items-start space-x-2 ${
             message.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' :
             message.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' :
             'bg-blue-50 text-blue-700 border border-blue-200'
@@ -207,7 +207,7 @@ export function PushNotificationManager() {
         <div className="border-b border-gray-200 pb-4 sm:pb-6 mb-4 sm:mb-6">
           <div className="space-y-4">
             <div>
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+              <h3 className="text-base sm:text-lg font-medium text-gray-900">
                 {isEnabled ? 'Push Notifications Enabled' : 'Enable Push Notifications'}
               </h3>
               <p className="text-gray-600 mt-1 text-sm sm:text-base leading-relaxed">
@@ -222,7 +222,7 @@ export function PushNotificationManager() {
               <button
                 onClick={isEnabled ? handleDisableNotifications : handleEnableNotifications}
                 disabled={isLoading}
-                className={`flex items-center justify-center space-x-2 px-4 sm:px-6 py-3 rounded-lg font-medium transition-colors disabled:opacity-50 touch-manipulation ${
+                className={`flex items-center justify-center space-x-2 px-4 sm:px-6 py-3 rounded-sm font-medium transition-colors disabled:opacity-50 touch-manipulation ${
                   isEnabled
                     ? 'bg-red-100 text-red-700 hover:bg-red-200 active:bg-red-300'
                     : 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800'
@@ -236,16 +236,16 @@ export function PushNotificationManager() {
                 <span>{isLoading ? 'Loading...' : isEnabled ? 'Disable Notifications' : 'Enable Notifications'}</span>
               </button>
               
-              {isEnabled && subscriptions.length > 0 && (
+              {/* {isEnabled && subscriptions.length > 0 && (
                 <button
                   onClick={handleSendTestNotification}
                   disabled={testLoading}
-                  className="flex items-center justify-center space-x-2 px-4 sm:px-6 py-3 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 active:bg-gray-300 disabled:opacity-50 transition-colors touch-manipulation"
+                  className="flex items-center justify-center space-x-2 px-4 sm:px-6 py-3 text-sm bg-gray-100 text-gray-700 rounded-sm hover:bg-gray-200 active:bg-gray-300 disabled:opacity-50 transition-colors touch-manipulation"
                 >
                   {testLoading && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>}
                   <span>{testLoading ? 'Sending...' : 'Send Test'}</span>
                 </button>
-              )}
+              )} */}
             </div>
           </div>
         </div>
@@ -253,17 +253,17 @@ export function PushNotificationManager() {
         {/* Active Subscriptions */}
         {subscriptions.length > 0 && (
           <div>
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Active Devices</h3>
+            <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-3 sm:mb-4">Active Devices</h3>
             <div className="space-y-3">
               {subscriptions.map((subscription) => {
                 const DeviceIcon = getDeviceIcon(subscription.deviceType);
                 return (
                   <div
                     key={subscription.id}
-                    className="flex items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-lg"
+                    className="flex items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-sm"
                   >
                     <div className="flex items-center space-x-3 min-w-0 flex-1">
-                      <div className="p-2 bg-white rounded-lg flex-shrink-0">
+                      <div className="p-2 bg-white rounded-sm flex-shrink-0">
                         <DeviceIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
                       </div>
                       <div className="min-w-0 flex-1">
@@ -301,7 +301,7 @@ export function PushNotificationManager() {
       </div>
 
       {/* Browser Support Info */}
-      {/* <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+      {/* <div className="bg-blue-50 border border-blue-200 rounded-sm p-3 sm:p-4">
         <div className="flex">
           <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 mt-0.5 mr-2 sm:mr-3 flex-shrink-0" />
           <div>
