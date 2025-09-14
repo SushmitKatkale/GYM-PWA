@@ -224,7 +224,7 @@ export function UserDashboard({ onNavigateToSettings, onNavigate }: UserDashboar
             if (collection.id === 'chest-abs-2' || collection.title.includes('exercises')) {
               onNavigate?.('exercises');
             } else if (collection.id === 'chest-abs' || collection.title.includes('Diet Plan')) {
-              onNavigate?.('diet-plans');
+              onNavigate?.('diet-browse');
             }
           }}
         />

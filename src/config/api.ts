@@ -27,6 +27,7 @@ export const API_CONFIG = {
     ATTENDANCE_ANALYTICS: '/attendance-analytics',
     // Diet management endpoints
     DIET_PLANS: '/diet-plans',
+    MEAL_IMAGES: '/meal-images',
     // Exercise management endpoints
     EXERCISES: '/exercises'
   }

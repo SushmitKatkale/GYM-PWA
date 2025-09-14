@@ -89,6 +89,9 @@ export function MobileBottomNav({ activeMenu, setActiveMenu }: MobileBottomNavPr
   const getMoreMenuItems = () => {
     if (user?.role === 'admin') {
       return [
+        { id: 'diet-management', label: 'Diet Plans', icon: Apple },
+        { id: 'diet-analytics', label: 'Diet Analytics', icon: BarChart3 },
+        { id: 'diet-change-management', label: 'Diet Requests', icon: Bell },
         { id: 'payment-management', label: 'Payments', icon: CreditCard },
         // { id: 'users', label: 'User Mgmt', icon: UserCheck },
         { id: 'help', label: 'Support', icon: HelpCircle }
@@ -103,7 +106,8 @@ export function MobileBottomNav({ activeMenu, setActiveMenu }: MobileBottomNavPr
 
     // Regular User
     return [
-      { id: 'diet-plans', label: 'Diet Plans', icon: Apple },
+      // { id: 'diet-browse', label: 'Browse Diets', icon: Apple },
+      // { id: 'diet-plans', label: 'My Diet Plans', icon: UserCheck },
       { id: 'settings', label: 'Settings', icon: Settings },
       // { id: 'wallet', label: 'Wallet', icon: Wallet },
       { id: 'my-subscriptions', label: 'Subscriptions', icon: Subscription },

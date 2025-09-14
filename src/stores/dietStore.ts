@@ -1,11 +1,11 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import { 
-  DietPlan, 
-  DietChangeRequest, 
+import {
+  DietPlan,
+  DietChangeRequest,
   DietPlanHistory,
   DietStats,
-  DietPlanFilters, 
+  DietPlanFilters,
   ChangeRequestFilters,
   CreateChangeRequestRequest
 } from '../models/Diet';
@@ -35,7 +35,7 @@ interface DietStore {
   submitChangeRequest: (request: CreateChangeRequestRequest) => Promise<void>;
   clearSelectedPlan: () => void;
   clearError: () => void;
-  
+
   // Utility actions
   getDietPlanById: (id: number) => DietPlan | null;
   getMealsByType: (planId: number, mealType: string) => any[];
@@ -65,7 +65,7 @@ export const useDietStore = create<DietStore>()(
         loadUserDietPlans: async (filters?: DietPlanFilters) => {
           try {
             set({ isLoading: true, error: null });
-            
+
             const response = await dietService.getUserDietPlans({
               ...filters,
               page: filters?.page || get().userPlansPage,
@@ -74,7 +74,7 @@ export const useDietStore = create<DietStore>()(
 
             if (response.success && response.data) {
               const { dietPlans, pagination } = response.data;
-              
+
               set({
                 userDietPlans: dietPlans || [],
                 userPlansPage: pagination.currentPage,
@@ -86,7 +86,7 @@ export const useDietStore = create<DietStore>()(
             }
           } catch (error) {
             console.error('Error loading user diet plans:', error);
-            set({ 
+            set({
               error: error instanceof Error ? error.message : 'Failed to load diet plans',
               isLoading: false
             });
@@ -96,7 +96,7 @@ export const useDietStore = create<DietStore>()(
         loadDietPlanById: async (id: number) => {
           try {
             set({ isLoading: true, error: null });
-            
+
             const response = await dietService.getDietPlanById(id);
 
             if (response.success && response.data) {
@@ -109,7 +109,7 @@ export const useDietStore = create<DietStore>()(
             }
           } catch (error) {
             console.error('Error loading diet plan:', error);
-            set({ 
+            set({
               error: error instanceof Error ? error.message : 'Failed to load diet plan',
               isLoading: false
             });
@@ -119,7 +119,7 @@ export const useDietStore = create<DietStore>()(
         loadDietPlanHistory: async (id: number) => {
           try {
             set({ isLoading: true, error: null });
-            
+
             const response = await dietService.getDietPlanHistory(id);
 
             if (response.success && response.data) {
@@ -132,7 +132,7 @@ export const useDietStore = create<DietStore>()(
             }
           } catch (error) {
             console.error('Error loading diet plan history:', error);
-            set({ 
+            set({
               error: error instanceof Error ? error.message : 'Failed to load diet plan history',
               isLoading: false
             });
@@ -142,16 +142,17 @@ export const useDietStore = create<DietStore>()(
         loadChangeRequests: async (filters?: ChangeRequestFilters) => {
           try {
             set({ isLoading: true, error: null });
-            
-            const response = await dietService.getChangeRequests({
+
+            const response = await dietService.getTrainerChangeRequests({
               ...filters,
               page: filters?.page || get().changeRequestsPage,
               limit: filters?.limit || 10
             });
 
             if (response.success && response.data) {
-              const { changeRequests, pagination } = response.data;
-              
+              let changeRequests = response.data.changeRequests;
+              let pagination = response.data.pagination
+
               set({
                 changeRequests: changeRequests || [],
                 changeRequestsPage: pagination.currentPage,
@@ -163,7 +164,7 @@ export const useDietStore = create<DietStore>()(
             }
           } catch (error) {
             console.error('Error loading change requests:', error);
-            set({ 
+            set({
               error: error instanceof Error ? error.message : 'Failed to load change requests',
               isLoading: false
             });
@@ -173,7 +174,7 @@ export const useDietStore = create<DietStore>()(
         submitChangeRequest: async (request: CreateChangeRequestRequest) => {
           try {
             set({ isLoading: true, error: null });
-            
+
             const response = await dietService.createChangeRequest(request);
 
             if (response.success && response.data) {
@@ -187,7 +188,7 @@ export const useDietStore = create<DietStore>()(
             }
           } catch (error) {
             console.error('Error creating change request:', error);
-            set({ 
+            set({
               error: error instanceof Error ? error.message : 'Failed to create change request',
               isLoading: false
             });
@@ -195,7 +196,7 @@ export const useDietStore = create<DietStore>()(
         },
 
         clearSelectedPlan: () => {
-          set({ 
+          set({
             selectedDietPlan: null,
             dietPlanHistory: []
           });
@@ -217,13 +218,37 @@ export const useDietStore = create<DietStore>()(
         },
 
         getPlanMacroSummary: (plan: DietPlan) => {
+          // If plan has target values, use those
+          if (plan.target_calories || plan.target_protein || plan.target_carbs || plan.target_fat) {
+            return {
+              calories: parseFloat(plan.target_calories as any) || 0,
+              protein: parseFloat(plan.target_protein as any) || 0,
+              carbs: parseFloat(plan.target_carbs as any) || 0,
+              fat: parseFloat(plan.target_fat as any) || 0
+            };
+          }
+
+          // Otherwise calculate from meals
+          if (plan.meals && plan.meals.length > 0) {
+            return plan.meals.reduce((totals, meal) => {
+              return {
+                calories: totals.calories + (parseFloat(meal.calories as any) || 0),
+                protein: totals.protein + (parseFloat(meal.protein as any) || 0),
+                carbs: totals.carbs + (parseFloat(meal.carbs as any) || 0),
+                fat: totals.fat + (parseFloat((meal.fat ?? meal.fats) as any) || 0)
+              };
+            }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
+          }
+
+          // Fallback to plan-level values
           return {
-            calories: plan.calories || 0,
-            protein: plan.protein_g || 0,
-            carbs: plan.carbs_g || 0,
-            fats: plan.fats_g || 0
+            calories: parseFloat(plan.calories as any) || 0,
+            protein: parseFloat(plan.protein_g as any) || 0,
+            carbs: parseFloat(plan.carbs_g as any) || 0,
+            fat: parseFloat((plan.fats_g ?? plan.fat_g) as any) || 0
           };
         }
+
       }),
       {
         name: 'diet-storage',

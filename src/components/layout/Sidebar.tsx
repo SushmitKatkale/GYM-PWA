@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   Home, Users, Building, Calendar, QrCode, CreditCard, 
-  BarChart3, Settings, MapPin, Bell, Clock, Wallet, UserCheck, Package, Megaphone, MessageCircle, HelpCircle, Dumbbell
+  BarChart3, Settings, MapPin, Bell, Clock, Wallet, UserCheck, Package, Megaphone, MessageCircle, HelpCircle, Dumbbell, Apple, PieChart, MessageSquare
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { useNotificationCount } from '../../hooks/useNotificationCount';
@@ -31,6 +31,9 @@ export function Sidebar({ activeView, onViewChange, isOpen }: SidebarProps) {
           { id: 'admin-notifications', label: 'Notification Management', icon: MessageCircle },
           { id: 'gym-management', label: 'Gym Management', icon: Building },
           { id: 'exercise-management', label: 'Exercise Management', icon: Dumbbell },
+          { id: 'diet-management', label: 'Diet Plan Management', icon: Apple },
+          { id: 'diet-analytics', label: 'Diet Analytics', icon: PieChart },
+          { id: 'diet-change-management', label: 'Diet Change Requests', icon: MessageSquare },
           // { id: 'subscription-management', label: 'Subscription Management', icon: Package },
           { id: 'users', label: 'User Management', icon: Users },
           { id: 'advertisements', label: 'Advertisement Management', icon: Megaphone },
@@ -59,6 +62,8 @@ export function Sidebar({ activeView, onViewChange, isOpen }: SidebarProps) {
           { id: 'qr-code', label: 'QR Check-in', icon: QrCode },
           { id: 'calendar', label: 'My Schedule', icon: Calendar },
           { id: 'attendance', label: 'My Attendance', icon: Clock },
+          { id: 'diet-browse', label: 'Browse Diet Plans', icon: Apple },
+          { id: 'diet-plans', label: 'My Diet Plans', icon: UserCheck },
           { id: 'wallet', label: 'Wallet & Payments', icon: Wallet },
           ...commonItems.slice(1)
         ];

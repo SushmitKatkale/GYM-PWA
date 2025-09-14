@@ -246,25 +246,43 @@ export function UserDietPlans({ onNavigate }: UserDietPlansProps = {}) {
                         </p>
                       )}
 
+                      {/* Calories Display */}
+                      <div className="bg-gradient-to-r from-orange-50 to-yellow-50 border border-orange-200 rounded-lg p-4 mb-4">
+                        <div className="flex items-center justify-center">
+                          <div className="text-center">
+                            <div className="flex items-center justify-center mb-1">
+                              <Zap className="w-5 h-5 text-orange-500 mr-2" />
+                              <span className="text-2xl font-bold text-orange-600">
+                                {macros.calories || plan.target_calories || 0}
+                              </span>
+                              <span className="text-sm text-orange-500 ml-1">cal</span>
+                            </div>
+                            <div className="text-xs text-gray-600">Daily Calories</div>
+                          </div>
+                        </div>
+                      </div>
+
                       {/* Macros Summary */}
-                      {(macros.calories > 0 || macros.protein > 0) && (
-                        <div className="grid grid-cols-2 gap-4 mb-4">
-                          {macros.calories > 0 && (
-                            <div className="text-center">
-                              <div className="text-lg font-semibold text-gray-900">
-                                {macros.calories}
-                              </div>
-                              <div className="text-xs text-gray-500">Calories</div>
+                      {macros.protein > 0 && (
+                        <div className="grid grid-cols-3 gap-3 mb-4">
+                          <div className="text-center p-2 bg-blue-50 rounded-lg">
+                            <div className="text-sm font-semibold text-blue-600">
+                              {macros.protein}g
                             </div>
-                          )}
-                          {macros.protein > 0 && (
-                            <div className="text-center">
-                              <div className="text-lg font-semibold text-blue-600">
-                                {macros.protein}g
-                              </div>
-                              <div className="text-xs text-gray-500">Protein</div>
+                            <div className="text-xs text-gray-500">Protein</div>
+                          </div>
+                          <div className="text-center p-2 bg-green-50 rounded-lg">
+                            <div className="text-sm font-semibold text-green-600">
+                              {macros.carbs}g
                             </div>
-                          )}
+                            <div className="text-xs text-gray-500">Carbs</div>
+                          </div>
+                          <div className="text-center p-2 bg-purple-50 rounded-lg">
+                            <div className="text-sm font-semibold text-purple-600">
+                              {macros.fat}g
+                            </div>
+                            <div className="text-xs text-gray-500">Fat</div>
+                          </div>
                         </div>
                       )}
 

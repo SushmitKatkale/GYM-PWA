@@ -70,16 +70,16 @@ export function DietChangeRequest({
         description: description.trim(),
         urgency
       });
-      
+
       setDescription('');
       setRequestType('general');
       setUrgency('medium');
       setShowSuccess(true);
       setActiveTab('history');
-      
+
       // Reload change requests
       loadChangeRequests({ planId: currentPlan.id });
-      
+
       setTimeout(() => setShowSuccess(false), 5000);
     } catch (error) {
       console.error('Failed to submit change request:', error);
@@ -145,7 +145,7 @@ export function DietChangeRequest({
               <div className="w-8 h-8 bg-gray-200 rounded"></div>
               <div className="h-8 bg-gray-200 rounded w-64"></div>
             </div>
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="bg-white rounded-sm border border-gray-200 p-6">
               <div className="h-6 bg-gray-200 rounded mb-4"></div>
               <div className="h-4 bg-gray-200 rounded mb-2"></div>
               <div className="h-4 bg-gray-200 rounded w-2/3"></div>
@@ -165,7 +165,7 @@ export function DietChangeRequest({
           {onBack && (
             <button
               onClick={onBack}
-              className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors mx-auto"
+              className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-sm hover:bg-green-700 transition-colors mx-auto"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Go Back</span>
@@ -185,14 +185,13 @@ export function DietChangeRequest({
             {onBack && (
               <button
                 onClick={onBack}
-                className="flex items-center justify-center w-10 h-10 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex items-center justify-center w-10 h-10 bg-white border border-gray-200 rounded-sm hover:bg-gray-50 transition-colors"
               >
                 <ArrowLeft className="w-5 h-5 text-gray-600" />
               </button>
             )}
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-                <MessageSquare className="w-8 h-8 text-green-600 mr-3" />
+              <h1 className="text-xl font-medium text-gray-900 flex items-center">
                 Request Diet Plan Changes
               </h1>
               <p className="text-sm text-gray-600 mt-1">
@@ -200,21 +199,21 @@ export function DietChangeRequest({
               </p>
             </div>
           </div>
-          {onNavigate && (
+          {/* {onNavigate && (
             <button
               onClick={() => onNavigate('diet-plan-details', { planId: currentPlan.id })}
-              className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-200 rounded-sm hover:bg-gray-50 transition-colors"
             >
               <Eye className="w-4 h-4" />
               <span className="text-sm font-medium">View Plan</span>
             </button>
-          )}
+          )} */}
         </div>
 
         {/* Success Message */}
         {showSuccess && (
           <div className="mb-6">
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start space-x-3">
+            <div className="bg-green-50 border border-green-200 rounded-sm p-4 flex items-start space-x-3">
               <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
                 <p className="text-green-800 text-sm font-medium">
@@ -231,7 +230,7 @@ export function DietChangeRequest({
         {/* Error Message */}
         {error && (
           <div className="mb-6">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start space-x-3">
+            <div className="bg-red-50 border border-red-200 rounded-sm p-4 flex items-start space-x-3">
               <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
                 <p className="text-red-800 text-sm">{error}</p>
@@ -248,7 +247,7 @@ export function DietChangeRequest({
 
         {/* Tabs */}
         <div className="mb-6">
-          <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
+          <div className="flex space-x-1 bg-gray-100 p-1 rounded-sm w-full">
             {[
               { key: 'new', label: 'New Request', icon: Plus },
               { key: 'history', label: 'Request History', icon: History }
@@ -256,11 +255,10 @@ export function DietChangeRequest({
               <button
                 key={key}
                 onClick={() => setActiveTab(key as any)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  activeTab === key
-                    ? 'bg-white text-green-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-sm text-sm font-medium transition-colors w-full ${activeTab === key
+                  ? 'bg-white text-green-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+                  }`}
               >
                 <Icon className="w-4 h-4" />
                 <span>{label}</span>
@@ -271,7 +269,7 @@ export function DietChangeRequest({
 
         {/* Tab Content */}
         {activeTab === 'new' && (
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-white rounded-sm border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-6">
               Submit New Change Request
             </h3>
@@ -291,11 +289,10 @@ export function DietChangeRequest({
                   ].map(({ value, label, desc }) => (
                     <label
                       key={value}
-                      className={`flex items-start space-x-3 p-4 border-2 rounded-lg cursor-pointer transition-colors ${
-                        requestType === value
-                          ? 'border-green-500 bg-green-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
+                      className={`flex items-start space-x-3 p-4 border-2 rounded-sm cursor-pointer transition-colors ${requestType === value
+                        ? 'border-green-500 bg-green-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                        }`}
                     >
                       <input
                         type="radio"
@@ -327,7 +324,7 @@ export function DietChangeRequest({
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={5}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none"
                   placeholder="Please describe your request in detail. Be specific about what you'd like to change and why..."
                   required
                 />
@@ -341,7 +338,7 @@ export function DietChangeRequest({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Priority Level
                 </label>
-                <div className="flex space-x-4">
+                <div className="flex flex-wrap gap-2">
                   {[
                     { value: 'low', label: 'Low', desc: 'No rush, when convenient' },
                     { value: 'medium', label: 'Medium', desc: 'Normal priority' },
@@ -349,11 +346,10 @@ export function DietChangeRequest({
                   ].map(({ value, label, desc }) => (
                     <label
                       key={value}
-                      className={`flex-1 flex items-center space-x-2 p-3 border-2 rounded-lg cursor-pointer transition-colors ${
-                        urgency === value
-                          ? 'border-green-500 bg-green-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
+                      className={`flex-1 flex items-center space-x-2 p-3 border-2 rounded-sm cursor-pointer transition-colors ${urgency === value
+                        ? 'border-green-500 bg-green-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                        }`}
                     >
                       <input
                         type="radio"
@@ -376,7 +372,7 @@ export function DietChangeRequest({
               </div>
 
               {/* Submit Button */}
-              <div className="flex justify-end space-x-3">
+              <div className="flex justify-end space-x-3 w-full">
                 <button
                   type="button"
                   onClick={() => {
@@ -384,14 +380,14 @@ export function DietChangeRequest({
                     setRequestType('general');
                     setUrgency('medium');
                   }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-sm hover:bg-gray-50 transition-colors"
                 >
                   Clear Form
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting || !description.trim()}
-                  className="flex items-center space-x-2 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center space-x-2 px-6 py-2 bg-green-600 text-white rounded-sm hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? (
                     <RefreshCw className="w-4 h-4 animate-spin" />
@@ -408,7 +404,7 @@ export function DietChangeRequest({
         {activeTab === 'history' && (
           <div className="space-y-4">
             {changeRequests.length === 0 ? (
-              <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+              <div className="bg-white rounded-sm border border-gray-200 p-8 text-center">
                 <History className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
                   No Change Requests Yet
@@ -421,29 +417,36 @@ export function DietChangeRequest({
               changeRequests.map((request) => (
                 <div
                   key={request.id}
-                  className="bg-white rounded-lg border border-gray-200 p-6"
+                  className="bg-white rounded-sm border border-gray-200 p-6"
                 >
-                  <div className="flex items-start justify-between mb-4">
+                  <div className={`flex items-start justify-between ${request.trainer_response && "mb-4"}`}>
                     <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <h4 className="font-semibold text-gray-900">
+                      <div className="flex flex-col mb-2">
+                        <h4 className="font-semibold text-gray-900 mb-2">
                           {getRequestTypeDisplay(request.request_type)}
                         </h4>
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(request.status)}`}>
-                          {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
-                        </span>
-                        <span className={`text-xs font-medium ${getUrgencyColor(request.urgency)}`}>
-                          {request.urgency.charAt(0).toUpperCase() + request.urgency.slice(1)} Priority
-                        </span>
+                        <div className='flex items-center space-x-2'>
+                          <span className={`px-2 py-1 text-xs font-medium rounded-[0.5rem] border ${getStatusColor(request.status)}`}>
+                            {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                          </span>
+                          <span className={`text-xs font-medium ${getUrgencyColor(request.urgency)}`}>
+                            {request.urgency.charAt(0).toUpperCase() + request.urgency.slice(1)} Priority
+                          </span>
+                        </div>
                       </div>
-                      <p className="text-sm text-gray-600 mb-3">
+
+                      <p className="text-sm text-gray-600 my-3">
                         {request.description}
                       </p>
+
                       <div className="flex items-center space-x-4 text-xs text-gray-500">
                         <div className="flex items-center space-x-1">
                           <Calendar className="w-4 h-4" />
                           <span>Submitted {formatDate(request.created_at)}</span>
                         </div>
+                      </div>
+
+                      <div className="flex items-center space-x-4 text-xs text-gray-500 mt-2">
                         {request.trainer_response && (
                           <div className="flex items-center space-x-1">
                             <Users className="w-4 h-4" />
@@ -451,12 +454,13 @@ export function DietChangeRequest({
                           </div>
                         )}
                       </div>
+
                     </div>
                   </div>
 
                   {/* Trainer Response */}
                   {request.trainer_response && (
-                    <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-sm">
                       <div className="flex items-start space-x-3">
                         <ChefHat className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                         <div className="flex-1">

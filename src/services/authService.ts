@@ -215,7 +215,7 @@ class AuthService {
 
   async refreshToken(refreshToken: string): Promise<ApiResponse<{ accessToken: string }>> {
     try {
-      const response = await fetch(buildApiUrl('/auth/refresh-token'), {
+      const response = await fetch(buildApiUrl('/auth/refresh'), {
         method: 'POST',
         headers: this.getAuthHeaders(),
         body: JSON.stringify({ refreshToken }),

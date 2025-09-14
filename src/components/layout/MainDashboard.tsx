@@ -38,6 +38,10 @@ import { DietChangeRequest } from '../features/DietChangeRequest';
 import { ExerciseList } from '../features/ExerciseList';
 import { ExerciseDetail } from '../features/ExerciseDetail';
 import ExerciseManagement from '../admin/ExerciseManagement';
+import DietPlanManagement from '../admin/DietPlanManagement';
+import DietAnalytics from '../admin/DietAnalytics';
+import DietChangeRequestManagement from '../admin/DietChangeRequestManagement';
+import { DietList } from '../features/DietList';
 
 export const MainDashboard: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -49,6 +53,7 @@ export const MainDashboard: React.FC = () => {
   const [activeSettingsTab, setActiveSettingsTab] = useState('profile');
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(user?.profileImage ?? null);
   const [selectedExerciseId, setSelectedExerciseId] = useState<number | null>(null);
+  const [selectedDietPlan, setSelectedDietPlan] = useState<any>(null);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -111,6 +116,21 @@ export const MainDashboard: React.FC = () => {
         return <GymManagement />;
       case 'exercise-management':
         return <ExerciseManagement />;
+      case 'diet-management':
+        return <DietPlanManagement />;
+      case 'diet-analytics':
+        return <DietAnalytics />;
+      case 'diet-change-management':
+        return <DietChangeRequestManagement />;
+      case 'diet-browse':
+        return <DietList 
+          onBack={() => setActiveView('dashboard')}
+          onDietSelect={(diet) => {
+            // Store the selected diet plan and navigate to details
+            setSelectedDietPlan(diet);
+            setActiveView('diet-plan-browse-details');
+          }}
+        />;
       case 'member-management':
         return <MemberManagement />;
       case 'owner-management':
@@ -157,6 +177,57 @@ export const MainDashboard: React.FC = () => {
             }
           }}
         />;
+      case 'diet-plan-browse-details':
+        return selectedDietPlan ? (
+          <DietPlanDetails 
+            plan={selectedDietPlan}
+            onBack={() => {
+              setActiveView('diet-browse');
+              setSelectedDietPlan(null);
+            }}
+            onNavigate={(view, data) => {
+              if (view === 'change-request') {
+                setActiveView('diet-change-request-browse');
+              }
+            }}
+          />
+        ) : (
+          <div className="text-center py-12">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">No Diet Plan Selected</h2>
+            <p className="text-gray-600">Please select a diet plan to view details.</p>
+            <button 
+              onClick={() => setActiveView('diet-browse')}
+              className="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-poppins"
+            >
+              Browse Diet Plans
+            </button>
+          </div>
+        );
+      case 'diet-change-request-browse':
+        return selectedDietPlan ? (
+          <DietChangeRequest 
+            planId={selectedDietPlan.id}
+            trainerId={selectedDietPlan.trainer_id}
+            plan={selectedDietPlan}
+            onBack={() => setActiveView('diet-plan-browse-details')}
+            onNavigate={(view, data) => {
+              if (view === 'diet-plan-details') {
+                setActiveView('diet-plan-browse-details');
+              }
+            }}
+          />
+        ) : (
+          <div className="text-center py-12">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">No Diet Plan Selected</h2>
+            <p className="text-gray-600">Please select a diet plan first.</p>
+            <button 
+              onClick={() => setActiveView('diet-browse')}
+              className="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-poppins"
+            >
+              Browse Diet Plans
+            </button>
+          </div>
+        );
       case 'exercises':
         return <ExerciseList 
           onExerciseSelect={(exerciseId) => {

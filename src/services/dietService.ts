@@ -42,6 +42,21 @@ class DietService {
     return apiClient.get<PaginatedResponse<DietPlan>>(url);
   }
 
+  // Public endpoint for browsing available diet plans
+  async getPublicDietPlans(filters?: DietPlanFilters & { goal?: string; dietaryRestrictions?: string; calorieRange?: string; search?: string }): Promise<ApiResponse<PaginatedResponse<DietPlan>>> {
+    const queryParams = new URLSearchParams();
+    if (filters?.status) queryParams.append('status', filters.status);
+    if (filters?.page) queryParams.append('page', filters.page.toString());
+    if (filters?.limit) queryParams.append('limit', filters.limit.toString());
+    if (filters?.goal) queryParams.append('goal', filters.goal);
+    if (filters?.dietaryRestrictions) queryParams.append('dietary_restrictions', filters.dietaryRestrictions);
+    if (filters?.calorieRange) queryParams.append('calorie_range', filters.calorieRange);
+    if (filters?.search) queryParams.append('search', filters.search);
+
+    const url = `${API_CONFIG.ENDPOINTS.DIET_PLANS}/user${queryParams.toString() ? `?${queryParams}` : ''}`;
+    return apiClient.get<PaginatedResponse<DietPlan>>(url);
+  }
+
   async getDietPlanById(id: number): Promise<ApiResponse<DietPlan>> {
     return apiClient.get<DietPlan>(`${API_CONFIG.ENDPOINTS.DIET_PLANS}/${id}`);
   }
@@ -325,11 +340,16 @@ class DietService {
 
   // Get users and trainers for filters
   async getUsers(): Promise<ApiResponse<any>> {
-    return apiClient.get<any>(`/api/users`);
+    return apiClient.get<any>(`/users`);
   }
 
   async getTrainers(): Promise<ApiResponse<any>> {
-    return apiClient.get<any>(`/api/users/trainers`);
+    return apiClient.get<any>(`/users/type/4`);
+  }
+
+  
+  async getRegularUsers(): Promise<ApiResponse<any>> {
+    return apiClient.get<any>(`/users/type/1`);
   }
 
   // Helper methods

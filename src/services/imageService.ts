@@ -205,46 +205,29 @@ class ImageService {
       formData.append('title', title);
     }
 
-    // For now, return a mock response since the meal image API might not be implemented yet
-    // TODO: Replace with actual API endpoint when backend is ready
+    // Use the actual API endpoint
     try {
-      // Mock API call simulation
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Generate a mock URL based on the file
-      const mockUrl = this.createMockImageUrl(file.name, 'meal');
-      
-      return {
-        success: true,
-        message: 'Image uploaded successfully',
-        data: {
-          url: mockUrl,
-          filename: file.name,
-          size: file.size,
-          mimetype: file.type
-        }
-      };
+      return await apiClient.post<{ url: string; filename: string; size: number; mimetype: string }>(
+        `${API_CONFIG.ENDPOINTS.MEAL_IMAGES}/upload`,
+        formData
+      );
     } catch (error) {
+      console.error('Meal image upload error:', error);
       return {
         success: false,
-        message: 'Failed to upload image',
+        message: 'Failed to upload meal image',
         error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
-
-    // Real implementation would be:
-    // return apiClient.post<{ url: string; filename: string; size: number; mimetype: string }>(
-    //   '/api/meals/upload-image',
-    //   formData
-    // );
   }
 
   async deleteMealImage(imageUrl: string): Promise<{ success: boolean; error?: string }> {
     try {
-      // Mock implementation - replace with actual API call when backend is ready
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const response = await apiClient.delete(`${API_CONFIG.ENDPOINTS.MEAL_IMAGES}/delete`, {
+        body: { imageUrl }
+      });
       
-      return { success: true };
+      return { success: response.success };
     } catch (error) {
       console.error('Meal image delete error:', error);
       return {
@@ -252,9 +235,6 @@ class ImageService {
         error: error instanceof Error ? error.message : 'Delete failed'
       };
     }
-
-    // Real implementation would be:
-    // return apiClient.delete('/api/meals/delete-image', { body: { imageUrl } });
   }
 
   // === UTILITY METHODS ===
@@ -264,14 +244,22 @@ class ImageService {
    */
   private createMockImageUrl(filename: string, type: 'meal' | 'gym' = 'meal'): string {
     const colors = {
-      meal: '4ade80',
-      gym: '3b82f6'
+      meal: '#4ade80',
+      gym: '#3b82f6'
     };
     
     const name = filename.split('.')[0].substring(0, 10);
     const color = colors[type];
     
-    return `https://via.placeholder.com/400x300/${color}/ffffff?text=${encodeURIComponent(name)}`;
+    // Create a local SVG data URL instead of external placeholder service
+    const svg = `
+      <svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+        <rect width="400" height="300" fill="${color}" rx="8"/>
+        <text x="200" y="160" font-family="system-ui, -apple-system, sans-serif" font-size="32" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">${name}</text>
+      </svg>
+    `;
+    
+    return `data:image/svg+xml;base64,${btoa(svg)}`;
   }
 
   /**
@@ -279,18 +267,26 @@ class ImageService {
    */
   getMealPlaceholder(mealName: string, category?: string): string {
     const categoryColors = {
-      breakfast: 'ffbe0b',
-      lunch: '8ecae6', 
-      dinner: 'ffb3c6',
-      snack: 'ffd166',
-      drink: 'a8dadc',
-      default: '4ade80'
+      breakfast: '#ffbe0b',
+      lunch: '#8ecae6', 
+      dinner: '#ffb3c6',
+      snack: '#ffd166',
+      drink: '#a8dadc',
+      default: '#4ade80'
     };
 
     const color = categoryColors[category as keyof typeof categoryColors] || categoryColors.default;
-    const initials = mealName.split(' ').map(word => word[0]).join('').substring(0, 2).toUpperCase();
+    const initials = mealName ? mealName.split(' ').map(word => word[0]).join('').substring(0, 2).toUpperCase() : '🍽️';
     
-    return `https://via.placeholder.com/400x300/${color}/ffffff?text=${encodeURIComponent(initials)}`;
+    // Create a local SVG data URL instead of external placeholder service
+    const svg = `
+      <svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+        <rect width="400" height="300" fill="${color}" rx="8"/>
+        <text x="200" y="160" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">${initials}</text>
+      </svg>
+    `;
+    
+    return `data:image/svg+xml;base64,${btoa(svg)}`;
   }
 
   /**
