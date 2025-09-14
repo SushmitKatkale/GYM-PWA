@@ -50,15 +50,77 @@ export interface OwnerDashboard {
 }
 
 export interface UserDashboard {
-  overview: {
-    activeSubscriptions: number;
-    weeklyWorkouts: number;
-    monthlyWorkouts: number;
-    favoriteGym: string;
+  user: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    username: string;
+    email: string;
+    profileImage: string;
+    gymName: string;
   };
-  subscriptions: UserSubscription[];
+  overview: {
+    weeklyWorkouts: number;
+    workoutGrowthRate: number;
+    totalHours: number;
+    hoursThisWeek: number;
+    totalCaloriesBurned: number;
+    caloriesThisWeek: number;
+    currentStreak: number;
+    bestStreak: number;
+  };
+  metrics: {
+    steps: number;
+    workoutTime: number;
+    activeEnergy: number;
+    weeklyGoalProgress: number;
+  };
+  gymDetails: {
+    gymName: string;
+    activeMembers: number;
+    subscription: {
+      duration: string;
+      gymName: string;
+    };
+    trainer: {
+      name: string;
+      schedule: string;
+      specialization: string;
+    };
+  };
+  workoutHistory: {
+    date: string;
+    count: number;
+    duration: number;
+    calories: number;
+  }[];
+  goalProgress: {
+    completed: number;
+    target: number;
+  };
+  exerciseCollections: {
+    id: string;
+    title: string;
+    subtitle: string;
+    exerciseCount: string;
+  }[];
+  subscriptions: {
+    active: number;
+    list: string[];
+  };
   upcomingBookings: Booking[];
   recentActivity: Activity[];
+  quickActions: {
+    id: string;
+    title: string;
+    subtitle: string;
+    icon: string;
+    color: string;
+    action: string;
+    target: string;
+  }[];
+  lastUpdated: string;
+  timezone: string;
 }
 
 export interface PersonalStats {
@@ -229,8 +291,30 @@ class DashboardService {
   }
 
   // User Dashboard Methods
-  async getUserDashboard(): Promise<ApiResponse<UserDashboard>> {
-    return apiClient.get<UserDashboard>('/dashboard/user');
+  async getUserDashboard(userId?: number): Promise<ApiResponse<UserDashboard>> {
+    // The userId is handled by the JWT token in the backend, so we don't need to pass it in the URL
+    console.log('🔄 Fetching user dashboard data...');
+    try {
+      const response = await apiClient.get<UserDashboard>('/dashboard/user');
+      console.log('📊 User dashboard response:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ Failed to fetch user dashboard:', error);
+      throw error;
+    }
+  }
+
+  // Quick stats for dashboard refresh
+  async getUserQuickStats(): Promise<ApiResponse<{weekly_workouts: number, calories_today: number, hours_this_week: number}>> {
+    console.log('⚡ Fetching user quick stats...');
+    try {
+      const response = await apiClient.get('/dashboard/user/quick-stats');
+      console.log('📈 Quick stats response:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ Failed to fetch quick stats:', error);
+      throw error;
+    }
   }
 
   async getPersonalStats(period: string = '30d'): Promise<ApiResponse<PersonalStats>> {

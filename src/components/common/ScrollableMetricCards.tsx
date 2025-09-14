@@ -24,6 +24,12 @@ interface MetricData {
 
 interface ScrollableMetricCardsProps {
   metrics?: MetricData[];
+  apiMetrics?: {
+    steps: number;
+    workoutTime: number;
+    activeEnergy: number;
+    weeklyGoalProgress: number;
+  };
   className?: string;
 }
 
@@ -72,9 +78,59 @@ const defaultMetrics: MetricData[] = [
 ];
 
 export const ScrollableMetricCards: React.FC<ScrollableMetricCardsProps> = ({
-  metrics = defaultMetrics,
+  metrics,
+  apiMetrics,
   className = ''
 }) => {
+  // Use API data when available, otherwise fall back to provided metrics or defaults
+  const metricsToShow = React.useMemo(() => {
+    if (apiMetrics) {
+      return [
+        {
+          id: 'steps',
+          title: 'Steps',
+          value: apiMetrics.steps >= 1000 ? (apiMetrics.steps / 1000).toFixed(1) : apiMetrics.steps.toString(),
+          unit: apiMetrics.steps >= 1000 ? 'k' : '',
+          icon: Footprints,
+          color: 'amber',
+          bgColor: 'bg-white',
+          chartData: [4.2, 5.1, 4.8, Math.max(5.5, apiMetrics.steps / 1000), 5.2, 5.8, apiMetrics.steps / 1000]
+        },
+        {
+          id: 'workoutTime',
+          title: 'Workout Time',
+          value: apiMetrics.workoutTime,
+          unit: 'min',
+          icon: Timer,
+          color: 'green',
+          bgColor: 'bg-white',
+          chartData: [30, 40, 35, Math.max(45, apiMetrics.workoutTime), 42, 48, apiMetrics.workoutTime]
+        },
+        {
+          id: 'activeEnergy',
+          title: 'Active Energy',
+          value: apiMetrics.activeEnergy,
+          unit: 'cal',
+          icon: Zap,
+          color: 'red',
+          bgColor: 'bg-white',
+          chartData: [250, 270, 260, Math.max(280, apiMetrics.activeEnergy), 275, 285, apiMetrics.activeEnergy]
+        },
+        {
+          id: 'progress',
+          title: 'Weekly Goal',
+          value: Math.round(apiMetrics.weeklyGoalProgress),
+          unit: '%',
+          icon: Target,
+          color: 'indigo',
+          bgColor: 'bg-white',
+          chartData: [60, 65, 70, 75, 80, 82, Math.round(apiMetrics.weeklyGoalProgress)]
+        }
+      ];
+    }
+    return metrics || defaultMetrics;
+  }, [apiMetrics, metrics]);
+
   return (
     <div className={`${className}`}>
       {/* Header */}
@@ -85,7 +141,7 @@ export const ScrollableMetricCards: React.FC<ScrollableMetricCardsProps> = ({
       
       {/* Scrollable Container */}
       <div className="flex space-x-4 overflow-x-auto pb-2 scrollbar-hide">
-        {metrics.map((metric) => (
+        {metricsToShow.map((metric) => (
           <MetricCard
             key={metric.id}
             title={metric.title}

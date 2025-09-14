@@ -43,7 +43,7 @@ interface DashboardState {
   fetchGymAnalytics: (gymId: number) => Promise<void>;
   
   // User methods
-  fetchUserDashboard: () => Promise<void>;
+  fetchUserDashboard: (userId?: number) => Promise<void>;
   fetchPersonalStats: (period?: string) => Promise<void>;
   fetchActivitySummary: () => Promise<void>;
   fetchRecommendations: () => Promise<void>;
@@ -186,24 +186,29 @@ export const useDashboardStore = create<DashboardState>()((set, get) => ({
   },
   
   // User methods
-  fetchUserDashboard: async () => {
+  fetchUserDashboard: async (userId?: number) => {
     try {
       set({ isLoading: true, error: null });
+      console.log('🔄 Dashboard store: Fetching user dashboard for user:', userId);
       
-      const response = await dashboardService.getUserDashboard();
+      const response = await dashboardService.getUserDashboard(userId);
+      console.log('📊 Dashboard store: API response received:', response);
       
       if (response.success && response.data) {
+        console.log('✅ Dashboard store: Setting dashboard data:', response.data);
         set({ 
           userDashboard: response.data,
           isLoading: false 
         });
       } else {
+        console.error('❌ Dashboard store: API returned error:', response.message);
         set({ 
           error: response.message || 'Failed to fetch user dashboard',
           isLoading: false 
         });
       }
     } catch (error: any) {
+      console.error('❌ Dashboard store: Exception occurred:', error);
       set({ 
         error: error.message || 'Network error occurred',
         isLoading: false 

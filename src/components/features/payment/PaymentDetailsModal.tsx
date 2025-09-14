@@ -112,7 +112,7 @@ export function PaymentDetailsModal({ isOpen, onClose, payment }: PaymentDetails
                 </div>
                 <div className="flex items-center">
                   <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full border ${getStatusBadge(payment.status)}`}>
-                    {payment.status.toUpperCase()}
+                    {payment.status}
                   </span>
                 </div>
               </div>
@@ -124,7 +124,7 @@ export function PaymentDetailsModal({ isOpen, onClose, payment }: PaymentDetails
                   <IndianRupee className="w-5 h-5 text-green-600" />
                 </div>
                 <div className="text-2xl font-bold text-green-700">
-                  {formatCurrency(payment.paymentAmount)}
+                  {formatCurrency(payment.amount)}
                 </div>
               </div>
             </div>
@@ -138,7 +138,7 @@ export function PaymentDetailsModal({ isOpen, onClose, payment }: PaymentDetails
                     <User className="w-5 h-5 text-gray-400" />
                     <span className="text-sm font-medium text-gray-700">User Email</span>
                   </div>
-                  <span className="text-sm text-gray-900">{payment.userEmail}</span>
+                  <span className="text-sm text-gray-900">{payment.userId}</span>
                 </div>
 
                 <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
@@ -149,13 +149,13 @@ export function PaymentDetailsModal({ isOpen, onClose, payment }: PaymentDetails
                   <span className="text-sm text-gray-900 capitalize">{payment.gateway}</span>
                 </div>
 
-                {payment.transactionId && (
+                {payment.paymentRefNo && (
                   <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
                     <div className="flex items-center space-x-3">
                       <Tag className="w-5 h-5 text-gray-400" />
                       <span className="text-sm font-medium text-gray-700">Transaction ID</span>
                     </div>
-                    <span className="text-sm text-gray-900 font-mono">{payment.transactionId}</span>
+                    <span className="text-sm text-gray-900 font-mono">{payment.paymentRefNo}</span>
                   </div>
                 )}
 
@@ -164,16 +164,16 @@ export function PaymentDetailsModal({ isOpen, onClose, payment }: PaymentDetails
                     <Calendar className="w-5 h-5 text-gray-400" />
                     <span className="text-sm font-medium text-gray-700">Created At</span>
                   </div>
-                  <span className="text-sm text-gray-900">{formatDate(payment.createdAt)}</span>
+                  <span className="text-sm text-gray-900">{formatDate(payment.created_at)}</span>
                 </div>
 
-                {payment.completedAt && (
+                {payment.updated_at && (
                   <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
                     <div className="flex items-center space-x-3">
                       <CheckCircle className="w-5 h-5 text-green-500" />
                       <span className="text-sm font-medium text-gray-700">Completed At</span>
                     </div>
-                    <span className="text-sm text-gray-900">{formatDate(payment.completedAt)}</span>
+                    <span className="text-sm text-gray-900">{formatDate(payment.updated_at)}</span>
                   </div>
                 )}
               </div>
@@ -189,7 +189,7 @@ export function PaymentDetailsModal({ isOpen, onClose, payment }: PaymentDetails
                       <Receipt className="w-5 h-5 text-gray-400" />
                       <span className="text-sm font-medium text-gray-700">Subscription Title</span>
                     </div>
-                    <span className="text-sm text-gray-900">{payment.subscription.title}</span>
+                    <span className="text-sm text-gray-900">{payment.subscription.name}</span>
                   </div>
 
                   <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">

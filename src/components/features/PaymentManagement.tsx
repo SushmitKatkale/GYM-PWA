@@ -117,31 +117,31 @@ export function PaymentManagement() {
         kycStatus: kycStatusFilter,
         razorpayVendorId: razorpayVendorIdFilter,
         activeStatus: activeStatusFilter ? activeStatusFilter === 'true' : undefined,
-        ownerEmail: searchTerm.includes('@') ? searchTerm : undefined,
-        gymName: !searchTerm.includes('@') ? searchTerm : undefined,
+        ownerEmail: searchTerm?.includes('@') ? searchTerm : undefined,
+        gymName: !searchTerm?.includes('@') ? searchTerm : undefined,
       };
 
       // Remove undefined values from filters
-      const cleanFilters = Object.fromEntries(
-        Object.entries(filters).filter(([_, value]) => value !== undefined && value !== '')
+      const cleanFilters = Object?.fromEntries(
+        Object?.entries(filters)?.filter(([_, value]) => value !== undefined && value !== '')
       );
 
-      const response = await adminPaymentService.getVendorConfigs(
+      const response = await adminPaymentService?.getVendorConfigs(
         resetPage ? 1 : page,
         itemsPerPage,
-        Object.keys(cleanFilters).length > 0 ? cleanFilters : undefined
+        Object?.keys(cleanFilters)?.length > 0 ? cleanFilters : undefined
       );
 
-      if (response.success && response.data) {
-        setVendorConfigs(response.data.configs);
-        setTotalPages(response.data.pagination.totalPages);
-        setTotalRecords(response.data.pagination.total);
+      if (response?.success && response?.data) {
+        setVendorConfigs(response?.data?.configs);
+        setTotalPages(response?.data?.pagination?.totalPages);
+        setTotalRecords(response?.data?.pagination?.total);
         setCurrentPage(resetPage ? 1 : page);
       }
     } catch (error) {
       console.error('Failed to load vendor configs:', error);
       // Show a user-friendly error message
-      const errorMessage = error instanceof Error ? error.message : 'Failed to load vendor configurations. Please try again.';
+      const errorMessage = error instanceof Error ? error?.message : 'Failed to load vendor configurations?. Please try again?.';
       // You could also show a toast notification here
       alert(errorMessage);
     } finally {
@@ -166,7 +166,7 @@ export function PaymentManagement() {
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e?.key === 'Enter') {
       handleSearch();
     }
   };
@@ -184,16 +184,16 @@ export function PaymentManagement() {
     // Immediately call API with no filters
     setLoading(true);
     try {
-      const response = await adminPaymentService.getVendorConfigs(
+      const response = await adminPaymentService?.getVendorConfigs(
         1,
         itemsPerPage,
         undefined // No filters
       );
 
-      if (response.success && response.data) {
-        setVendorConfigs(response.data.configs);
-        setTotalPages(response.data.pagination.totalPages);
-        setTotalRecords(response.data.pagination.total);
+      if (response?.success && response?.data) {
+        setVendorConfigs(response?.data?.configs);
+        setTotalPages(response?.data?.pagination?.totalPages);
+        setTotalRecords(response?.data?.pagination?.total);
         setCurrentPage(1);
       }
     } catch (error) {
@@ -210,7 +210,7 @@ export function PaymentManagement() {
   };
 
   const handleViewConfig = (config: VendorPaymentConfig) => {
-    setViewConfigId(config.id);
+    setViewConfigId(config?.id);
     setShowViewModal(true);
   };
 
@@ -234,7 +234,7 @@ export function PaymentManagement() {
     try {
       const filters: any = {};
       if (paymentSearchTerm) {
-        if (paymentSearchTerm.includes('@')) {
+        if (paymentSearchTerm?.includes('@')) {
           filters.userEmail = paymentSearchTerm;
         } else {
           filters.transactionId = paymentSearchTerm;
@@ -243,16 +243,16 @@ export function PaymentManagement() {
       if (paymentStatusFilter) filters.status = paymentStatusFilter;
       if (paymentGatewayFilter) filters.gateway = paymentGatewayFilter;
 
-      const response = await adminPaymentService.getAllPayments(
+      const response = await adminPaymentService?.getAllPayments(
         resetPage ? 1 : page,
         paymentItemsPerPage,
-        Object.keys(filters).length > 0 ? filters : undefined
+        Object?.keys(filters)?.length > 0 ? filters : undefined
       );
 
-      if (response.success && response.data) {
-        setPayments(response.data.payments);
-        setPaymentTotalPages(response.data.pagination.totalPages);
-        setPaymentTotalRecords(response.data.pagination.total);
+      if (response?.success && response?.data) {
+        setPayments(response?.data?.payments);
+        setPaymentTotalPages(response?.data?.pagination?.totalPages);
+        setPaymentTotalRecords(response?.data?.pagination?.total);
         setPaymentCurrentPage(resetPage ? 1 : page);
       }
     } catch (error) {
@@ -267,7 +267,7 @@ export function PaymentManagement() {
     try {
       const filters: any = {};
       if (subscriptionSearchTerm) {
-        if (subscriptionSearchTerm.includes('@')) {
+        if (subscriptionSearchTerm?.includes('@')) {
           filters.userEmail = subscriptionSearchTerm;
         } else {
           filters.userEmail = subscriptionSearchTerm; // Backend searches by userEmail, not title
@@ -275,16 +275,16 @@ export function PaymentManagement() {
       }
       if (subscriptionStatusFilter) filters.status = subscriptionStatusFilter;
 
-      const response = await adminPaymentService.getAllUserSubscriptions(
+      const response = await adminPaymentService?.getAllUserSubscriptions(
         resetPage ? 1 : page,
         subscriptionItemsPerPage,
-        Object.keys(filters).length > 0 ? filters : undefined
+        Object?.keys(filters)?.length > 0 ? filters : undefined
       );
 
-      if (response.success && response.data) {
-        setUserSubscriptions(response.data.subscriptions);
-        setSubscriptionTotalPages(response.data.pagination.totalPages);
-        setSubscriptionTotalRecords(response.data.pagination.total);
+      if (response?.success && response?.data) {
+        setUserSubscriptions(response?.data?.subscriptions);
+        setSubscriptionTotalPages(response?.data?.pagination?.totalPages);
+        setSubscriptionTotalRecords(response?.data?.pagination?.total);
         setSubscriptionCurrentPage(resetPage ? 1 : page);
       }
     } catch (error) {
@@ -300,7 +300,7 @@ export function PaymentManagement() {
   };
 
   const handlePaymentKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e?.key === 'Enter') {
       handlePaymentSearch();
     }
   };
@@ -324,7 +324,7 @@ export function PaymentManagement() {
   };
 
   const handleSubscriptionKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e?.key === 'Enter') {
       handleSubscriptionSearch();
     }
   };
@@ -347,7 +347,7 @@ export function PaymentManagement() {
     try {
       const filters: any = {};
       if (refundSearchTerm) {
-        if (refundSearchTerm.includes('@')) {
+        if (refundSearchTerm?.includes('@')) {
           filters.userEmail = refundSearchTerm;
         } else {
           filters.refundId = refundSearchTerm;
@@ -356,16 +356,16 @@ export function PaymentManagement() {
       if (refundStatusFilter) filters.status = refundStatusFilter;
       if (refundTypeFilter) filters.refundType = refundTypeFilter;
 
-      const response = await adminPaymentService.getRefunds(
+      const response = await adminPaymentService?.getRefunds(
         resetPage ? 1 : page,
         refundItemsPerPage,
-        Object.keys(filters).length > 0 ? filters : undefined
+        Object?.keys(filters)?.length > 0 ? filters : undefined
       );
 
-      if (response.success && response.data) {
-        setRefunds(response.data.refunds);
-        setRefundTotalPages(response.data.pagination.totalPages);
-        setRefundTotalRecords(response.data.pagination.total);
+      if (response?.success && response?.data) {
+        setRefunds(response?.data?.refunds);
+        setRefundTotalPages(response?.data?.pagination?.totalPages);
+        setRefundTotalRecords(response?.data?.pagination?.total);
         setRefundCurrentPage(resetPage ? 1 : page);
       }
     } catch (error) {
@@ -380,7 +380,7 @@ export function PaymentManagement() {
   };
 
   const handleRefundKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e?.key === 'Enter') {
       handleRefundSearch();
     }
   };
@@ -439,17 +439,17 @@ export function PaymentManagement() {
     if (activeTab === 'refunds') {
       loadRefunds(refundCurrentPage);
     }
-    if (payments.length > 0) loadPayments(paymentCurrentPage);
-    if (userSubscriptions.length > 0) loadUserSubscriptions(subscriptionCurrentPage);
+    if (payments?.length > 0) loadPayments(paymentCurrentPage);
+    if (userSubscriptions?.length > 0) loadUserSubscriptions(subscriptionCurrentPage);
   };
 
   // Load data when tab changes
   useEffect(() => {
-    if (activeTab === 'payments' && payments.length === 0) {
+    if (activeTab === 'payments' && payments?.length === 0) {
       loadPayments(1, true);
-    } else if (activeTab === 'subscriptions' && userSubscriptions.length === 0) {
+    } else if (activeTab === 'subscriptions' && userSubscriptions?.length === 0) {
       loadUserSubscriptions(1, true);
-    } else if (activeTab === 'refunds' && refunds.length === 0) {
+    } else if (activeTab === 'refunds' && refunds?.length === 0) {
       loadRefunds(1, true);
     }
   }, [activeTab]);
@@ -491,7 +491,7 @@ export function PaymentManagement() {
       style: 'currency',
       currency: 'INR',
       minimumFractionDigits: 0,
-    }).format(amount);
+    })?.format(amount);
   };
 
   const getStatusBadge = (status: string) => {
@@ -526,19 +526,19 @@ export function PaymentManagement() {
   const stats = [
     {
       label: 'Total Vendors',
-      value: vendorConfigs.length.toString(),
+      value: vendorConfigs?.length?.toString(),
       icon: Building,
       color: 'bg-blue-500'
     },
     {
       label: 'Active Configs',
-      value: vendorConfigs.filter(c => c.isRazorpayActive).length.toString(),
+      value: vendorConfigs?.filter(c => c?.isRazorpayActive)?.length?.toString(),
       icon: CheckCircle,
       color: 'bg-green-500'
     },
     {
       label: 'Pending Onboarding',
-      value: vendorConfigs.filter(c => c.onboardingStatus === 'pending').length.toString(),
+      value: vendorConfigs?.filter(c => c?.onboardingStatus === 'pending')?.length?.toString(),
       icon: AlertCircle,
       color: 'bg-yellow-500'
     },
@@ -578,16 +578,16 @@ export function PaymentManagement() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => {
-          const Icon = stat.icon;
+        {stats?.map((stat, index) => {
+          const Icon = stat?.icon;
           return (
             <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">{stat.label}</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
+                  <p className="text-sm font-medium text-gray-600">{stat?.label}</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">{stat?.value}</p>
                 </div>
-                <div className={`${stat.color} p-3 rounded-lg`}>
+                <div className={`${stat?.color} p-3 rounded-lg`}>
                   <Icon className="w-6 h-6 text-white" />
                 </div>
               </div>
@@ -605,19 +605,19 @@ export function PaymentManagement() {
             { id: 'subscriptions', label: 'User Subscriptions', icon: Users },
             { id: 'refunds', label: 'Refund Management', icon: RefreshCw },
             // { id: 'calculator', label: 'Commission Calculator', icon: TrendingUp }
-          ].map((tab) => {
-            const Icon = tab.icon;
+          ]?.map((tab) => {
+            const Icon = tab?.icon;
             return (
               <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm ${activeTab === tab.id
+                key={tab?.id}
+                onClick={() => setActiveTab(tab?.id as any)}
+                className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm ${activeTab === tab?.id
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
               >
                 <Icon className="w-4 h-4 mr-2" />
-                {tab.label}
+                {tab?.label}
               </button>
             );
           })}
@@ -638,9 +638,9 @@ export function PaymentManagement() {
                   <div className="relative">
                     <input
                       type="text"
-                      placeholder="Search by gym name, owner email, or Razorpay ID..."
+                      placeholder="Search by gym name, owner email, or Razorpay ID?.?.?."
                       value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onChange={(e) => setSearchTerm(e?.target?.value)}
                       onKeyPress={handleKeyPress}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                     />
@@ -653,7 +653,7 @@ export function PaymentManagement() {
                     type="text"
                     placeholder="Enter acc_xxx or partial ID"
                     value={razorpayVendorIdFilter}
-                    onChange={(e) => setRazorpayVendorIdFilter(e.target.value)}
+                    onChange={(e) => setRazorpayVendorIdFilter(e?.target?.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                   />
                 </div>
@@ -662,7 +662,7 @@ export function PaymentManagement() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Onboarding Status</label>
                   <select
                     value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
+                    onChange={(e) => setStatusFilter(e?.target?.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-sm"
                   >
                     <option value="">All Status</option>
@@ -678,7 +678,7 @@ export function PaymentManagement() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Razorpay Status</label>
                   <select
                     value={razorpayActiveFilter}
-                    onChange={(e) => setRazorpayActiveFilter(e.target.value)}
+                    onChange={(e) => setRazorpayActiveFilter(e?.target?.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-sm"
                   >
                     <option value="">All</option>
@@ -691,7 +691,7 @@ export function PaymentManagement() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">KYC Status</label>
                   <select
                     value={kycStatusFilter}
-                    onChange={(e) => setKycStatusFilter(e.target.value)}
+                    onChange={(e) => setKycStatusFilter(e?.target?.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-sm"
                   >
                     <option value="">All KYC Status</option>
@@ -706,7 +706,7 @@ export function PaymentManagement() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Configuration Status</label>
                   <select
                     value={activeStatusFilter}
-                    onChange={(e) => setActiveStatusFilter(e.target.value)}
+                    onChange={(e) => setActiveStatusFilter(e?.target?.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-sm"
                   >
                     <option value="">All Configurations</option>
@@ -740,11 +740,11 @@ export function PaymentManagement() {
 
               <div className="mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <p className="text-sm text-gray-600">
-                  Showing {vendorConfigs.length} of {totalRecords} vendor configurations
+                  Showing {vendorConfigs?.length} of {totalRecords} vendor configurations
                   {hasActiveFilters && (
                     <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
                       <Filter className="w-3 h-3 mr-1" />
-                      {[statusFilter, razorpayActiveFilter, kycStatusFilter, razorpayVendorIdFilter, activeStatusFilter].filter(Boolean).length} filter{[statusFilter, razorpayActiveFilter, kycStatusFilter, razorpayVendorIdFilter, activeStatusFilter].filter(Boolean).length !== 1 ? 's' : ''} active
+                      {[statusFilter, razorpayActiveFilter, kycStatusFilter, razorpayVendorIdFilter, activeStatusFilter]?.filter(Boolean)?.length} filter{[statusFilter, razorpayActiveFilter, kycStatusFilter, razorpayVendorIdFilter, activeStatusFilter]?.filter(Boolean)?.length !== 1 ? 's' : ''} active
                     </span>
                   )}
                 </p>
@@ -754,7 +754,7 @@ export function PaymentManagement() {
                     <label className="text-sm text-gray-600">Show:</label>
                     <select
                       value={itemsPerPage}
-                      onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                      onChange={(e) => setItemsPerPage(Number(e?.target?.value))}
                       className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                     >
                       <option value={5}>5</option>
@@ -799,37 +799,37 @@ export function PaymentManagement() {
             {loading ? (
               <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
                 <RefreshCw className="w-8 h-8 animate-spin text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-500">Loading vendor configurations...</p>
+                <p className="text-gray-500">Loading vendor configurations?.?.?.</p>
               </div>
-            ) : filteredConfigs.length === 0 ? (
+            ) : filteredConfigs?.length === 0 ? (
               <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
                 <Building className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                 <p className="text-gray-500">No vendor configurations found</p>
               </div>
             ) : (
-              filteredConfigs.map((config) => (
-                <div key={config.id} className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+              filteredConfigs?.map((config) => (
+                <div key={config?.id} className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
                   {/* Header with gym name and status */}
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <div className="flex items-center mb-2">
                         <Building className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
                         <h3 className="text-sm font-semibold text-gray-900 truncate">
-                          {config.gym?.name || 'N/A'}
+                          {config?.gym?.name || 'N/A'}
                         </h3>
                       </div>
                       <div className="flex items-center text-xs text-gray-500">
                         <User className="w-3 h-3 mr-1 flex-shrink-0" />
-                        <span className="truncate">{config.ownerEmail}</span>
+                        <span className="truncate">{config?.ownerEmail}</span>
                       </div>
                     </div>
                     
                     {/* Quick Status Badge */}
                     <div className="ml-3">
-                      <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadge(config.onboardingStatus)}`}>
-                        {getStatusIcon(config.onboardingStatus)}
+                      <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadge(config?.onboardingStatus)}`}>
+                        {getStatusIcon(config?.onboardingStatus)}
                         <span className="ml-1">
-                          {config.onboardingStatus.replace('_', ' ').toUpperCase()}
+                          {config?.onboardingStatus?.replace('_', ' ')?.toUpperCase()}
                         </span>
                       </span>
                     </div>
@@ -841,22 +841,22 @@ export function PaymentManagement() {
                     <div className="bg-gray-50 rounded-lg p-3">
                       <div className="text-xs text-gray-500 mb-1">Commission</div>
                       <div className="text-sm font-medium text-gray-900">
-                        {config.cutValue}{config.cutType === 'percentage' ? '%' : ' ₹'}
+                        {config?.cutValue}{config?.cutType === 'percentage' ? '%' : ' ₹'}
                       </div>
-                      <div className="text-xs text-gray-500 capitalize">{config.cutType}</div>
+                      <div className="text-xs text-gray-500 capitalize">{config?.cutType}</div>
                     </div>
 
                     {/* Razorpay Status */}
                     <div className="bg-gray-50 rounded-lg p-3">
                       <div className="text-xs text-gray-500 mb-1">Razorpay Status</div>
                       <div className="flex items-center">
-                        {config.isRazorpayActive ? (
+                        {config?.isRazorpayActive ? (
                           <CheckCircle className="w-3 h-3 text-green-500 mr-1" />
                         ) : (
                           <XCircle className="w-3 h-3 text-red-500 mr-1" />
                         )}
-                        <span className={`text-xs font-medium ${config.isRazorpayActive ? 'text-green-600' : 'text-red-600'}`}>
-                          {config.isRazorpayActive ? 'Active' : 'Inactive'}
+                        <span className={`text-xs font-medium ${config?.isRazorpayActive ? 'text-green-600' : 'text-red-600'}`}>
+                          {config?.isRazorpayActive ? 'Active' : 'Inactive'}
                         </span>
                       </div>
                     </div>
@@ -866,7 +866,7 @@ export function PaymentManagement() {
                   <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
                     <div className="flex items-center">
                       <Calendar className="w-3 h-3 mr-1" />
-                      <span>Created: {new Date(config.createTimestamp).toLocaleDateString()}</span>
+                      <span>Created: {new Date(config?.createTimestamp)?.toLocaleDateString()}</span>
                     </div>
                   </div>
 
@@ -896,7 +896,7 @@ export function PaymentManagement() {
               <div className="bg-white rounded-lg border border-gray-200 p-4">
                 <div className="flex items-center justify-between">
                   <button
-                    onClick={() => loadVendorConfigs(Math.max(1, currentPage - 1))}
+                    onClick={() => loadVendorConfigs(Math?.max(1, currentPage - 1))}
                     disabled={currentPage === 1}
                     className="flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
@@ -911,7 +911,7 @@ export function PaymentManagement() {
                   </div>
                   
                   <button
-                    onClick={() => loadVendorConfigs(Math.min(totalPages, currentPage + 1))}
+                    onClick={() => loadVendorConfigs(Math?.min(totalPages, currentPage + 1))}
                     disabled={currentPage === totalPages}
                     className="flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
@@ -922,7 +922,7 @@ export function PaymentManagement() {
                 
                 <div className="mt-4 text-center">
                   <p className="text-xs text-gray-500">
-                    Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalRecords)} of {totalRecords} results
+                    Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math?.min(currentPage * itemsPerPage, totalRecords)} of {totalRecords} results
                   </p>
                 </div>
               </div>
@@ -937,37 +937,37 @@ export function PaymentManagement() {
                 {loading ? (
                   <div className="col-span-full bg-white rounded-lg border border-gray-200 p-8 text-center">
                     <RefreshCw className="w-8 h-8 animate-spin text-gray-400 mx-auto mb-3" />
-                    <p className="text-gray-500">Loading vendor configurations...</p>
+                    <p className="text-gray-500">Loading vendor configurations?.?.?.</p>
                   </div>
-                ) : filteredConfigs.length === 0 ? (
+                ) : filteredConfigs?.length === 0 ? (
                   <div className="col-span-full bg-white rounded-lg border border-gray-200 p-8 text-center">
                     <Building className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                     <p className="text-gray-500">No vendor configurations found</p>
                   </div>
                 ) : (
-                  filteredConfigs.map((config) => (
-                    <div key={config.id} className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow">
+                  filteredConfigs?.map((config) => (
+                    <div key={config?.id} className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow">
                       {/* Header with gym name and status */}
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
                           <div className="flex items-center mb-2">
                             <Building className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
                             <h3 className="text-sm font-semibold text-gray-900 truncate">
-                              {config.gym?.name || 'N/A'}
+                              {config?.gym?.name || 'N/A'}
                             </h3>
                           </div>
                           <div className="flex items-center text-xs text-gray-500">
                             <User className="w-3 h-3 mr-1 flex-shrink-0" />
-                            <span className="truncate">{config.ownerEmail}</span>
+                            <span className="truncate">{config?.ownerEmail}</span>
                           </div>
                         </div>
                         
                         {/* Quick Status Badge */}
                         <div className="ml-3">
-                          <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadge(config.onboardingStatus)}`}>
-                            {getStatusIcon(config.onboardingStatus)}
+                          <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadge(config?.onboardingStatus)}`}>
+                            {getStatusIcon(config?.onboardingStatus)}
                             <span className="ml-1">
-                              {config.onboardingStatus.replace('_', ' ').toUpperCase()}
+                              {config?.onboardingStatus?.replace('_', ' ')?.toUpperCase()}
                             </span>
                           </span>
                         </div>
@@ -979,22 +979,22 @@ export function PaymentManagement() {
                         <div className="bg-gray-50 rounded-lg p-3">
                           <div className="text-xs text-gray-500 mb-1">Commission</div>
                           <div className="text-sm font-medium text-gray-900">
-                            {config.cutValue}{config.cutType === 'percentage' ? '%' : ' ₹'}
+                            {config?.cutValue}{config?.cutType === 'percentage' ? '%' : ' ₹'}
                           </div>
-                          <div className="text-xs text-gray-500 capitalize">{config.cutType}</div>
+                          <div className="text-xs text-gray-500 capitalize">{config?.cutType}</div>
                         </div>
 
                         {/* Razorpay Status */}
                         <div className="bg-gray-50 rounded-lg p-3">
                           <div className="text-xs text-gray-500 mb-1">Razorpay Status</div>
                           <div className="flex items-center">
-                            {config.isRazorpayActive ? (
+                            {config?.isRazorpayActive ? (
                               <CheckCircle className="w-3 h-3 text-green-500 mr-1" />
                             ) : (
                               <XCircle className="w-3 h-3 text-red-500 mr-1" />
                             )}
-                            <span className={`text-xs font-medium ${config.isRazorpayActive ? 'text-green-600' : 'text-red-600'}`}>
-                              {config.isRazorpayActive ? 'Active' : 'Inactive'}
+                            <span className={`text-xs font-medium ${config?.isRazorpayActive ? 'text-green-600' : 'text-red-600'}`}>
+                              {config?.isRazorpayActive ? 'Active' : 'Inactive'}
                             </span>
                           </div>
                         </div>
@@ -1004,7 +1004,7 @@ export function PaymentManagement() {
                       <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
                         <div className="flex items-center">
                           <Calendar className="w-3 h-3 mr-1" />
-                          <span>Created: {new Date(config.createTimestamp).toLocaleDateString()}</span>
+                          <span>Created: {new Date(config?.createTimestamp)?.toLocaleDateString()}</span>
                         </div>
                       </div>
 
@@ -1036,19 +1036,19 @@ export function PaymentManagement() {
                   <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                     <div className="text-sm text-gray-700">
                       Showing <span className="font-medium">{((currentPage - 1) * itemsPerPage) + 1}</span> to{' '}
-                      <span className="font-medium">{Math.min(currentPage * itemsPerPage, totalRecords)}</span> of{' '}
+                      <span className="font-medium">{Math?.min(currentPage * itemsPerPage, totalRecords)}</span> of{' '}
                       <span className="font-medium">{totalRecords}</span> results
                     </div>
                     <div className="flex items-center space-x-2">
                       <button
-                        onClick={() => loadVendorConfigs(Math.max(1, currentPage - 1))}
+                        onClick={() => loadVendorConfigs(Math?.max(1, currentPage - 1))}
                         disabled={currentPage === 1}
                         className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Previous
                       </button>
                       
-                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      {Array?.from({ length: Math?.min(5, totalPages) }, (_, i) => {
                         let page;
                         if (totalPages <= 5) {
                           page = i + 1;
@@ -1076,7 +1076,7 @@ export function PaymentManagement() {
                       })}
                       
                       <button
-                        onClick={() => loadVendorConfigs(Math.min(totalPages, currentPage + 1))}
+                        onClick={() => loadVendorConfigs(Math?.min(totalPages, currentPage + 1))}
                         disabled={currentPage === totalPages}
                         className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
@@ -1124,61 +1124,61 @@ export function PaymentManagement() {
                         </div>
                       </td>
                     </tr>
-                  ) : filteredConfigs.length === 0 ? (
+                  ) : filteredConfigs?.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
                         No vendor configurations found
                       </td>
                     </tr>
                   ) : (
-                    filteredConfigs.map((config) => (
-                      <tr key={config.id} className="hover:bg-gray-50">
+                    filteredConfigs?.map((config) => (
+                      <tr key={config?.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
                             <div className="flex items-center">
                               <Building className="w-4 h-4 text-gray-400 mr-2" />
                               <div className="text-sm font-medium text-gray-900">
-                                {config.gym?.name || 'N/A'}
+                                {config?.gym?.name || 'N/A'}
                               </div>
                             </div>
                             <div className="flex items-center mt-1">
                               <User className="w-4 h-4 text-gray-400 mr-2" />
-                              <div className="text-sm text-gray-500">{config.ownerEmail}</div>
+                              <div className="text-sm text-gray-500">{config?.ownerEmail}</div>
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">
-                            {config.cutValue}{config.cutType === 'percentage' ? '%' : ' ₹'}
+                            {config?.cutValue}{config?.cutType === 'percentage' ? '%' : ' ₹'}
                           </div>
                           <div className="text-xs text-gray-500 capitalize">
-                            {config.cutType}
+                            {config?.cutType}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            {getStatusIcon(config.onboardingStatus)}
-                            <span className={`ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadge(config.onboardingStatus)}`}>
-                              {config.onboardingStatus.replace('_', ' ').toUpperCase()}
+                            {getStatusIcon(config?.onboardingStatus)}
+                            <span className={`ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadge(config?.onboardingStatus)}`}>
+                              {config?.onboardingStatus?.replace('_', ' ')?.toUpperCase()}
                             </span>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            {config.isRazorpayActive ? (
+                            {config?.isRazorpayActive ? (
                               <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
                             ) : (
                               <XCircle className="w-4 h-4 text-red-500 mr-2" />
                             )}
-                            <span className={`text-sm ${config.isRazorpayActive ? 'text-green-600' : 'text-red-600'}`}>
-                              {config.isRazorpayActive ? 'Active' : 'Inactive'}
+                            <span className={`text-sm ${config?.isRazorpayActive ? 'text-green-600' : 'text-red-600'}`}>
+                              {config?.isRazorpayActive ? 'Active' : 'Inactive'}
                             </span>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center text-sm text-gray-500">
                             <Calendar className="w-4 h-4 mr-2" />
-                            {new Date(config.createTimestamp).toLocaleDateString()}
+                            {new Date(config?.createTimestamp)?.toLocaleDateString()}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -1197,7 +1197,7 @@ export function PaymentManagement() {
                             >
                               <Edit className="w-4 h-4" />
                             </button>
-                            {/* {config.onboardingStatus === 'pending' && (
+                            {/* {config?.onboardingStatus === 'pending' && (
                               <button
                                 onClick={() => handleOnboardVendor(config)}
                                 className="text-purple-600 hover:text-purple-900"
@@ -1221,7 +1221,7 @@ export function PaymentManagement() {
                   {/* Mobile pagination */}
                   <div className="flex-1 flex justify-between sm:hidden">
                     <button
-                      onClick={() => loadVendorConfigs(Math.max(1, currentPage - 1))}
+                      onClick={() => loadVendorConfigs(Math?.max(1, currentPage - 1))}
                       disabled={currentPage === 1}
                       className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -1232,7 +1232,7 @@ export function PaymentManagement() {
                       Page {currentPage} of {totalPages}
                     </span>
                     <button
-                      onClick={() => loadVendorConfigs(Math.min(totalPages, currentPage + 1))}
+                      onClick={() => loadVendorConfigs(Math?.min(totalPages, currentPage + 1))}
                       disabled={currentPage === totalPages}
                       className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -1246,14 +1246,14 @@ export function PaymentManagement() {
                     <div className="flex items-center space-x-4">
                       <p className="text-sm text-gray-700">
                         Showing <span className="font-medium">{((currentPage - 1) * itemsPerPage) + 1}</span> to{' '}
-                        <span className="font-medium">{Math.min(currentPage * itemsPerPage, totalRecords)}</span> of{' '}
+                        <span className="font-medium">{Math?.min(currentPage * itemsPerPage, totalRecords)}</span> of{' '}
                         <span className="font-medium">{totalRecords}</span> results
                       </p>
                       <div className="flex items-center space-x-2">
                         <label className="text-sm text-gray-700">Show:</label>
                         <select
                           value={itemsPerPage}
-                          onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                          onChange={(e) => setItemsPerPage(Number(e?.target?.value))}
                           className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         >
                           <option value={5}>5</option>
@@ -1285,7 +1285,7 @@ export function PaymentManagement() {
 
                       {/* Previous page */}
                       <button
-                        onClick={() => loadVendorConfigs(Math.max(1, currentPage - 1))}
+                        onClick={() => loadVendorConfigs(Math?.max(1, currentPage - 1))}
                         disabled={currentPage === 1}
                         className="relative inline-flex items-center px-2 py-2 border border-gray-300 text-sm font-medium text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
@@ -1293,7 +1293,7 @@ export function PaymentManagement() {
                       </button>
 
                       {/* Page numbers around current page */}
-                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      {Array?.from({ length: Math?.min(5, totalPages) }, (_, i) => {
                         let page;
                         if (totalPages <= 5) {
                           page = i + 1;
@@ -1321,7 +1321,7 @@ export function PaymentManagement() {
 
                       {/* Next page */}
                       <button
-                        onClick={() => loadVendorConfigs(Math.min(totalPages, currentPage + 1))}
+                        onClick={() => loadVendorConfigs(Math?.min(totalPages, currentPage + 1))}
                         disabled={currentPage === totalPages}
                         className="relative inline-flex items-center px-2 py-2 border border-gray-300 text-sm font-medium text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
@@ -1362,9 +1362,9 @@ export function PaymentManagement() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
                 <input
                   type="text"
-                  placeholder="Transaction ID or user email..."
+                  placeholder="Transaction ID or user email?.?.?."
                   value={paymentSearchTerm}
-                  onChange={(e) => setPaymentSearchTerm(e.target.value)}
+                  onChange={(e) => setPaymentSearchTerm(e?.target?.value)}
                   onKeyPress={handlePaymentKeyPress}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                 />
@@ -1373,7 +1373,7 @@ export function PaymentManagement() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                 <select
                   value={paymentStatusFilter}
-                  onChange={(e) => setPaymentStatusFilter(e.target.value)}
+                  onChange={(e) => setPaymentStatusFilter(e?.target?.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-sm"
                 >
                   <option value="">All Status</option>
@@ -1386,7 +1386,7 @@ export function PaymentManagement() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Gateway</label>
                 <select
                   value={paymentGatewayFilter}
-                  onChange={(e) => setPaymentGatewayFilter(e.target.value)}
+                  onChange={(e) => setPaymentGatewayFilter(e?.target?.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-sm"
                 >
                   <option value="">All Gateways</option>
@@ -1435,40 +1435,40 @@ export function PaymentManagement() {
                     <tr>
                       <td colSpan={7} className="px-6 py-12 text-center">
                         <RefreshCw className="w-6 h-6 animate-spin text-gray-400 mx-auto mb-2" />
-                        <p className="text-gray-500">Loading payments...</p>
+                        <p className="text-gray-500">Loading payments?.?.?.</p>
                       </td>
                     </tr>
-                  ) : payments.length === 0 ? (
+                  ) : payments?.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
                         No payments found
                       </td>
                     </tr>
                   ) : (
-                    payments.map((payment) => (
-                      <tr key={payment.id} className="hover:bg-gray-50">
+                    payments?.map((payment) => (
+                      <tr key={payment?.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">#{payment.id}</div>
-                          {payment.transactionId && (
-                            <div className="text-sm text-gray-500">{payment.transactionId}</div>
+                          <div className="text-sm font-medium text-gray-900">#{payment?.id}</div>
+                          {payment?.paymentRefNo && (
+                            <div className="text-sm text-gray-500">{payment?.paymentRefNo}</div>
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{payment.userEmail}</div>
+                          <div className="text-sm text-gray-900">{payment?.userId}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{formatCurrency(payment.paymentAmount)}</div>
+                          <div className="text-sm font-medium text-gray-900">{formatCurrency(payment?.amount)}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getPaymentStatusBadge(payment.status)}`}>
-                            {payment.status.toUpperCase()}
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getPaymentStatusBadge(payment?.status)}`}>
+                            {payment?.status}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900 capitalize">{payment.gateway}</div>
+                          <div className="text-sm text-gray-900 capitalize">{payment?.gateway}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(payment.createdAt).toLocaleDateString()}
+                          {new Date(payment?.created_at)?.toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex justify-end space-x-2">
@@ -1479,7 +1479,7 @@ export function PaymentManagement() {
                             >
                               <Eye className="w-4 h-4" />
                             </button>
-                            {payment.status === 'completed' && !payment.refunded && (!payment.totalRefunded || payment.totalRefunded < payment.paymentAmount) && (
+                            {payment?.status === 'completed' && !payment?.refunded && (!payment?.totalRefunded || payment?.totalRefunded < payment?.paymentAmount) && (
                               <button
                                 onClick={() => handleInitiateRefund(payment)}
                                 className="text-orange-600 hover:text-orange-900"
@@ -1502,11 +1502,11 @@ export function PaymentManagement() {
               <div className="bg-white px-4 py-3 border-t border-gray-200">
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-gray-700">
-                    Showing {((paymentCurrentPage - 1) * paymentItemsPerPage) + 1} to {Math.min(paymentCurrentPage * paymentItemsPerPage, paymentTotalRecords)} of {paymentTotalRecords} results
+                    Showing {((paymentCurrentPage - 1) * paymentItemsPerPage) + 1} to {Math?.min(paymentCurrentPage * paymentItemsPerPage, paymentTotalRecords)} of {paymentTotalRecords} results
                   </div>
                   <div className="flex items-center space-x-2">
                     <button
-                      onClick={() => loadPayments(Math.max(1, paymentCurrentPage - 1))}
+                      onClick={() => loadPayments(Math?.max(1, paymentCurrentPage - 1))}
                       disabled={paymentCurrentPage === 1}
                       className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -1516,7 +1516,7 @@ export function PaymentManagement() {
                       Page {paymentCurrentPage} of {paymentTotalPages}
                     </span>
                     <button
-                      onClick={() => loadPayments(Math.min(paymentTotalPages, paymentCurrentPage + 1))}
+                      onClick={() => loadPayments(Math?.min(paymentTotalPages, paymentCurrentPage + 1))}
                       disabled={paymentCurrentPage === paymentTotalPages}
                       className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -1539,9 +1539,9 @@ export function PaymentManagement() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
                 <input
                   type="text"
-                  placeholder="User email or subscription title..."
+                  placeholder="User email or subscription title?.?.?."
                   value={subscriptionSearchTerm}
-                  onChange={(e) => setSubscriptionSearchTerm(e.target.value)}
+                  onChange={(e) => setSubscriptionSearchTerm(e?.target?.value)}
                   onKeyPress={handleSubscriptionKeyPress}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                 />
@@ -1550,7 +1550,7 @@ export function PaymentManagement() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                 <select
                   value={subscriptionStatusFilter}
-                  onChange={(e) => setSubscriptionStatusFilter(e.target.value)}
+                  onChange={(e) => setSubscriptionStatusFilter(e?.target?.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-sm"
                 >
                   <option value="">All Status</option>
@@ -1600,42 +1600,42 @@ export function PaymentManagement() {
                     <tr>
                       <td colSpan={7} className="px-6 py-12 text-center">
                         <RefreshCw className="w-6 h-6 animate-spin text-gray-400 mx-auto mb-2" />
-                        <p className="text-gray-500">Loading subscriptions...</p>
+                        <p className="text-gray-500">Loading subscriptions?.?.?.</p>
                       </td>
                     </tr>
-                  ) : userSubscriptions.length === 0 ? (
+                  ) : userSubscriptions?.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
                         No subscriptions found
                       </td>
                     </tr>
                   ) : (
-                    userSubscriptions.map((subscription) => (
-                      <tr key={subscription.id} className="hover:bg-gray-50">
+                    userSubscriptions?.map((subscription) => (
+                      <tr key={subscription?.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <User className="w-4 h-4 text-gray-400 mr-2" />
                             <div>
                               <div className="text-sm font-medium text-gray-900">
-                                {subscription.user?.name || subscription.user?.firstName || subscription.userEmail}
+                                {subscription?.user?.name || subscription?.user?.firstName || subscription?.userEmail}
                               </div>
-                              <div className="text-sm text-gray-500">{subscription.userEmail}</div>
+                              <div className="text-sm text-gray-500">{subscription?.userEmail}</div>
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
-                            {subscription.subscription?.title || subscription.title || 'N/A'}
+                            {subscription?.subscription?.title || subscription?.title || 'N/A'}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {subscription.subscription?.validityDays || subscription.validityDays || 0} days
+                            {subscription?.subscription?.validityDays || subscription?.validityDays || 0} days
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          {subscription.gym ? (
+                          {subscription?.gym ? (
                             <div>
-                              <div className="text-sm font-medium text-gray-900">{subscription.gym.name}</div>
-                              <div className="text-sm text-gray-500">{subscription.gym.city}</div>
+                              <div className="text-sm font-medium text-gray-900">{subscription?.gym?.name}</div>
+                              <div className="text-sm text-gray-500">{subscription?.gym?.city}</div>
                             </div>
                           ) : (
                             <span className="text-sm text-gray-400">N/A</span>
@@ -1643,19 +1643,19 @@ export function PaymentManagement() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
-                            {formatCurrency(subscription.paidAmount || subscription.payment?.paymentAmount || subscription.price || 0)}
+                            {formatCurrency(subscription?.paidAmount || subscription?.payment?.paymentAmount || subscription?.price || 0)}
                           </div>
                           <div className="text-xs text-gray-500">
-                            {subscription.paymentGateway || subscription.payment?.gateway || 'N/A'}
+                            {subscription?.paymentGateway || subscription?.payment?.gateway || 'N/A'}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getSubscriptionStatusBadge(subscription.status)}`}>
-                            {subscription.status?.toUpperCase() || 'UNKNOWN'}
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getSubscriptionStatusBadge(subscription?.status)}`}>
+                            {subscription?.status?.toUpperCase() || 'UNKNOWN'}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {subscription.endDate ? new Date(subscription.endDate).toLocaleDateString() : 'N/A'}
+                          {subscription?.endDate ? new Date(subscription?.endDate)?.toLocaleDateString() : 'N/A'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex justify-end space-x-2">
@@ -1666,7 +1666,7 @@ export function PaymentManagement() {
                             >
                               <Eye className="w-4 h-4" />
                             </button>
-                            {/* {subscription.status === 'active' && subscription.paidAmount > 0 && !subscription.refunded && (
+                            {/* {subscription?.status === 'active' && subscription?.paidAmount > 0 && !subscription?.refunded && (
                               <button
                                 onClick={() => handleInitiateRefund(undefined, subscription)}
                                 className="text-orange-600 hover:text-orange-900"
@@ -1689,11 +1689,11 @@ export function PaymentManagement() {
               <div className="bg-white px-4 py-3 border-t border-gray-200">
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-gray-700">
-                    Showing {((subscriptionCurrentPage - 1) * subscriptionItemsPerPage) + 1} to {Math.min(subscriptionCurrentPage * subscriptionItemsPerPage, subscriptionTotalRecords)} of {subscriptionTotalRecords} results
+                    Showing {((subscriptionCurrentPage - 1) * subscriptionItemsPerPage) + 1} to {Math?.min(subscriptionCurrentPage * subscriptionItemsPerPage, subscriptionTotalRecords)} of {subscriptionTotalRecords} results
                   </div>
                   <div className="flex items-center space-x-2">
                     <button
-                      onClick={() => loadUserSubscriptions(Math.max(1, subscriptionCurrentPage - 1))}
+                      onClick={() => loadUserSubscriptions(Math?.max(1, subscriptionCurrentPage - 1))}
                       disabled={subscriptionCurrentPage === 1}
                       className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -1703,7 +1703,7 @@ export function PaymentManagement() {
                       Page {subscriptionCurrentPage} of {subscriptionTotalPages}
                     </span>
                     <button
-                      onClick={() => loadUserSubscriptions(Math.min(subscriptionTotalPages, subscriptionCurrentPage + 1))}
+                      onClick={() => loadUserSubscriptions(Math?.min(subscriptionTotalPages, subscriptionCurrentPage + 1))}
                       disabled={subscriptionCurrentPage === subscriptionTotalPages}
                       className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -1726,9 +1726,9 @@ export function PaymentManagement() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
                 <input
                   type="text"
-                  placeholder="Refund ID or user email..."
+                  placeholder="Refund ID or user email?.?.?."
                   value={refundSearchTerm}
-                  onChange={(e) => setRefundSearchTerm(e.target.value)}
+                  onChange={(e) => setRefundSearchTerm(e?.target?.value)}
                   onKeyPress={handleRefundKeyPress}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                 />
@@ -1737,7 +1737,7 @@ export function PaymentManagement() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                 <select
                   value={refundStatusFilter}
-                  onChange={(e) => setRefundStatusFilter(e.target.value)}
+                  onChange={(e) => setRefundStatusFilter(e?.target?.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-sm"
                 >
                   <option value="">All Status</option>
@@ -1751,7 +1751,7 @@ export function PaymentManagement() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
                 <select
                   value={refundTypeFilter}
-                  onChange={(e) => setRefundTypeFilter(e.target.value)}
+                  onChange={(e) => setRefundTypeFilter(e?.target?.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-sm"
                 >
                   <option value="">All Types</option>
@@ -1800,48 +1800,48 @@ export function PaymentManagement() {
                     <tr>
                       <td colSpan={7} className="px-6 py-12 text-center">
                         <RefreshCw className="w-6 h-6 animate-spin text-gray-400 mx-auto mb-2" />
-                        <p className="text-gray-500">Loading refunds...</p>
+                        <p className="text-gray-500">Loading refunds?.?.?.</p>
                       </td>
                     </tr>
-                  ) : refunds.length === 0 ? (
+                  ) : refunds?.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
                         No refunds found
                       </td>
                     </tr>
                   ) : (
-                    refunds.map((refund) => (
-                      <tr key={refund.id} className="hover:bg-gray-50">
+                    refunds?.map((refund) => (
+                      <tr key={refund?.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">#{refund.id}</div>
-                          <div className="text-sm text-gray-500">{refund.refundId || 'Pending'}</div>
+                          <div className="text-sm font-medium text-gray-900">#{refund?.id}</div>
+                          <div className="text-sm text-gray-500">{refund?.refundId || 'Pending'}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{refund.userEmail || refund.payment?.userEmail}</div>
+                          <div className="text-sm text-gray-900">{refund?.userEmail || refund?.payment?.userEmail}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{formatCurrency(refund.originalAmount)}</div>
-                          <div className="text-xs text-gray-500">{refund.paymentGateway}</div>
+                          <div className="text-sm font-medium text-gray-900">{formatCurrency(refund?.originalAmount)}</div>
+                          <div className="text-xs text-gray-500">{refund?.paymentGateway}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{formatCurrency(refund.refundAmount)}</div>
+                          <div className="text-sm font-medium text-gray-900">{formatCurrency(refund?.refundAmount)}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getRefundStatusBadge(refund.status)}`}>
-                            {refund.status.toUpperCase()}
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getRefundStatusBadge(refund?.status)}`}>
+                            {refund?.status?.toUpperCase()}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                            refund.refundAmount === refund.originalAmount 
+                            refund?.refundAmount === refund?.originalAmount 
                               ? 'bg-blue-100 text-blue-800' 
                               : 'bg-orange-100 text-orange-800'
                           }`}>
-                            {refund.refundAmount === refund.originalAmount ? 'Full' : 'Partial'}
+                            {refund?.refundAmount === refund?.originalAmount ? 'Full' : 'Partial'}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(refund.createdAt).toLocaleDateString()}
+                          {new Date(refund?.createdAt)?.toLocaleDateString()}
                         </td>
                       </tr>
                     ))
@@ -1855,11 +1855,11 @@ export function PaymentManagement() {
               <div className="bg-white px-4 py-3 border-t border-gray-200">
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-gray-700">
-                    Showing {((refundCurrentPage - 1) * refundItemsPerPage) + 1} to {Math.min(refundCurrentPage * refundItemsPerPage, refundTotalRecords)} of {refundTotalRecords} results
+                    Showing {((refundCurrentPage - 1) * refundItemsPerPage) + 1} to {Math?.min(refundCurrentPage * refundItemsPerPage, refundTotalRecords)} of {refundTotalRecords} results
                   </div>
                   <div className="flex items-center space-x-2">
                     <button
-                      onClick={() => loadRefunds(Math.max(1, refundCurrentPage - 1))}
+                      onClick={() => loadRefunds(Math?.max(1, refundCurrentPage - 1))}
                       disabled={refundCurrentPage === 1}
                       className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -1869,7 +1869,7 @@ export function PaymentManagement() {
                       Page {refundCurrentPage} of {refundTotalPages}
                     </span>
                     <button
-                      onClick={() => loadRefunds(Math.min(refundTotalPages, refundCurrentPage + 1))}
+                      onClick={() => loadRefunds(Math?.min(refundTotalPages, refundCurrentPage + 1))}
                       disabled={refundCurrentPage === refundTotalPages}
                       className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -1995,29 +1995,29 @@ export function PaymentManagement() {
               {pendingRefundPayment && (
                 <div className="mt-3 p-3 bg-gray-50 rounded-md">
                   <div className="text-sm">
-                    <p><strong>Payment ID:</strong> #{pendingRefundPayment.id}</p>
-                    <p><strong>User:</strong> {pendingRefundPayment.userEmail}</p>
-                    <p><strong>Amount:</strong> {formatCurrency(pendingRefundPayment.paymentAmount)}</p>
-                    <p><strong>Gateway:</strong> {pendingRefundPayment.gateway}</p>
+                    <p><strong>Payment ID:</strong> #{pendingRefundPayment?.id}</p>
+                    <p><strong>User:</strong> {pendingRefundPayment?.userEmail}</p>
+                    <p><strong>Amount:</strong> {formatCurrency(pendingRefundPayment?.paymentAmount)}</p>
+                    <p><strong>Gateway:</strong> {pendingRefundPayment?.gateway}</p>
                   </div>
                 </div>
               )}
               {pendingRefundSubscription && (
                 <div className="mt-3 p-3 bg-gray-50 rounded-md">
                   <div className="text-sm">
-                    <p><strong>Subscription:</strong> {pendingRefundSubscription.subscription?.title || pendingRefundSubscription.title || 'N/A'}</p>
-                    <p><strong>User:</strong> {pendingRefundSubscription.userEmail}</p>
-                    <p><strong>Paid Amount:</strong> {formatCurrency(pendingRefundSubscription.paidAmount || pendingRefundSubscription.payment?.paymentAmount || pendingRefundSubscription.price || 0)}</p>
-                    <p><strong>Status:</strong> {pendingRefundSubscription.status?.toUpperCase()}</p>
+                    <p><strong>Subscription:</strong> {pendingRefundSubscription?.subscription?.title || pendingRefundSubscription?.title || 'N/A'}</p>
+                    <p><strong>User:</strong> {pendingRefundSubscription?.userEmail}</p>
+                    <p><strong>Paid Amount:</strong> {formatCurrency(pendingRefundSubscription?.paidAmount || pendingRefundSubscription?.payment?.paymentAmount || pendingRefundSubscription?.price || 0)}</p>
+                    <p><strong>Status:</strong> {pendingRefundSubscription?.status?.toUpperCase()}</p>
                   </div>
                 </div>
               )}
               <div className="mt-3 p-3 bg-yellow-50 rounded-md">
                 <div className="flex">
-                  <AlertCircle className="h-5 w-5 text-yellow-400 mt-0.5" />
+                  <AlertCircle className="h-5 w-5 text-yellow-400 mt-0?.5" />
                   <div className="ml-2">
                     <p className="text-sm text-yellow-700">
-                      <strong>Warning:</strong> {pendingRefundSubscription ? 'The subscription will be automatically deactivated when the refund is completed.' : 'This action cannot be undone once the refund is processed.'}
+                      <strong>Warning:</strong> {pendingRefundSubscription ? 'The subscription will be automatically deactivated when the refund is completed?.' : 'This action cannot be undone once the refund is processed?.'}
                     </p>
                   </div>
                 </div>

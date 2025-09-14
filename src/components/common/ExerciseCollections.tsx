@@ -15,6 +15,13 @@ interface CollectionData {
 
 interface ExerciseCollectionsProps {
   collections?: CollectionData[];
+  apiCollections?: {
+    id: string;
+    name: string;
+    description: string;
+    exerciseCount: number;
+    type: string;
+  }[];
   title?: string;
   className?: string;
   onCardClick?: (collection: CollectionData) => void;
@@ -43,11 +50,32 @@ const defaultCollections: CollectionData[] = [
 ];
 
 export const ExerciseCollections: React.FC<ExerciseCollectionsProps> = ({
-  collections = defaultCollections,
+  collections,
+  apiCollections,
   title = 'Our Collection',
   className = '',
   onCardClick
 }) => {
+  // Transform API data if available, otherwise use provided collections or defaults
+  const collectionsToShow = React.useMemo(() => {
+    if (apiCollections && apiCollections.length > 0) {
+      return apiCollections.map((apiCollection, index) => ({
+        id: apiCollection.id,
+        title: apiCollection.name,
+        subtitle: apiCollection.description || 'Premium Collection',
+        exerciseCount: apiCollection.type === 'diet' ? 
+          `${apiCollection.exerciseCount} Diet Plan${apiCollection.exerciseCount !== 1 ? 's' : ''}` :
+          `${apiCollection.exerciseCount} Exercise${apiCollection.exerciseCount !== 1 ? 's' : ''}`,
+        image: apiCollection.type === 'diet' ? gymGirlImg : gymBoyImg,
+        backgroundColor: apiCollection.type === 'diet' ? 
+          'bg-gradient-to-br from-amber-300 to-orange-400' : 
+          'bg-gradient-to-br from-purple-400 to-purple-500',
+        textColor: apiCollection.type === 'diet' ? 'text-gray-900' : 'text-white'
+      }));
+    }
+    return collections || defaultCollections;
+  }, [apiCollections, collections]);
+
   return (
     <div className={className}>
       {/* Header */}
@@ -57,7 +85,7 @@ export const ExerciseCollections: React.FC<ExerciseCollectionsProps> = ({
       
       {/* Grid Container */}
       <div className="space-y-4">
-        {collections.map((collection) => (
+        {collectionsToShow.map((collection) => (
           <CollectionCard
             key={collection.id}
             title={collection.title}

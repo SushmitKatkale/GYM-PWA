@@ -141,7 +141,7 @@ export function UserSubscriptionDetailsModal({ isOpen, onClose, subscription }: 
                   <IndianRupee className="w-5 h-5 text-green-600" />
                 </div>
                 <div className="text-2xl font-bold text-green-700">
-                  {formatCurrency(subscription.paidAmount || subscription.payment?.paymentAmount || subscription.price || 0)}
+                  {formatCurrency(subscription.paidAmount || subscription.payment?.amount || subscription.price || 0)}
                 </div>
                 <div className="text-xs text-green-600 mt-1">
                   via {subscription.paymentGateway || subscription.payment?.gateway || 'N/A'}

@@ -227,7 +227,7 @@ class NotificationService {
     if (params?.type) queryParams.append('type', params.type);
     if (params?.category) queryParams.append('category', params.category);
     if (params?.recipientEmail) queryParams.append('recipientEmail', params.recipientEmail);
-    if (params?.isGlobal !== undefined) queryParams.append('isGlobal', params.isGlobal.toString());
+    // if (params?.isGlobal !== undefined) queryParams.append('isGlobal', params.isGlobal.toString());
 
     const url = `${this.baseUrl}/admin/all${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
     console.log('🔍 Making API call to:', url);

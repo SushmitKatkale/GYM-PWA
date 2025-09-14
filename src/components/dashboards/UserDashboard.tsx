@@ -80,32 +80,32 @@ export function UserDashboard({ onNavigateToSettings, onNavigate }: UserDashboar
   const stats = [
     {
       label: 'Workouts This Week',
-      value: userDashboard?.weeklyWorkouts?.toString() || '0',
-      change: `+${userDashboard?.workoutGrowthRate || 0}%`,
+      value: userDashboard?.overview?.weeklyWorkouts?.toString() || '0',
+      change: `+${userDashboard?.overview?.workoutGrowthRate || 0}%`,
       icon: Target,
       color: 'bg-purple-500',
       trend: 'up'
     },
     {
       label: 'Total Hours',
-      value: `${userDashboard?.totalHours || 0}h`,
-      change: `+${userDashboard?.hoursThisWeek || 0}h this week`,
+      value: `${userDashboard?.overview?.totalHours || 0}h`,
+      change: `+${userDashboard?.overview?.hoursThisWeek || 0}h this week`,
       icon: Clock,
       color: 'bg-blue-500',
       trend: 'up'
     },
     {
       label: 'Calories Burned',
-      value: userDashboard?.totalCaloriesBurned?.toLocaleString() || '0',
-      change: `+${userDashboard?.caloriesThisWeek || 0} this week`,
+      value: userDashboard?.overview?.totalCaloriesBurned?.toLocaleString() || '0',
+      change: `+${userDashboard?.overview?.caloriesThisWeek || 0} this week`,
       icon: Heart,
       color: 'bg-red-500',
       trend: 'up'
     },
     {
       label: 'Current Streak',
-      value: `${userDashboard?.currentStreak || 0} days`,
-      change: userDashboard?.currentStreak > (userDashboard?.bestStreak || 0) ? 'New record!' : `Best: ${userDashboard?.bestStreak || 0} days`,
+      value: `${userDashboard?.overview?.currentStreak || 0} days`,
+      change: userDashboard?.overview?.currentStreak > (userDashboard?.overview?.bestStreak || 0) ? 'New record!' : `Best: ${userDashboard?.overview?.bestStreak || 0} days`,
       icon: Trophy,
       color: 'bg-yellow-500',
       trend: 'up'
@@ -209,15 +209,22 @@ export function UserDashboard({ onNavigateToSettings, onNavigate }: UserDashboar
       <div className="p-4 space-y-6">
 
         {/* Charts Cards - Scrollable Metric Cards */}
-        <ScrollableMetricCards className="" />
+        <ScrollableMetricCards 
+          className="" 
+          apiMetrics={userDashboard?.metricsCards}
+        />
 
 
         {/* Daily Activity */}
-        <DailyActivity className="" />
+        <DailyActivity 
+          className="" 
+          gymDetails={userDashboard?.gymDetails}
+        />
 
         {/* Exercise Collections */}
         <ExerciseCollections
           className=""
+          apiCollections={userDashboard?.exerciseCollections}
           onCardClick={(collection) => {
             console.log('Clicked collection:', collection);
             // Navigate to exercises for collections with exercises

@@ -453,7 +453,7 @@ export function AllPaymentsTab({ onViewPayment }: AllPaymentsTabProps) {
                         <div className="flex items-center">
                           {getStatusIcon(payment.status)}
                           <span className={`ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getStatusBadge(payment.status)}`}>
-                            {payment.status.toUpperCase()}
+                            {payment.status}
                           </span>
                         </div>
                       </td>
@@ -600,7 +600,7 @@ export function AllPaymentsTab({ onViewPayment }: AllPaymentsTabProps) {
                   <div className="flex items-center">
                     {getStatusIcon(payment.status)}
                     <span className={`ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getStatusBadge(payment.status)}`}>
-                      {payment.status.toUpperCase()}
+                      {payment.status}
                     </span>
                   </div>
                 </div>

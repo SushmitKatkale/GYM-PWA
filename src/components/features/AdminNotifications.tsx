@@ -59,8 +59,8 @@ export function AdminNotifications({ isOpen = true, onClose }: AdminNotification
     
     if (user?.role === 'admin') { 
       console.log('🔍 User is admin, loading notifications...');
-      loadNotifications();
       loadStats();
+      loadNotifications();
     } else {
       console.log('🔍 User is not admin, skipping notification load');
     }
@@ -100,7 +100,7 @@ export function AdminNotifications({ isOpen = true, onClose }: AdminNotification
     try {
       const response = await notificationService.getAllNotifications({
         page: 1,
-        limit: 1000 // Get all for stats
+        limit: 20
       });
       
       if (response.success) {

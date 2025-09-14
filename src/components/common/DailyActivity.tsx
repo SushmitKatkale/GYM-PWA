@@ -4,6 +4,19 @@ import bodyBuilder from '../../assets/images/body-builder.png';
 
 interface DailyActivityProps {
   className?: string;
+  gymDetails?: {
+    gymName: string;
+    activeMembers: number;
+    subscription: {
+      duration: string;
+      gymName: string;
+    };
+    trainer: {
+      name: string;
+      schedule: string;
+      specialization: string;
+    };
+  };
 }
 
 // Today's activity data matching screenshot
@@ -70,7 +83,38 @@ const generateRandomWave = () => {
 
 const wavePath = generateRandomWave();
 
-export const DailyActivity: React.FC<DailyActivityProps> = ({ className = '' }) => {
+export const DailyActivity: React.FC<DailyActivityProps> = ({ className = '', gymDetails }) => {
+  // Use API data if available, otherwise fall back to static data
+  const displayData = gymDetails ? {
+    members: gymDetails.activeMembers,
+    exercises: [
+      {
+        id: 'GymName',
+        name: 'Gym Name',
+        subtitle: gymDetails.gymName,
+        icon: '💪',
+        bgColor: 'bg-blue-50',
+        textColor: 'text-blue-600'
+      },
+      {
+        id: 'Subscription',
+        name: 'Subscription',
+        subtitle: gymDetails.subscription.duration,
+        icon: '🦵',
+        bgColor: 'bg-green-50',
+        textColor: 'text-green-600'
+      },
+      {
+        id: 'TrainerName',
+        name: 'Trainer Name',
+        subtitle: `${gymDetails.trainer.name} (${gymDetails.trainer.schedule})`,
+        icon: '🏃‍♂️',
+        bgColor: 'bg-purple-50',
+        textColor: 'text-purple-600'
+      }
+    ]
+  } : activityData;
+
   return (
     <div className={className}>
       {/* Activity Container */}
@@ -79,7 +123,7 @@ export const DailyActivity: React.FC<DailyActivityProps> = ({ className = '' }) 
           <h2 className="text-base font-normal text-gray-900 font-poppins">Gym Details</h2>
         </div>
         <div className="flex gap-4">
-          {/* Left side - Calories Card */}
+          {/* Left side - Active Members Card */}
           <div className="flex-shrink-0">
             <div className="relative bg-gradient-to-br h-full from-pink-400 to-red-500 rounded-md p-4 text-white w-20 flex flex-col justify-between">
               <div className="flex items-center justify-center">
@@ -89,7 +133,7 @@ export const DailyActivity: React.FC<DailyActivityProps> = ({ className = '' }) 
               </div>
               <div>
                 <div className="text-lg font-bold leading-tight text-center">
-                  {activityData.members.toLocaleString()}
+                  {displayData.members.toLocaleString()}
                 </div>
                 <div className="text-xs opacity-90 leading-tight text-center">
                   Active Members
@@ -114,9 +158,9 @@ export const DailyActivity: React.FC<DailyActivityProps> = ({ className = '' }) 
             </div>
           </div>
 
-          {/* Right side - Exercise List */}
+          {/* Right side - Gym Details List */}
           <div className="flex-1 space-y-2">
-            {activityData.exercises.map((exercise, index) => (
+            {displayData.exercises.map((exercise, index) => (
               <div key={exercise.id} className="flex items-center space-x-3 py-1">
                 {/* Icon */}
                 <div className={`w-8 h-8 rounded-lg ${exercise.bgColor} flex items-center justify-center flex-shrink-0`}>
