@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { authService, LoginRequest, RegisterRequest, SendOtpRequest, VerifyOtpRequest, ResendOtpRequest } from '../services/authService';
 
-export type UserRole = 'admin' | 'owner' | 'user';
+export type UserRole = 'admin' | 'owner' | 'user' | 'trainer';
 
 export interface User {
   id: string;
@@ -71,6 +71,7 @@ const mapUserTypeToRole = (type: string): UserRole => {
   console.log('Mapping user type:', type, typeof type);
   
   switch (type) {
+    case '4': return 'trainer';
     case '3': return 'admin';
     case '2': return 'owner';
     case '1': 
@@ -79,8 +80,9 @@ const mapUserTypeToRole = (type: string): UserRole => {
 };
 
 // Helper function to map frontend role to backend type
-const mapRoleToUserType = (role: UserRole): '1' | '2' | '3' => {
+const mapRoleToUserType = (role: UserRole): '1' | '2' | '3' | '4' => {
   switch (role) {
+    case 'trainer': return '4';
     case 'admin': return '3';
     case 'owner': return '2';
     case 'user':

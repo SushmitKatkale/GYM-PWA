@@ -18,9 +18,10 @@ interface StepBasicInfoProps {
   formData: FormData;
   onChange: (data: FormData) => void;
   setCurrentStep: (step: number) => void;
+  isEditing?: boolean;
 }
 
-const StepBasicInfo: React.FC<StepBasicInfoProps> = ({ formData, onChange, setCurrentStep }) => {
+const StepBasicInfo: React.FC<StepBasicInfoProps> = ({ formData, onChange, setCurrentStep, isEditing = false }) => {
   const { hasRole, user } = useAuthStore();
 
   // Check if current user is admin or owner
@@ -75,7 +76,7 @@ const StepBasicInfo: React.FC<StepBasicInfoProps> = ({ formData, onChange, setCu
             <div className={`w-2 h-2 rounded-full mr-2 ${formData.capacity > 0 ? 'bg-green-500' : 'bg-red-500'}`}></div>
             Total Capacity
           </div>
-          {!isOwner &&
+          {!isOwner && !isEditing &&
             <div className="flex items-center">
               <div className={`w-2 h-2 rounded-full mr-2 ${formData.ownerId ? 'bg-green-500' : 'bg-red-500'}`}></div>
               Owner Selection
@@ -176,24 +177,26 @@ const StepBasicInfo: React.FC<StepBasicInfoProps> = ({ formData, onChange, setCu
           <p className="text-xs text-gray-500 mt-1">Rate from 0.0 to 5.0 stars</p>
         </div>
 
-        {/* Owner Selection */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            <User className="w-4 h-4 inline mr-2" />
-            Owner *
-          </label>
-          <OwnerAutocomplete
-            value={formData.ownerId}
-            onChange={(ownerId) => onChange({ ...formData, ownerId })}
-            placeholder={isOwner ? "Your owner account" : "Search for owner by email or name"}
-            disabled={isOwner}
-            required
-            className={`w-full ${isOwner ? 'cursor-not-allowed' : ''}`}
-          />
-          {isOwner && (
-            <p className="text-xs text-gray-500 mt-1">As an owner, this gym will be automatically assigned to your account</p>
-          )}
-        </div>
+        {/* Owner Selection - Only show when not editing */}
+        {!isEditing && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              <User className="w-4 h-4 inline mr-2" />
+              Owner *
+            </label>
+            <OwnerAutocomplete
+              value={formData.ownerId}
+              onChange={(ownerId) => onChange({ ...formData, ownerId })}
+              placeholder={isOwner ? "Your owner account" : "Search for owner by email or name"}
+              disabled={isOwner}
+              required
+              className={`w-full ${isOwner ? 'cursor-not-allowed' : ''}`}
+            />
+            {isOwner && (
+              <p className="text-xs text-gray-500 mt-1">As an owner, this gym will be automatically assigned to your account</p>
+            )}
+          </div>
+        )}
       </div>
 
     </div>

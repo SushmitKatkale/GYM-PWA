@@ -156,7 +156,7 @@ export const ScrollableMetricCards: React.FC<ScrollableMetricCardsProps> = ({
       </div>
       
       {/* Custom scrollbar styling */}
-      <style jsx>{`
+      <style>{`
         .scrollbar-hide {
           -ms-overflow-style: none;
           scrollbar-width: none;

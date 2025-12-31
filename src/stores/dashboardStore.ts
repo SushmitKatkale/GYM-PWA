@@ -15,6 +15,7 @@ interface DashboardState {
   // Loading states
   isLoading: boolean;
   error: string | null;
+  lastFetchTimes: { [key: string]: number };
   
   // Admin dashboard data
   adminOverview: AdminOverview | null;
@@ -23,6 +24,7 @@ interface DashboardState {
   // Owner dashboard data
   ownerDashboard: OwnerDashboard | null;
   gymAnalytics: { [gymId: number]: GymAnalytics };
+  currentGymAnalytics: GymAnalytics | null;
   
   // User dashboard data
   userDashboard: UserDashboard | null;
@@ -39,7 +41,7 @@ interface DashboardState {
   fetchAdminAnalytics: (period?: string) => Promise<void>;
   
   // Owner methods
-  fetchOwnerDashboard: () => Promise<void>;
+  fetchOwnerDashboard: (userId?: string | number) => Promise<void>;
   fetchGymAnalytics: (gymId: number) => Promise<void>;
   
   // User methods
@@ -53,6 +55,7 @@ export const useDashboardStore = create<DashboardState>()((set, get) => ({
   // Initial state
   isLoading: false,
   error: null,
+  lastFetchTimes: {},
   
   adminOverview: null,
   adminAnalytics: null,
@@ -77,7 +80,8 @@ export const useDashboardStore = create<DashboardState>()((set, get) => ({
     personalStats: null,
     activitySummary: null,
     recommendations: null,
-    error: null
+    error: null,
+    lastFetchTimes: {}
   }),
   
   // Admin methods
@@ -132,17 +136,32 @@ export const useDashboardStore = create<DashboardState>()((set, get) => ({
   },
   
   // Owner methods
-  fetchOwnerDashboard: async () => {
+  fetchOwnerDashboard: async (userId?: string | number) => {
+    const state = get();
+    const now = Date.now();
+    const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+    const cacheKey = `ownerDashboard_${userId || 'current'}`;
+    
+    // If we have recent data, don't fetch again
+    if (state.ownerDashboard && state.lastFetchTimes[cacheKey] && (now - state.lastFetchTimes[cacheKey]) < CACHE_DURATION) {
+      console.log('Using cached owner dashboard data');
+      return;
+    }
+    
     try {
       set({ isLoading: true, error: null });
       
-      const response = await dashboardService.getOwnerDashboard();
+      const response = await dashboardService.getOwnerDashboard(userId);
       
       if (response.success && response.data) {
-        set({ 
+        set((state) => ({
           ownerDashboard: response.data,
-          isLoading: false 
-        });
+          isLoading: false,
+          lastFetchTimes: {
+            ...state.lastFetchTimes,
+            [cacheKey]: now
+          }
+        }));
       } else {
         set({ 
           error: response.message || 'Failed to fetch owner dashboard',

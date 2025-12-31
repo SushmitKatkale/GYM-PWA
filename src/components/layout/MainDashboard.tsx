@@ -44,6 +44,13 @@ import DietAnalytics from '../admin/DietAnalytics';
 import DietChangeRequestManagement from '../admin/DietChangeRequestManagement';
 import { DietList } from '../features/DietList';
 import { BookingManagement } from '../features/BookingManagement';
+import { OwnerDashboardMobile } from '../owner/OwnerDashboardMobile';
+import { OwnerGymsMobile } from '../owner/OwnerGymsMobile';
+import { OwnerCheckinMobile } from '../owner/OwnerCheckinMobile';
+import { OwnerTrainersMobile } from '../owner/OwnerTrainersMobile';
+import { OwnerWalletMobile } from '../owner/OwnerWalletMobile';
+import { OwnerSettingsMobile } from '../owner/OwnerSettingsMobile';
+import { OwnerSupportMobile } from '../owner/OwnerSupportMobile';
 
 export const MainDashboard: React.FC = () => {
   const { user, logout } = useAuthStore();
@@ -87,7 +94,7 @@ export const MainDashboard: React.FC = () => {
       case 'dashboard':
         switch (user.role) {
           case 'admin': return <AdminDashboard onNavigate={handleViewChange} />;
-          case 'owner': return <OwnerDashboard />;
+          case 'owner': return <OwnerDashboardMobile onNavigate={handleViewChange} />;
           case 'user': return <UserDashboard onNavigateToSettings={handleNavigateToNotificationSettings} onNavigate={handleViewChange} />;
           default: return <div>Invalid role</div>;
         }
@@ -126,6 +133,18 @@ export const MainDashboard: React.FC = () => {
       case 'gym-management':
       case 'my-gyms':
         return <GymManagement />;
+      case 'owner-gyms':
+        return <OwnerGymsMobile onNavigate={handleViewChange} />;
+      case 'owner-checkin':
+        return <OwnerCheckinMobile onNavigate={handleViewChange} />;
+      case 'owner-trainers':
+        return <OwnerTrainersMobile onNavigate={handleViewChange} />;
+      case 'owner-wallet':
+        return <OwnerWalletMobile onNavigate={handleViewChange} />;
+      case 'owner-settings':
+        return <OwnerSettingsMobile onNavigate={handleViewChange} />;
+      case 'owner-support':
+        return <OwnerSupportMobile onNavigate={handleViewChange} />;
       case 'exercise-management':
         return <ExerciseManagement />;
       case 'diet-management':

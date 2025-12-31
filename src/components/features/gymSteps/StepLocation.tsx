@@ -25,6 +25,7 @@ interface StepLocationProps {
   formData: FormData;
   onChange: (data: FormData) => void;
   isEditing?: boolean;
+  setCurrentStep?: (step: number) => void;
 }
 
 const StepLocation: React.FC<StepLocationProps> = ({ formData, onChange, isEditing, setCurrentStep }) => {
@@ -220,7 +221,12 @@ const StepLocation: React.FC<StepLocationProps> = ({ formData, onChange, isEditi
           <MapPin className="w-8 h-8 text-green-600" />
         </div>
         <h3 className="text-lg font-semibold text-gray-900 mb-2">Location</h3>
-        <p className="text-sm text-gray-600">Specify the physical location of the gym.</p>
+        <p className="text-sm text-gray-600">
+          {isEditing 
+            ? "Location details (cannot be changed after gym creation)"
+            : "Specify the physical location of the gym."
+          }
+        </p>
       </div>
 
       {/* Progress Indicator */}
@@ -239,73 +245,108 @@ const StepLocation: React.FC<StepLocationProps> = ({ formData, onChange, isEditi
       </div>
 
 
-      {/* Address Search */}
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Search Location
-          </label>
-          <p className="text-xs text-gray-500 mb-2">
-            Search for an address or use your current location
-          </p>
-          {googleMapsApiKey && googleMapsApiKey !== 'your_google_maps_api_key_here' ? (
-            <GooglePlacesAutocomplete
-              apiKey={googleMapsApiKey}
-              onPlaceSelect={handlePlaceSelect}
-              placeholder="Search for gym location..."
-              types={['establishment', 'geocode']}
-              useCurrentLocation={!isEditing}
-            />
-          ) : (
-            <FallbackLocationInput
-              onLocationSelect={handleFallbackLocationSelect}
-              placeholder="Enter address or use current location..."
-            />
-          )}
+      {/* Address Search - Hide when editing */}
+      {!isEditing && (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Search Location
+            </label>
+            <p className="text-xs text-gray-500 mb-2">
+              Search for an address or use your current location
+            </p>
+            {googleMapsApiKey && googleMapsApiKey !== 'your_google_maps_api_key_here' ? (
+              <GooglePlacesAutocomplete
+                apiKey={googleMapsApiKey}
+                onPlaceSelect={handlePlaceSelect}
+                placeholder="Search for gym location..."
+                types={['establishment', 'geocode']}
+                useCurrentLocation={!isEditing}
+              />
+            ) : (
+              <FallbackLocationInput
+                onLocationSelect={handleFallbackLocationSelect}
+                placeholder="Enter address or use current location..."
+              />
+            )}
+          </div>
         </div>
+      )}
+
+      {/* Read-only notice when editing */}
+      {isEditing && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <AlertCircle className="w-5 h-5 text-amber-600 mr-2" />
+            <div>
+              <h4 className="text-sm font-medium text-amber-800">Location cannot be changed</h4>
+              <p className="text-xs text-amber-700 mt-1">
+                The gym location is fixed and cannot be modified after creation. Contact support if you need to update the location.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="space-y-4">
 
         {/* Manual Address Fields */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Address
+            Address {isEditing && <span className="text-xs text-gray-500">(Read-only)</span>}
           </label>
           <input
             type="text"
             name="address"
             value={formData.location.address}
             onChange={handleInputChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            disabled={isEditing}
+            className={`w-full px-3 py-2 border rounded-lg ${
+              isEditing 
+                ? 'border-gray-200 bg-gray-50 text-gray-600 cursor-not-allowed'
+                : 'border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent'
+            }`}
             placeholder="123 Main St"
-            required
+            required={!isEditing}
           />
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              City
+              City {isEditing && <span className="text-xs text-gray-500">(Read-only)</span>}
             </label>
             <input
               type="text"
               name="city"
               value={formData.location.city}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              disabled={isEditing}
+              className={`w-full px-3 py-2 border rounded-lg ${
+                isEditing 
+                  ? 'border-gray-200 bg-gray-50 text-gray-600 cursor-not-allowed'
+                  : 'border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent'
+              }`}
               placeholder="City"
-              required
+              required={!isEditing}
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              State
+              State {isEditing && <span className="text-xs text-gray-500">(Read-only)</span>}
             </label>
             <input
               type="text"
               name="state"
               value={formData.location.state}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              disabled={isEditing}
+              className={`w-full px-3 py-2 border rounded-lg ${
+                isEditing 
+                  ? 'border-gray-200 bg-gray-50 text-gray-600 cursor-not-allowed'
+                  : 'border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent'
+              }`}
               placeholder="State"
-              required
+              required={!isEditing}
             />
           </div>
         </div>
@@ -313,16 +354,21 @@ const StepLocation: React.FC<StepLocationProps> = ({ formData, onChange, isEditi
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              ZIP Code
+              ZIP Code {isEditing && <span className="text-xs text-gray-500">(Read-only)</span>}
             </label>
             <input
               type="text"
               name="zip"
               value={formData.location.zip}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              disabled={isEditing}
+              className={`w-full px-3 py-2 border rounded-lg ${
+                isEditing 
+                  ? 'border-gray-200 bg-gray-50 text-gray-600 cursor-not-allowed'
+                  : 'border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-transparent'
+              }`}
               placeholder="ZIP Code"
-              required
+              required={!isEditing}
             />
           </div>
           <div></div>
@@ -331,21 +377,28 @@ const StepLocation: React.FC<StepLocationProps> = ({ formData, onChange, isEditi
 
       {/* Map */}
       <div className="space-y-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">Exact Location</label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Exact Location {isEditing && <span className="text-xs text-gray-500">(Read-only)</span>}
+        </label>
         <p className="text-xs text-gray-500 mb-2">
-          Click on the map or drag the marker to set the gym's exact location
+          {isEditing 
+            ? "Current location marker (interaction disabled)"
+            : "Click on the map or drag the marker to set the gym's exact location"
+          }
         </p>
         {googleMapsApiKey ? (
-          <GoogleMapComponent
-            center={{
-              lat: formData.location.coordinates.latitude || 40.7128, // Default to NYC if no coordinates
-              lng: formData.location.coordinates.longitude || -74.0060
-            }}
-            onLocationSelect={handleMapLocationSelect}
-            height="300px"
-            zoom={15}
-            apiKey={googleMapsApiKey}
-          />
+          <div className={isEditing ? "pointer-events-none opacity-75" : ""}>
+            <GoogleMapComponent
+              center={{
+                lat: formData.location.coordinates.latitude || 40.7128, // Default to NYC if no coordinates
+                lng: formData.location.coordinates.longitude || -74.0060
+              }}
+              onLocationSelect={isEditing ? () => {} : handleMapLocationSelect}
+              height="300px"
+              zoom={15}
+              apiKey={googleMapsApiKey}
+            />
+          </div>
         ) : (
           <div className="w-full h-48 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center justify-center">
             <div className="text-center text-yellow-700">

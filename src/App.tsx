@@ -68,6 +68,14 @@ function App() {
         
         {/* Auth Routes */}
         <Route 
+          path="/auth/login" 
+          element={user ? <MainDashboard /> : <LoginForm onToggleMode={() => {}} />} 
+        />
+        <Route 
+          path="/auth/register" 
+          element={user ? <MainDashboard /> : <RegisterForm onToggleMode={() => {}} onRegistrationSuccess={() => {}} />} 
+        />
+        <Route 
           path="/" 
           element={user ? <MainDashboard /> : <AuthWrapper />} 
         />

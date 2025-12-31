@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
-import { LogIn, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { LogIn, Mail, Lock, Eye, EyeOff, UserCheck } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore';
 import { authService } from '../../services/authService';
+import { trainerService } from '../../services/trainerService';
 import { BrandLogo } from '../common/BrandLogo';
 import { BRAND } from '../../constants/branding';
 
@@ -10,14 +12,30 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onToggleMode }: LoginFormProps) {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [isInvitationLogin, setIsInvitationLogin] = useState(false);
+  const [invitationToken, setInvitationToken] = useState<string | null>(null);
   
   const { login, isLoading, error: authError, clearError } = useAuthStore();
+
+  // Handle URL parameters for invitation login
+  useEffect(() => {
+    const token = searchParams.get('invitation_token');
+    const email = searchParams.get('email');
+    
+    if (token && email) {
+      setIsInvitationLogin(true);
+      setInvitationToken(token);
+      setFormData(prev => ({ ...prev, email: decodeURIComponent(email) }));
+    }
+  }, [searchParams]);
 
   React.useEffect(() => {
     if (authError) {
@@ -39,8 +57,25 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
     try {
       const success = await login(formData.email, formData.password);
 
-      // Error handling is now done through the store
-      if (!success && !authError) {
+      if (success) {
+        // If this is an invitation login, automatically accept the invitation
+        if (isInvitationLogin && invitationToken) {
+          try {
+            const response = await trainerService.acceptInvitation(invitationToken);
+            if (response.success) {
+              // Redirect to trainer dashboard or success page
+              navigate('/dashboard?invitation_accepted=true');
+              return;
+            } else {
+              setError(`Login successful, but invitation acceptance failed: ${response.message}`);
+            }
+          } catch (inviteErr: any) {
+            console.error('Invitation acceptance error:', inviteErr);
+            setError(`Login successful, but invitation acceptance failed: ${inviteErr.message}`);
+          }
+        }
+        // Normal login redirect happens automatically via auth store
+      } else if (!authError) {
         setError('Login failed. Please check your credentials and try again.');
       }
     } catch (err: any) {
@@ -53,8 +88,22 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md py-8 px-4">
         <div className="text-center mb-8">
-          <h2 className="heading-md text-gray-900 font-poppins">Welcome</h2>
-          <p className="text-gray-600 mt-2 font-opensans">Sign in to continue!</p>
+          {isInvitationLogin ? (
+            <>
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <UserCheck className="w-8 h-8 text-blue-600" />
+              </div>
+              <h2 className="heading-md text-gray-900 font-poppins">Accept Trainer Invitation</h2>
+              <p className="text-gray-600 mt-2 font-opensans">
+                Please sign in with your trainer credentials to accept the gym invitation
+              </p>
+            </>
+          ) : (
+            <>
+              <h2 className="heading-md text-gray-900 font-poppins">Welcome</h2>
+              <p className="text-gray-600 mt-2 font-opensans">Sign in to continue!</p>
+            </>
+          )}
         </div>
 
 

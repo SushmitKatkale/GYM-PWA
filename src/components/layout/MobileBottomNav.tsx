@@ -57,9 +57,9 @@ export function MobileBottomNav({ activeMenu, setActiveMenu }: MobileBottomNavPr
     if (user?.role === 'owner') {
       const baseItems = [
         { id: 'dashboard', label: 'Dashboard', icon: Home },
-        { id: 'my-gyms', label: 'My Gyms', icon: Building2 },
-        { id: 'member-management', label: 'Members', icon: Users },
-        { id: 'analytics', label: 'Reports', icon: BarChart3 }
+        { id: 'owner-gyms', label: 'My Gym', icon: Building2 },
+        { id: 'owner-checkin', label: 'Check In', icon: QrCode },
+        { id: 'owner-trainers', label: 'Trainers', icon: Users }
       ];
       
       // If only one item in more menu, show it directly
@@ -101,7 +101,9 @@ export function MobileBottomNav({ activeMenu, setActiveMenu }: MobileBottomNavPr
 
     if (user?.role === 'owner') {
       return [
-        { id: 'help', label: 'Support', icon: HelpCircle }
+        { id: 'owner-wallet', label: 'Wallet', icon: Wallet },
+        { id: 'owner-settings', label: 'Settings', icon: Settings },
+        { id: 'owner-support', label: 'Support', icon: HelpCircle }
       ];
     }
 

@@ -38,14 +38,36 @@ export interface AdminAnalytics {
 }
 
 export interface OwnerDashboard {
-  overview: {
-    totalGyms: number;
+  // Single gym owner - simplified overview
+  totalActiveMembers: number;
+  totalMonthlyRevenue: number;
+  averageOccupancyRate: number;
+  todayCheckIns: number;
+  revenueGrowthRate: number;
+  
+  // Single gym info (instead of array)
+  gym: {
+    id: number;
+    name: string;
+    address: string;
+    capacity: number;
     activeMembers: number;
+    occupancyRate: number;
     monthlyRevenue: number;
-    todayCheckIns: number;
-    averageOccupancy: number;
+    status: string;
+    city: string;
+    state: string;
+  } | null;
+  
+  // Last 7 days historical data for charts
+  last7DaysData: {
+    members: number[];
+    revenue: number[];
+    checkIns: number[];
+    occupancy: number[];
+    dates: string[];
   };
-  gyms: GymInfo[];
+  
   recentActivity: Activity[];
 }
 
@@ -162,9 +184,23 @@ export interface GymAnalytics {
     occupancyRate: number;
     rating: number;
     activeMembers: number;
+    address: string;
+    city: string;
+    state: string;
   };
   weeklyTrends: WeeklyTrend[];
   popularTimes: PopularTime[];
+  monthlyStats: {
+    revenue: string; // INR formatted string like "₹10,053"
+    activeMembers: number;
+    avgSessionDuration: string; // like "65 minutes"
+    totalSessions: number;
+  };
+  todayStats: {
+    revenue: string; // INR formatted string like "₹2,500"
+    checkIns: number;
+    newMembers: number;
+  };
 }
 
 // Supporting interfaces
@@ -282,7 +318,8 @@ class DashboardService {
   }
 
   // Owner Dashboard Methods
-  async getOwnerDashboard(): Promise<ApiResponse<OwnerDashboard>> {
+  async getOwnerDashboard(userId?: string | number): Promise<ApiResponse<OwnerDashboard>> {
+    // The userId is handled by JWT token in the backend, but we can pass it if needed
     return apiClient.get<OwnerDashboard>('/dashboard/owner');
   }
 

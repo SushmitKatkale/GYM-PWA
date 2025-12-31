@@ -56,7 +56,8 @@ const StepOperatingHours: React.FC<StepOperatingHoursProps> = ({ formData, onCha
 
     if (dataset.type === 'plans') {
       const index = Number(dataset.index);
-      const updatedPlans = [...formData.plans];
+      const currentPlans = formData.plans || [];
+      const updatedPlans = [...currentPlans];
     const processedValue = type === 'checkbox' ? checked : 
         (name === 'price' || name === 'validityDays' || 
          name === 'discountPercent' || name === 'bufferDays' || name === 'bufferFee') ? 
@@ -80,17 +81,20 @@ const StepOperatingHours: React.FC<StepOperatingHoursProps> = ({ formData, onCha
       bufferFee: 0,
       features: []
     };
-    onChange({ ...formData, plans: [...formData.plans, newPlan] });
+    const currentPlans = formData.plans || [];
+    onChange({ ...formData, plans: [...currentPlans, newPlan] });
   };
 
   const handleRemovePlan = (index: number) => {
-    const updatedPlans = formData.plans.filter((_, i) => i !== index);
+    const currentPlans = formData.plans || [];
+    const updatedPlans = currentPlans.filter((_, i) => i !== index);
     onChange({ ...formData, plans: updatedPlans });
   };
 
   const handleAddFeature = (planIndex: number) => {
     if (newFeature.title.trim()) {
-      const updatedPlans = [...formData.plans];
+      const currentPlans = formData.plans || [];
+      const updatedPlans = [...currentPlans];
       // Initialize features array if it doesn't exist
       if (!updatedPlans[planIndex].features) {
         updatedPlans[planIndex].features = [];
@@ -103,7 +107,8 @@ const StepOperatingHours: React.FC<StepOperatingHoursProps> = ({ formData, onCha
   };
 
   const handleRemoveFeature = (planIndex: number, featureIndex: number) => {
-    const updatedPlans = [...formData.plans];
+    const currentPlans = formData.plans || [];
+    const updatedPlans = [...currentPlans];
     // Initialize features array if it doesn't exist
     if (!updatedPlans[planIndex].features) {
       updatedPlans[planIndex].features = [];
@@ -143,7 +148,6 @@ const StepOperatingHours: React.FC<StepOperatingHoursProps> = ({ formData, onCha
           <div onClick={() => {setCurrentStep(4)}} className="cursor-pointer w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-medium">5</div>
         </div>
       </div>
-
 
       {/* Operating Hours */}
       <div className="space-y-4">
@@ -195,14 +199,14 @@ const StepOperatingHours: React.FC<StepOperatingHoursProps> = ({ formData, onCha
           </button>
         </div>
 
-        {formData.plans.length === 0 ? (
+        {(!formData.plans || formData.plans.length === 0) ? (
           <div className="text-center py-8 bg-gray-50 rounded-lg">
             <Tag className="w-12 h-12 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-500">No membership plans added yet</p>
             <p className="text-sm text-gray-400">Click "Add Plan" to create your first subscription plan</p>
           </div>
         ) : (
-          formData.plans.map((plan, planIndex) => (
+          (formData.plans || []).map((plan, planIndex) => (
             <div key={planIndex} className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
               {/* Plan Header */}
               <div className="flex justify-between items-center mb-4">

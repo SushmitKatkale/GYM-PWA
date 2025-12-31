@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { gymService, Gym as ApiGym, GymFilters } from '../services/gymService';
 import { slotService, TimeSlot as ApiTimeSlot, Booking as ApiBooking } from '../services/slotService';
 import { useAuthStore } from './authStore';
+import { buildApiUrl } from '../config/api';
 
 // Use types from services
 export type Gym = ApiGym;
@@ -16,6 +17,7 @@ interface GymState {
   isLoading: boolean;
   error: string | null;
   currentFilters: GymFilters | null;
+  lastFetchTime: number | null;
   
   // Actions
   fetchGyms: () => Promise<boolean>;
@@ -30,6 +32,10 @@ interface GymState {
   updateGymOccupancy: (gymId: string, change: number) => void;
   calculateDistance: (gymLat: number, gymLng: number, userLat: number, userLng: number) => number;
   clearError: () => void;
+  
+  // Owner-specific actions (single gym model)
+  fetchOwnerGyms: () => Promise<boolean>;
+  searchGyms: (query: string) => Promise<boolean>;
 }
 
 // Mock data
@@ -148,6 +154,7 @@ export const useGymStore = create<GymState>((set, get) => ({
   isLoading: false,
   error: null,
   currentFilters: null,
+  lastFetchTime: null,
 
   fetchGyms: async () => {
     set({ isLoading: true, error: null });
@@ -369,5 +376,151 @@ fetchGymsWithFilters: async (filters?: GymFilters) => {
     }));
   },
 
-  clearError: () => set({ error: null })
+  clearError: () => set({ error: null }),
+  
+  // Owner-specific implementations (single gym model)
+  fetchOwnerGyms: async () => {
+    const state = get();
+    const now = Date.now();
+    const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+    
+    // If we're already loading, don't make another request
+    if (state.isLoading) {
+      console.log('Already loading gym data, skipping request');
+      return false;
+    }
+    
+    // If we have recent data, don't fetch again
+    if (state.gyms.length > 0 && state.lastFetchTime && (now - state.lastFetchTime) < CACHE_DURATION) {
+      console.log('Using cached gym data');
+      return true;
+    }
+    
+    console.log('Starting fetchOwnerGyms API call...');
+    set({ isLoading: true, error: null });
+    
+    try {
+      const authState = useAuthStore.getState();
+      const token = authState.getAccessToken();
+      const user = authState.user;
+      
+      console.log('fetchOwnerGyms - User:', user);
+      console.log('fetchOwnerGyms - User role:', user?.role);
+      console.log('fetchOwnerGyms - Token available:', !!token);
+      
+      if (!token) {
+        console.log('No token available, stopping fetch');
+        set({
+          error: 'No authentication token available',
+          isLoading: false
+        });
+        return false;
+      }
+      
+      const response = await fetch(buildApiUrl('/owner/gym'), {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Fetch owner gym HTTP error:', response.status, errorText);
+        set({
+          error: `Failed to load gym information (${response.status}): ${errorText}`,
+          isLoading: false
+        });
+        return false;
+      }
+      
+      const result = await response.json();
+      console.log('Fetch owner gym response:', result);
+      
+      if (result.success && result.data) {
+        // Transform API data to frontend Gym format
+        const ownerGym: Gym = {
+          id: result.data.id.toString(),
+          name: result.data.name,
+          address: result.data.address,
+          latitude: result.data.latitude || 0,
+          longitude: result.data.longitude || 0,
+          rating: result.data.rating || 0,
+          image: '/images/gyms/owner-gym.svg', // Default image
+          description: 'Your gym',
+          amenities: [], // Would come from database if available
+          operatingHours: result.data.operatingHours || { open: '06:00', close: '22:00' },
+          plans: { daily: 20, weekly: 95, monthly: 79.99, yearly: 799 }, // Would come from subscriptions
+          ownerId: result.data.owner?.id?.toString() || '',
+          capacity: result.data.capacity || 100,
+          currentOccupancy: result.data.currentOccupancy || 0,
+          // Additional owner-specific fields
+          city: result.data.city,
+          state: result.data.state,
+          zip: result.data.zip,
+          phone: result.data.phone,
+          email: result.data.email,
+          status: result.data.status,
+          occupancyRate: result.data.occupancyRate
+        };
+        
+        set({
+          gyms: [ownerGym], // Single gym in array
+          isLoading: false,
+          lastFetchTime: Date.now()
+        });
+        return true;
+      } else {
+        set({
+          error: result.message || 'Failed to load gym information',
+          isLoading: false
+        });
+        return false;
+      }
+      
+    } catch (error) {
+      console.error('Fetch owner gym error:', error);
+      set({
+        error: 'Failed to load your gym information.',
+        isLoading: false
+      });
+      return false;
+    }
+  },
+  
+  searchGyms: async (query: string) => {
+    // For owner with single gym, search is not really needed, but we'll implement basic filtering
+    set({ isLoading: true, error: null });
+    
+    try {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      const currentGyms = get().gyms;
+      if (!query.trim()) {
+        // Return all gyms if no search query
+        return await get().fetchOwnerGyms();
+      }
+      
+      // Filter by gym name or address
+      const filteredGyms = currentGyms.filter(gym =>
+        gym.name.toLowerCase().includes(query.toLowerCase()) ||
+        gym.address.toLowerCase().includes(query.toLowerCase())
+      );
+      
+      set({
+        gyms: filteredGyms,
+        isLoading: false
+      });
+      return true;
+      
+    } catch (error) {
+      console.error('Search gyms error:', error);
+      set({
+        error: 'Search failed. Please try again.',
+        isLoading: false
+      });
+      return false;
+    }
+  }
 }));
