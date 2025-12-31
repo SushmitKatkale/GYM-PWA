@@ -200,6 +200,18 @@ export function RegisterForm({ onToggleMode, onRegistrationSuccess }: RegisterFo
             </div>
           </div>
 
+          <div className="flex items-center gap-2 mb-4">
+            <input
+              type="checkbox"
+              id="terms"
+              required
+              className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+            />
+            <label htmlFor="terms" className="text-sm text-gray-600">
+              I agree to the <a href="/terms-and-conditions" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-700">Terms and Conditions</a>
+            </label>
+          </div>
+
           <button
             type="submit"
             disabled={isLoading}

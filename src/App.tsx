@@ -6,6 +6,8 @@ import { RegisterForm } from './components/auth/RegisterForm';
 import { OTPVerification } from './components/auth/OTPVerification';
 import { PaymentStatus } from './components/features/PaymentStatus';
 import { MainDashboard } from './components/layout/MainDashboard';
+import { TermsAndConditions } from './components/features/TermsAndConditions';
+
 
 // Auth wrapper component
 const AuthWrapper: React.FC = () => {
@@ -17,8 +19,8 @@ const AuthWrapper: React.FC = () => {
       return <LoginForm onToggleMode={() => setAuthMode('register')} />;
     case 'register':
       return (
-        <RegisterForm 
-          onToggleMode={() => setAuthMode('login')} 
+        <RegisterForm
+          onToggleMode={() => setAuthMode('login')}
           onRegistrationSuccess={(email: string) => {
             setPendingVerificationEmail(email);
             setAuthMode('otp');
@@ -27,7 +29,7 @@ const AuthWrapper: React.FC = () => {
       );
     case 'otp':
       return (
-        <OTPVerification 
+        <OTPVerification
           email={pendingVerificationEmail}
           onVerified={() => {
             setAuthMode('login');
@@ -51,7 +53,7 @@ function App() {
   useEffect(() => {
     // Initialize authentication state from stored tokens
     initializeAuth();
-    
+
     // Register service worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js')
@@ -65,29 +67,30 @@ function App() {
       <Routes>
         {/* Public Routes */}
         <Route path="/gateway/status/:paymentId" element={<PaymentStatus />} />
-        
+        <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+
         {/* Auth Routes */}
-        <Route 
-          path="/" 
-          element={user ? <MainDashboard /> : <AuthWrapper />} 
+        <Route
+          path="/"
+          element={user ? <MainDashboard /> : <AuthWrapper />}
         />
-        <Route 
-          path="/dashboard" 
-          element={user ? <MainDashboard /> : <AuthWrapper />} 
+        <Route
+          path="/dashboard"
+          element={user ? <MainDashboard /> : <AuthWrapper />}
         />
-        <Route 
-          path="/discover" 
-          element={user ? <MainDashboard /> : <AuthWrapper />} 
+        <Route
+          path="/discover"
+          element={user ? <MainDashboard /> : <AuthWrapper />}
         />
-        <Route 
-          path="/my-subscriptions" 
-          element={user ? <MainDashboard /> : <AuthWrapper />} 
+        <Route
+          path="/my-subscriptions"
+          element={user ? <MainDashboard /> : <AuthWrapper />}
         />
-        
+
         {/* Catch all other routes */}
-        <Route 
-          path="*" 
-          element={user ? <MainDashboard /> : <AuthWrapper />} 
+        <Route
+          path="*"
+          element={user ? <MainDashboard /> : <AuthWrapper />}
         />
       </Routes>
     </Router>
